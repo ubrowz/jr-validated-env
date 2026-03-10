@@ -1,12 +1,17 @@
 #!/bin/zsh
 set -e
 #
-# parameter: none | --rebuild
+# admin_install_Python
+# Sets up the validated Python environment.
 #
-# Set-up or update the Python environment for users
+# Usage:
+#   admin_install_Python              — install from existing local repo
+#   admin_install_Python --rebuild    — download all packages from PyPI, then install
+#   admin_install_Python --add packagename==version
+#                                     — add one package to existing repo, then install
 #
 
-# --- Script directory
+# --- Script directory (admin/)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
 
@@ -19,12 +24,13 @@ if [[ ! -f "$PROJECT_ID_FILE" ]]; then
 fi
 PROJECT_ID="$(tr -d '[:space:]' < "$PROJECT_ID_FILE")"
 
-# --- Python environment path — must match VENV_PATH expected by admin_python_install.py
+# --- Python environment path
 export VENV_PATH="$HOME/.venvs/$PROJECT_ID"
 
-# --- Local package repo and build flag
+# --- Local package repo and flags
 export LOCAL_REPO="$(dirname "$SCRIPT_DIR")/Python_repo/my-repo"
 export BUILD_REPO="${BUILD_REPO:-false}"
+export ADD_PACKAGE=""
 
 # --- Requirements file — exported so admin_python_install.py can read it
 export REQ_FILE="$SCRIPT_DIR/python_requirements.txt"
@@ -32,28 +38,46 @@ export REQ_FILE="$SCRIPT_DIR/python_requirements.txt"
 # --- Help
 show_help() {
   echo ""
-  echo "Usage: admin_install_Python [--rebuild]"
+  echo "Usage: admin_install_Python [--rebuild] [--add packagename==version]"
   echo ""
-  echo "Description:"
-  echo "  Set-up or update the Python environment for users."
-  echo "  --rebuild   (Re)download packages into the local repo first."
-  echo "              Only needed when creating the repo or updating package versions."
-  echo "  -h|--help   Show this help message"
+  echo "  (no flag)                  Install from existing local repo"
+  echo "  --rebuild                  Download all packages from PyPI, then install"
+  echo "  --add packagename==version Add one package to existing repo, then install"
+  echo "  -h|--help                  Show this help message"
   echo ""
-  echo "Example:"
-  echo "  admin_install_Python            # install from existing local repo"
-  echo "  admin_install_Python --rebuild  # rebuild local repo from internet, then install"
+  echo "Examples:"
+  echo "  admin_install_Python"
+  echo "  admin_install_Python --rebuild"
+  echo "  admin_install_Python --add scipy==1.11.0"
+  echo ""
   exit 0
 }
 
 # --- Argument parsing
+SKIP_NEXT=false
 for arg in "$@"; do
+  if [[ "$SKIP_NEXT" == "true" ]]; then
+    export ADD_PACKAGE="$arg"
+    SKIP_NEXT=false
+    continue
+  fi
   case "$arg" in
     -h|--help)  show_help ;;
     --rebuild)  export BUILD_REPO="true" ;;
+    --add=*)    export ADD_PACKAGE="${arg#--add=}" ;;
+    --add)      SKIP_NEXT=true ;;
     *)          echo "❌ Unknown argument: $arg"; show_help ;;
   esac
 done
+
+# --- Validate --add format if provided
+if [[ -n "$ADD_PACKAGE" ]]; then
+  if [[ "$ADD_PACKAGE" != *"=="* ]]; then
+    echo "❌ --add requires format: packagename==version"
+    echo "   Example: admin_install_Python --add scipy==1.11.0"
+    exit 1
+  fi
+fi
 
 # --- Check requirements file exists
 if [[ ! -f "$REQ_FILE" ]]; then
@@ -69,8 +93,7 @@ if [[ ! -f "$PY_VERSION_FILE" ]]; then
   echo "   Please create the file with full version e.g: 3.11.9"
   exit 1
 fi
-
-REQ_PYTHON="$(cat "$PY_VERSION_FILE" | tr -d '[:space:]')"
+REQ_PYTHON="$(tr -d '[:space:]' < "$PY_VERSION_FILE")"
 REQ_MAJOR_MINOR=$(echo "$REQ_PYTHON" | awk -F. '{print $1 "." $2}')
 PYTHON_BIN="python$REQ_MAJOR_MINOR"
 
@@ -96,6 +119,16 @@ if [[ "$PY_VER" != "$REQ_PYTHON" ]]; then
 else
   echo "✅ Correct Python version $PY_VER installed"
 fi
+
+# --- Confirm mode
+if [[ "$BUILD_REPO" == "true" ]]; then
+  echo "🔨 Mode: full rebuild from PyPI"
+elif [[ -n "$ADD_PACKAGE" ]]; then
+  echo "➕ Mode: add package to existing repo ($ADD_PACKAGE)"
+else
+  echo "📂 Mode: install from existing local repo"
+fi
+echo ""
 
 # --- Run Python admin install script using the validated Python binary
 "$PYTHON_BIN" -I "$SCRIPT_DIR/Python/admin_python_install.py"

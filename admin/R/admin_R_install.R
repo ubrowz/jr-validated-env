@@ -2,87 +2,292 @@
 # Admin setup script for renv
 # R package versions in R_requirements.txt
 #
-# run as: Rscript --vanilla admin_R_install.R
+# run as: Rscript --vanilla admin/R/admin_R_install.R
+#         called via zsh wrapper admin_install_R
 #
 # Modes:
-#   BUILD_REPO=true  Rscript --vanilla admin_R_install.R
-#     → downloads pinned packages from internet into LOCAL_REPO, then installs from it
-#   BUILD_REPO=false Rscript --vanilla admin_R_install.R   (default)
+#   BUILD_REPO=true
+#     → downloads pinned packages from internet into LOCAL_REPO, then installs
+#   BUILD_REPO=false  (default)
 #     → installs directly from LOCAL_REPO (no internet needed)
+#   ADD_PACKAGE=packagename==version
+#     → downloads ONE new package + dependencies into existing LOCAL_REPO,
+#       updates R_requirements.txt, renv.lock, checksums.txt, then installs
 #
 # R_requirements.txt format (one per line, comments with #):
 #   ggplot2==3.5.2
-#   MASS==7.3.65
 #   e1071==1.7.16
 #   tolerance==2.0.0
 #
 # ==============================
 
 # ---------------------------------------------------------------------------
-# Configuration — edit these paths to match your environment
+# Configuration
 # ---------------------------------------------------------------------------
 
-LOCAL_REPO <- Sys.getenv("LOCAL_REPO")
+LOCAL_REPO  <- Sys.getenv("LOCAL_REPO")
 if (LOCAL_REPO == "") {
   stop(paste(
     "❌ LOCAL_REPO environment variable is not set.",
-    "   Call this R script only via zsh-shell script admin_R_install ",
-    "   to ensure correct envrionment variable setting. ",
+    "   Call this R script only via zsh wrapper admin_install_R",
+    "   to ensure correct environment variable setting.",
     sep = "\n"
   ))
 }
-BUILD_REPO  <- Sys.getenv("BUILD_REPO",
-               unset = "false") == "true"           # set to true to (re)build repo from internet
-CRAN_MIRROR <- "https://cloud.r-project.org"        # only used when BUILD_REPO=true
 
-# Binary type for your platform — change if not on macOS Apple Silicon
+RENV_HOME   <- Sys.getenv("RENV_PATHS_ROOT")
+BUILD_REPO  <- Sys.getenv("BUILD_REPO",  unset = "false") == "true"
+ADD_PACKAGE <- Sys.getenv("ADD_PACKAGE", unset = "")
+CRAN_MIRROR <- "https://cloud.r-project.org"
 BINARY_TYPE <- "mac.binary.big-sur-arm64"
 
 # ---------------------------------------------------------------------------
-# Parse R_requirements.txt  (format: packagename==version)
+# Determine mode
+# ---------------------------------------------------------------------------
+
+MODE <- if (nchar(ADD_PACKAGE) > 0) "ADD" else if (BUILD_REPO) "BUILD" else "INSTALL"
+cat(sprintf("Mode: %s\n\n", MODE))
+
+# ---------------------------------------------------------------------------
+# Helper — parse requirements file into named vector
+# ---------------------------------------------------------------------------
+
+read_requirements <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  lines <- trimws(lines)
+  lines <- lines[lines != "" & !startsWith(lines, "#")]
+  bad   <- lines[!grepl("==", lines)]
+  if (length(bad) > 0) {
+    stop(paste0(
+      "❌ R_requirements.txt entries must use 'package==version' format.\n",
+      "   Offending lines: ", paste(bad, collapse = ", ")
+    ))
+  }
+  setNames(sub(".*==", "", lines), sub("==.*", "", lines))
+}
+
+# ---------------------------------------------------------------------------
+# Parse R_requirements.txt
 # ---------------------------------------------------------------------------
 
 REQ_FILE <- "R_requirements.txt"
-if (!file.exists(REQ_FILE)) {
-  stop("❌ R_requirements.txt not found")
-}
+if (!file.exists(REQ_FILE)) stop("❌ R_requirements.txt not found")
 
-lines <- readLines(REQ_FILE, warn = FALSE)
-lines <- trimws(lines)
-lines <- lines[lines != "" & !startsWith(lines, "#")]
+pkg_versions <- read_requirements(REQ_FILE)
+pkg_names    <- names(pkg_versions)
 
-if (length(lines) == 0) {
-  stop("❌ No packages found in R_requirements.txt")
-}
-
-# Split "pkg==version" into a named vector  c(pkg = "version")
-pkg_versions <- setNames(
-  sub(".*==", "", lines),    # everything after ==
-  sub("==.*", "", lines)     # everything before ==
-)
-
-# Validate format
-bad <- lines[!grepl("==", lines)]
-if (length(bad) > 0) {
-  stop(paste0(
-    "❌ R_requirements.txt entries must use 'package==version' format.\n",
-    "   Offending lines: ", paste(bad, collapse = ", ")
-  ))
-}
-
-pkg_names <- names(pkg_versions)
-
-cat("📋 Required packages:\n")
+cat("📋 Current packages in R_requirements.txt:\n")
 for (nm in pkg_names) cat(sprintf("   %-20s %s\n", nm, pkg_versions[nm]))
 cat("\n")
 
 # ---------------------------------------------------------------------------
-# Optionally (re)build the local miniCRAN repo from the internet
+# ADD mode — download one new package + dependencies, update repo and files
 # ---------------------------------------------------------------------------
 
-if (BUILD_REPO) {
+if (MODE == "ADD") {
 
-  cat("🌐 BUILD_REPO=true — downloading packages from CRAN into local repo...\n")
+  # Validate format
+  if (!grepl("==", ADD_PACKAGE)) {
+    stop(paste0(
+      "❌ --add requires format: packagename==version\n",
+      "   Received: ", ADD_PACKAGE
+    ))
+  }
+
+  add_name <- sub("==.*", "", ADD_PACKAGE)
+  add_ver  <- sub(".*==", "", ADD_PACKAGE)
+
+  cat(sprintf("➕ Adding package: %s version %s\n\n", add_name, add_ver))
+
+  # Check if already in requirements
+  if (add_name %in% pkg_names) {
+    existing_ver <- pkg_versions[[add_name]]
+    if (existing_ver == add_ver) {
+      cat(sprintf("✅ %s==%s is already in R_requirements.txt — nothing to do.\n",
+                  add_name, add_ver))
+      quit(status = 0)
+    } else {
+      cat(sprintf("⚠️  %s already in R_requirements.txt at version %s — updating to %s\n",
+                  add_name, existing_ver, add_ver))
+    }
+  }
+
+  # Verify local repo exists — ADD requires an existing repo
+  if (!dir.exists(LOCAL_REPO)) {
+    stop(paste0(
+      "❌ Local repo not found at: ", LOCAL_REPO, "\n",
+      "   Run admin_install_R --rebuild first to create the repo,\n",
+      "   then use --add to extend it."
+    ))
+  }
+
+  # Resolve dependencies from CRAN
+  cat(sprintf("🔍 Resolving dependencies for %s==%s...\n", add_name, add_ver))
+
+  if (!requireNamespace("miniCRAN", quietly = TRUE)) {
+    install.packages("miniCRAN", repos = CRAN_MIRROR)
+  }
+  library(miniCRAN)
+
+  # pkgDep returns all recursive dependencies including the package itself
+  all_deps <- pkgDep(add_name, repos = CRAN_MIRROR,
+                     type = "source", suggests = FALSE)
+
+  # Get the versions CRAN would download for each dependency
+  cran_pkg_info <- tryCatch(
+    available.packages(repos = CRAN_MIRROR, type = "source"),
+    error = function(e) stop(paste("❌ Failed to query CRAN:", e$message))
+  )
+
+  cat("📦 Resolved dependencies:\n")
+  for (dep in all_deps) {
+    if (dep %in% rownames(cran_pkg_info)) {
+      cran_ver <- cran_pkg_info[dep, "Version"]
+      cat(sprintf("   %-20s %s (CRAN)\n", dep, cran_ver))
+    }
+  }
+  cat("\n")
+
+  # ---------------------------------------------------------------------------
+  # Conflict check — compare CRAN versions against R_requirements.txt pins
+  # ---------------------------------------------------------------------------
+  # The target package itself is excluded from this check since we are
+  # intentionally adding/updating it. Only its dependencies are checked.
+
+  dep_conflicts <- character(0)
+
+  for (dep in all_deps) {
+    if (dep == add_name) next                          # skip the target package itself
+    if (!dep %in% rownames(cran_pkg_info)) next        # skip if not on CRAN (base pkg)
+
+    cran_ver <- cran_pkg_info[dep, "Version"]
+
+    if (dep %in% pkg_names) {
+      pinned_ver <- pkg_versions[[dep]]
+      # Normalise hyphens for comparison (e.g. 7.3-65 vs 7.3.65)
+      if (gsub("-", ".", cran_ver) != gsub("-", ".", pinned_ver)) {
+        dep_conflicts <- c(dep_conflicts,
+          sprintf("   %-20s pinned: %-12s  CRAN would download: %s",
+                  dep, pinned_ver, cran_ver))
+      }
+    }
+    # Note: dependencies not yet in requirements.txt are allowed through —
+    # they will be added automatically with their CRAN version below.
+  }
+
+  if (length(dep_conflicts) > 0) {
+    cat("❌ DEPENDENCY VERSION CONFLICT DETECTED\n\n")
+    cat(sprintf("   %s==%s requires dependencies whose CRAN versions\n", add_name, add_ver))
+    cat("   differ from the versions pinned in R_requirements.txt:\n\n")
+    cat(paste(dep_conflicts, collapse = "\n"), "\n\n")
+    cat("   Resolution options:\n")
+    cat("   1. Update the pinned version(s) in R_requirements.txt to match\n")
+    cat("      CRAN, then run --add again.\n")
+    cat("   2. Choose a different version of", add_name, "whose dependencies\n")
+    cat("      are compatible with your current pins.\n")
+    cat("   3. Run --rebuild to update the entire environment at once\n")
+    cat("      (note: this requires full re-validation).\n\n")
+    stop("❌ Aborting --add due to dependency conflict. No files were changed.")
+  }
+
+  cat("✅ No dependency conflicts detected.\n\n")
+
+  # Collect any new dependencies not yet in R_requirements.txt
+  new_implicit_deps <- character(0)
+  for (dep in all_deps) {
+    if (dep == add_name) next
+    if (!dep %in% pkg_names && dep %in% rownames(cran_pkg_info)) {
+      new_implicit_deps <- c(new_implicit_deps, dep)
+    }
+  }
+  if (length(new_implicit_deps) > 0) {
+    cat("ℹ️  New implicit dependencies will be added to R_requirements.txt:\n")
+    for (dep in new_implicit_deps) {
+      cat(sprintf("   %s==%s\n", dep, cran_pkg_info[dep, "Version"]))
+    }
+    cat("\n")
+  }
+
+  # Download new package + all dependencies into existing repo
+  cat(sprintf("🌐 Downloading %s==%s + dependencies from CRAN...\n", add_name, add_ver))
+
+  makeRepo(all_deps,
+           path  = LOCAL_REPO,
+           repos = CRAN_MIRROR,
+           type  = c("source", BINARY_TYPE),
+           quiet = FALSE)
+
+  # Rebuild PACKAGES index
+  tools::write_PACKAGES(
+    file.path(LOCAL_REPO, "bin/macosx/big-sur-arm64/contrib/4.5"),
+    type = "mac.binary"
+  )
+  cat("📋 PACKAGES index rebuilt.\n\n")
+
+  # Update R_requirements.txt — target package first, then new implicit deps
+  req_lines      <- readLines(REQ_FILE, warn = FALSE)
+  existing_entry <- grep(paste0("^", add_name, "=="), req_lines)
+  new_entry      <- paste0(add_name, "==", add_ver)
+
+  if (length(existing_entry) > 0) {
+    req_lines[existing_entry] <- new_entry
+  } else {
+    req_lines <- c(req_lines, new_entry)
+  }
+
+  # Append any new implicit dependencies
+  for (dep in new_implicit_deps) {
+    dep_ver   <- cran_pkg_info[dep, "Version"]
+    dep_entry <- paste0(dep, "==", dep_ver)
+    if (!any(grepl(paste0("^", dep, "=="), req_lines))) {
+      req_lines <- c(req_lines, dep_entry)
+    }
+  }
+
+  writeLines(req_lines, REQ_FILE)
+  cat(sprintf("📝 R_requirements.txt updated: %s==%s\n", add_name, add_ver))
+  if (length(new_implicit_deps) > 0) {
+    for (dep in new_implicit_deps) {
+      cat(sprintf("📝 R_requirements.txt added implicit dep: %s==%s\n",
+                  dep, cran_pkg_info[dep, "Version"]))
+    }
+  }
+  cat("\n")
+
+  # Reload pkg_versions to include the new package
+  pkg_versions <- read_requirements(REQ_FILE)
+  pkg_names    <- names(pkg_versions)
+
+  # Recompute checksums for entire repo
+  cat("🔒 Recomputing repo checksums...\n")
+  repo_files <- list.files(LOCAL_REPO, recursive = TRUE, full.names = TRUE)
+  repo_files <- repo_files[!grepl("VERSIONS.txt|checksums.txt", repo_files)]
+  checksums  <- tools::md5sum(repo_files)
+  writeLines(paste(checksums, repo_files), file.path(LOCAL_REPO, "checksums.txt"))
+  cat("✅ checksums.txt updated.\n\n")
+
+  # Update VERSIONS.txt
+  renv_version   <- as.character(packageVersion("renv"))
+  manifest_lines <- c(
+    "# Pinned package versions — do not edit manually",
+    paste0("# Generated: ", Sys.time()),
+    paste0("# R version: ", paste(R.version$major,
+                                  sub("\\..*", "", R.version$minor), sep = ".")),
+    "",
+    paste(pkg_names, pkg_versions, sep = " == "),
+    paste("renv", renv_version, sep = " == ")
+  )
+  writeLines(manifest_lines, file.path(LOCAL_REPO, "VERSIONS.txt"))
+  cat("📋 VERSIONS.txt updated.\n\n")
+}
+
+# ---------------------------------------------------------------------------
+# BUILD mode — download all packages from internet into local repo
+# ---------------------------------------------------------------------------
+
+if (MODE == "BUILD") {
+
+  cat("🌐 BUILD_REPO=true — downloading packages from CRAN...\n")
   cat(sprintf("   Destination: %s\n\n", LOCAL_REPO))
 
   if (!requireNamespace("miniCRAN", quietly = TRUE)) {
@@ -90,14 +295,12 @@ if (BUILD_REPO) {
   }
   library(miniCRAN)
 
-  # Expand to include all recursive dependencies
   deps <- pkgDep(pkg_names, repos = CRAN_MIRROR,
                  type = "source", suggests = FALSE)
   cat("📦 Packages + dependencies to download:\n")
   print(deps)
   cat("\n")
 
-  # Create or update the local repo
   if (!dir.exists(LOCAL_REPO)) dir.create(LOCAL_REPO, recursive = TRUE)
 
   makeRepo(deps,
@@ -105,10 +308,7 @@ if (BUILD_REPO) {
            repos = CRAN_MIRROR,
            type  = c("source", BINARY_TYPE))
 
-# --- Ensure renv package is in the local repo ---
-  # renv is not in R_requirements.txt but is needed by user scripts to
-  # bootstrap the environment. Download it explicitly so the local repo
-  # is fully self-contained.
+  # Ensure renv is in the local repo
   renv_version <- as.character(packageVersion("renv"))
   renv_binary  <- sprintf("renv_%s.tgz", renv_version)
   renv_url     <- sprintf(
@@ -130,56 +330,57 @@ if (BUILD_REPO) {
     cat(sprintf("✅ renv %s already in local repo.\n", renv_version))
   }
 
-  # Rebuild the PACKAGES index to include renv
+  # Rebuild PACKAGES index
   tools::write_PACKAGES(
     file.path(LOCAL_REPO, "bin/macosx/big-sur-arm64/contrib/4.5"),
     type = "mac.binary"
   )
   cat("📋 PACKAGES index updated.\n\n")
 
-  # Write version manifest for audit trail
+  # Write VERSIONS.txt
   manifest_lines <- c(
     "# Pinned package versions — do not edit manually",
     paste0("# Generated: ", Sys.time()),
     paste0("# R version: ", paste(R.version$major,
-                                  sub("\\..*", "", R.version$minor),
-                                  sep = ".")),
+                                  sub("\\..*", "", R.version$minor), sep = ".")),
     "",
     paste(pkg_names, pkg_versions, sep = " == "),
-
     paste("renv", renv_version, sep = " == ")
   )
   writeLines(manifest_lines, file.path(LOCAL_REPO, "VERSIONS.txt"))
 
-  # Compute and write checksums for integrity verification
+  # Compute checksums
   repo_files <- list.files(LOCAL_REPO, recursive = TRUE, full.names = TRUE)
   repo_files <- repo_files[!grepl("VERSIONS.txt|checksums.txt", repo_files)]
   checksums  <- tools::md5sum(repo_files)
   writeLines(paste(checksums, repo_files), file.path(LOCAL_REPO, "checksums.txt"))
 
-  cat(sprintf("\n✅ Local repo built at: %s\n", LOCAL_REPO))
-  cat("📋 Version manifest written to VERSIONS.txt\n")
-  cat("🔒 Checksums written to checksums.txt\n\n")
+  cat(sprintf("✅ Local repo built at: %s\n", LOCAL_REPO))
+  cat("📋 VERSIONS.txt written\n")
+  cat("🔒 checksums.txt written\n\n")
 
-} else {
+} else if (MODE == "INSTALL") {
 
-  cat(sprintf("📂 BUILD_REPO=false — using existing local repo: %s\n\n", LOCAL_REPO))
+  # ---------------------------------------------------------------------------
+  # INSTALL mode — verify existing repo integrity
+  # ---------------------------------------------------------------------------
 
-  # Verify repo exists
+  cat(sprintf("📂 Using existing local repo: %s\n\n", LOCAL_REPO))
+
   if (!dir.exists(LOCAL_REPO)) {
     stop(paste0(
       "❌ Local repo not found at: ", LOCAL_REPO, "\n",
-      "   Run with BUILD_REPO=true first to create it."
+      "   Run admin_install_R --rebuild first to create it."
     ))
   }
 
-  # Integrity check against stored checksums
   checksum_file <- file.path(LOCAL_REPO, "checksums.txt")
   if (file.exists(checksum_file)) {
     cat("🔒 Verifying repo integrity...\n")
-    stored   <- read.table(checksum_file, header = FALSE,
-                           col.names = c("hash", "path"), stringsAsFactors = FALSE)
-    current  <- tools::md5sum(stored$path)
+    stored     <- read.table(checksum_file, header = FALSE,
+                             col.names = c("hash", "path"),
+                             stringsAsFactors = FALSE)
+    current    <- tools::md5sum(stored$path)
     mismatches <- stored$path[current != stored$hash]
     if (length(mismatches) > 0) {
       stop(paste0(
@@ -194,7 +395,7 @@ if (BUILD_REPO) {
 }
 
 # ---------------------------------------------------------------------------
-# Set local repo as the sole package source
+# Set local repo as sole package source  (all modes)
 # ---------------------------------------------------------------------------
 
 local_repo_url <- paste0("file://", normalizePath(LOCAL_REPO))
@@ -208,35 +409,25 @@ options(
 cat(sprintf("📌 Installing from: %s\n\n", local_repo_url))
 
 # ---------------------------------------------------------------------------
-# Clean and reinitialise renv
+# Install renv if not present
 # ---------------------------------------------------------------------------
-
-if (dir.exists("renv")) {
-  message("⚠️  Existing renv folder detected — removing")
-  unlink("renv", recursive = TRUE)
-}
-if (file.exists("renv.lock")) {
-  unlink("renv.lock")
-}
 
 if (!requireNamespace("renv", quietly = TRUE)) {
   install.packages("renv", repos = local_repo_url)
 }
-#renv::init(bare = TRUE)
 
 # ---------------------------------------------------------------------------
-# Install pinned packages from local repo via renv::restore()
+# Write renv.lock from current pkg_versions  (all modes)
 # ---------------------------------------------------------------------------
 
-cat("📦 Installing packages from local repo via renv.lock...\n")
-
-# Build renv.lock manually — avoids jsonlite dependency before renv is populated
 r_version <- paste(R.version$major, R.version$minor, sep = ".")
 
 pkg_entries <- paste(
   sapply(pkg_names, function(nm) {
-    sprintf('    "%s": {\n      "Package": "%s",\n      "Version": "%s",\n      "Source": "Repository",\n      "Repository": "LOCAL"\n    }',
-            nm, nm, pkg_versions[[nm]])
+    sprintf(
+      '    "%s": {\n      "Package": "%s",\n      "Version": "%s",\n      "Source": "Repository",\n      "Repository": "LOCAL"\n    }',
+      nm, nm, pkg_versions[[nm]]
+    )
   }),
   collapse = ",\n"
 )
@@ -246,38 +437,46 @@ lock_json <- sprintf(
   r_version, pkg_entries
 )
 
-writeLines(lock_json, "renv.lock")
-cat("📋 renv.lock written.\n\n")
+lock_path <- if (nchar(RENV_HOME) > 0) file.path(RENV_HOME, "renv.lock") else "renv.lock"
+writeLines(lock_json, lock_path)
+cat(sprintf("📋 renv.lock written to: %s\n\n", lock_path))
 
-renv::restore(lockfile = "renv.lock",
+# ---------------------------------------------------------------------------
+# Restore renv library from lock  (all modes)
+# ---------------------------------------------------------------------------
+
+renv::restore(lockfile = lock_path,
               repos    = c(LOCAL = local_repo_url),
               prompt   = FALSE)
-              
+
 # ---------------------------------------------------------------------------
-# Verify installed versions match requirements
+# Verify installed versions
 # ---------------------------------------------------------------------------
 
 cat("\n🔍 Verifying installed versions:\n")
 all_ok <- TRUE
 for (nm in pkg_names) {
-  required  <- gsub("-", ".", pkg_versions[[nm]])   # normalise: 7.3-65 -> 7.3.65
+  required  <- gsub("-", ".", pkg_versions[[nm]])
   installed <- tryCatch(as.character(packageVersion(nm)), error = function(e) NA)
   if (is.na(installed)) {
     cat(sprintf("   ❌ %-20s NOT INSTALLED\n", nm))
     all_ok <- FALSE
   } else if (installed != required) {
-    cat(sprintf("   ❌ %-20s installed: %s  required: %s\n", nm, installed, required))
+    cat(sprintf("   ❌ %-20s installed: %s  required: %s\n",
+                nm, installed, required))
     all_ok <- FALSE
   } else {
     cat(sprintf("   ✅ %-20s %s\n", nm, installed))
   }
 }
 
-if (!all_ok) {
-  stop("❌ Version mismatch detected — aborting snapshot. Check errors above.")
-}
+if (!all_ok) stop("❌ Version mismatch detected. Check errors above.")
 
 cat("\n✅ renv environment successfully created\n")
-cat(sprintf("📦 R version: %s\n", R.version.string))
-cat(sprintf("📂 Repo:      %s\n", LOCAL_REPO))
-cat(sprintf("📋 Packages:  %s\n", paste(pkg_names, collapse = ", ")))
+cat(sprintf("📦 R version  : %s\n", R.version.string))
+cat(sprintf("📂 Repo       : %s\n", LOCAL_REPO))
+cat(sprintf("📋 Packages   : %s\n", paste(pkg_names, collapse = ", ")))
+if (MODE == "ADD") {
+  cat(sprintf("➕ Added      : %s==%s\n", add_name, add_ver))
+}
+

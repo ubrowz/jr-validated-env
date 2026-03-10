@@ -1,16 +1,22 @@
 #!/bin/zsh
 set -e
 #
-# parameter: none | --rebuild
+# admin_install_R
+# Sets up the validated R environment.
 #
-# Set-up or update the R environment for users
+# Usage:
+#   admin_install_R              — install from existing local repo
+#   admin_install_R --rebuild    — download all packages from internet, then install
+#   admin_install_R --add packagename==version
+#                                — add one package to existing repo, then install
 #
 
-# --- Script directory
+# --- Script directory (admin/)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# --- Project identity — read from project_id.txt (one line change per fork)
+# --- Project identity
 PROJECT_ID_FILE="$SCRIPT_DIR/project_id.txt"
 if [[ ! -f "$PROJECT_ID_FILE" ]]; then
   echo "❌ project_id.txt not found at: $PROJECT_ID_FILE"
@@ -19,44 +25,20 @@ if [[ ! -f "$PROJECT_ID_FILE" ]]; then
 fi
 PROJECT_ID="$(tr -d '[:space:]' < "$PROJECT_ID_FILE")"
 
-# --- Required files
-R_VERSION_FILE="$SCRIPT_DIR/r_version.txt"
-
 # --- R environment paths
 export RENV_HOME="$HOME/.renv/$PROJECT_ID"
 export RENV_PATHS_ROOT="$HOME/.renv/$PROJECT_ID"
+export LOCAL_REPO="$PROJECT_ROOT/R_repo/my-cran-repo"
+export BUILD_REPO="false"
+export ADD_PACKAGE=""
 
-# --- Local miniCRAN repo — edit this path to match your environment
-export LOCAL_REPO="$(dirname "$SCRIPT_DIR")/R_repo/my-cran-repo"
-export BUILD_REPO="${BUILD_REPO:-false}"
-
-# --- Help
-show_help() {
-  echo ""
-  echo "Usage: admin_install_R [--rebuild]"
-  echo ""
-  echo "  Use only allowed by admin!"
-  echo "  Set-up or update the R environment for users."
-  echo "  --rebuild   (Re)download packages from CRAN into the local repo first."
-  echo "              Only needed when creating the repo or updating package versions."
-  echo "  -h|--help   Show this help message"
-  echo ""
-  echo "Example:"
-  echo "  admin_install_R            # install from existing local repo"
-  echo "  admin_install_R --rebuild  # rebuild local repo from internet, then install"
-  exit 0
-}
-
-# --- Argument parsing
-for arg in "$@"; do
-  case "$arg" in
-    -h|--help)  show_help ;;
-    --rebuild)  export BUILD_REPO="true" ;;
-    *)          echo "❌ Unknown argument: $arg"; show_help ;;
-  esac
-done
+# --- Clear R library overrides
+unset R_LIBS
+unset R_LIBS_USER
+unset R_LIBS_SITE
 
 # --- Check required files exist
+R_VERSION_FILE="$SCRIPT_DIR/r_version.txt"
 if [[ ! -f "$R_VERSION_FILE" ]]; then
   echo "❌ r_version.txt missing. Contact admin."
   exit 1
@@ -68,28 +50,83 @@ fi
 
 # --- Check R is installed
 if ! command -v Rscript >/dev/null 2>&1; then
-  echo "❌ Rscript not found"
-  echo "   Install R from: $(dirname "$SCRIPT_DIR")/R_repo/"
+  echo "❌ Rscript not found."
+  echo "   Install R from: $PROJECT_ROOT/R_repo/"
   exit 1
 fi
 
 # --- Check R version matches requirement
 REQ_R="$(cat "$R_VERSION_FILE")"
 if ! R_VER=$(Rscript --vanilla -e 'cat(format(getRversion(), nsmall = 1))' 2>/dev/null); then
-  echo "❌ Failed to detect R version"
+  echo "❌ Failed to detect R version."
   exit 1
 fi
 R_VER=$(echo "$R_VER" | cut -d. -f1,2)
 if [[ "$R_VER" != "$REQ_R" ]]; then
   echo "❌ R $REQ_R required, found $R_VER"
-  echo "    Install correct R version from $(dirname "$SCRIPT_DIR")/R_repo/"
+  echo "   Install correct R version from $PROJECT_ROOT/R_repo/"
   exit 1
 fi
 
-# --- Clear R library overrides
-unset R_LIBS
-unset R_LIBS_USER  
-unset R_LIBS_SITE
+# --- Argument parsing
+SKIP_NEXT=false
+for arg in "$@"; do
+  if [[ "$SKIP_NEXT" == "true" ]]; then
+    export ADD_PACKAGE="$arg"
+    SKIP_NEXT=false
+    continue
+  fi
+  case "$arg" in
+    --rebuild)
+      export BUILD_REPO="true"
+      ;;
+    --add)
+      SKIP_NEXT=true
+      ;;
+    --add=*)
+      export ADD_PACKAGE="${arg#--add=}"
+      ;;
+    --help|-h)
+      echo ""
+      echo "Usage: admin_install_R [--rebuild] [--add packagename==version]"
+      echo ""
+      echo "  (no flag)                  Install from existing local repo"
+      echo "  --rebuild                  Download all packages from internet, then install"
+      echo "  --add packagename==version Add one package to existing repo, then install"
+      echo ""
+      echo "Examples:"
+      echo "  admin_install_R"
+      echo "  admin_install_R --rebuild"
+      echo "  admin_install_R --add fitdistrplus==1.1-11"
+      echo ""
+      exit 0
+      ;;
+    *)
+      echo "❌ Unknown argument: $arg"
+      exit 1
+      ;;
+  esac
+done
+
+# --- Validate --add format if provided
+if [[ -n "$ADD_PACKAGE" ]]; then
+  if [[ "$ADD_PACKAGE" != *"=="* ]]; then
+    echo "❌ --add requires format: packagename==version"
+    echo "   Example: admin_install_R --add fitdistrplus==1.1-11"
+    exit 1
+  fi
+  echo "➕ Adding package: $ADD_PACKAGE"
+fi
+
+# --- Confirm mode
+if [[ "$BUILD_REPO" == "true" ]]; then
+  echo "🔨 Mode: full rebuild from internet"
+elif [[ -n "$ADD_PACKAGE" ]]; then
+  echo "➕ Mode: add package to existing repo"
+else
+  echo "📂 Mode: install from existing local repo"
+fi
+echo ""
 
 # --- Run R install script
 Rscript --vanilla "$SCRIPT_DIR/R/admin_R_install.R"
