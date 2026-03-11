@@ -7,6 +7,7 @@ set -e
 #
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 ZPROFILE="$HOME/.zprofile"
 
 # --- Check if already added
@@ -20,7 +21,7 @@ fi
 {
   echo ""
   echo "# JR Validated Environment — begin"
-  echo "export PATH=\"\$PATH:$SCRIPT_DIR\""
+  echo "export PATH=\"\$PATH:$SCRIPT_DIR/bin:$SCRIPT_DIR/wrapper\""
   echo "# JR Validated Environment — end"
 } >> "$ZPROFILE"
 
@@ -28,3 +29,4 @@ echo "✅ PATH updated successfully."
 echo ""
 echo "👉 Please open a new Terminal window before using JR Scripts."
 echo "   You only need to run this script once."
+
