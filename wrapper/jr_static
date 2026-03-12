@@ -1,2 +1,2 @@
 #!/bin/zsh
-exec "$(dirname "$0")/jrrun" jrhello.R "$@"
+exec "$(dirname "$0")/../bin/jrrun" jrhello.R "$@"

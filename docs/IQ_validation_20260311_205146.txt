@@ -1,0 +1,92 @@
+=============================================================
+ JR Validated Environment — Validation Report
+ Project   : MyProject
+ Date/Time : 2026-03-11 20:51:46
+ Admin     : anonymous
+ Host      : Anonymous-MacBook-Air.local
+ macOS     : 15.7.3
+=============================================================
+
+─────────────────────────────────────────────────────────────
+ Step 1 — Generating validate_R_env.R
+─────────────────────────────────────────────────────────────
+
+
+─────────────────────────────────────────────────────────────
+ Step 2 — Generating validate_Python_env.py
+─────────────────────────────────────────────────────────────
+
+
+─────────────────────────────────────────────────────────────
+ Step 3 — R Environment Validation (IQ/OQ)
+─────────────────────────────────────────────────────────────
+
+
+=============================================================
+ R Environment Validation Report
+ Generated: 2026-03-11 20:51:46.591288
+=============================================================
+
+R version  : 4.5
+Library    : /Users/anonymous/.renv/MyProject/renv/library/macos/R-4.5/aarch64-apple-darwin20
+
+Base R packages:
+  ✅ stats 4.5.0 from /Library/Frameworks/R.framework/Resources/library/stats
+  ✅ MASS 7.3.65 from /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/MASS
+
+User-installed packages:
+  ✅ tolerance 3.0.0 from /Users/anonymous/.renv/MyProject/renv/library/macos/R-4.5/aarch64-apple-darwin20/tolerance
+  ✅ e1071 1.7.17 from /Users/anonymous/.renv/MyProject/renv/library/macos/R-4.5/aarch64-apple-darwin20/e1071
+  ✅ ggplot2 4.0.2 from /Users/anonymous/.renv/MyProject/renv/library/macos/R-4.5/aarch64-apple-darwin20/ggplot2
+
+=============================================================
+✅ All R packages validated successfully.
+=============================================================
+
+─────────────────────────────────────────────────────────────
+ Step 4 — Python Environment Validation (IQ/OQ)
+─────────────────────────────────────────────────────────────
+
+
+=============================================================
+ Python Environment Validation Report
+ Generated: 2026-03-11 20:51:46
+=============================================================
+
+Python version : 3.11.9
+Executable     : /Users/anonymous/.venvs/MyProject/bin/python
+Site-packages  : /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages
+
+Standard library modules:
+  ✅ os : available (standard library, Python 3.11.9)
+  ✅ sys : available (standard library, Python 3.11.9)
+  ✅ math : available (standard library, Python 3.11.9)
+  ✅ statistics : available (standard library, Python 3.11.9)
+
+User-installed packages:
+  ✅ numpy : 1.26.4 from /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages/numpy
+  ✅ scipy : 1.11.4 from /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages/scipy
+  ✅ pandas : 2.1.4 from /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages/pandas
+  ✅ matplotlib : 3.8.2 from /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages/matplotlib
+  ✅ pydantic : 2.6.1 from /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages/pydantic
+  ✅ Pillow : 10.2.0 from /Users/anonymous/.venvs/MyProject/lib/python3.11/site-packages/Pillow
+
+=============================================================
+✅ All Python packages validated successfully.
+=============================================================
+
+=============================================================
+ VALIDATION RESULT: PASSED
+─────────────────────────────────────────────────────────────
+ R environment    : ✅ PASSED
+ Python environment: ✅ PASSED
+─────────────────────────────────────────────────────────────
+ Project          : MyProject
+ Date/Time        : 2026-03-11 20:51:46
+ Admin            : anonymous
+ Host             : Anonymous-MacBook-Air.local
+ macOS            : 15.7.3
+─────────────────────────────────────────────────────────────
+ Evidence file    : /Users/anonymous/.jrscript/MyProject/validation/validation_20260311_205146.txt
+=============================================================
+
