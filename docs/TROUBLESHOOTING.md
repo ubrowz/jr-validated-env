@@ -160,7 +160,7 @@ git diff
 **Symptom**
 
 ```
-zsh: command not found: jrr
+zsh: command not found: jrrun
 zsh: command not found: jr_versions
 ```
 

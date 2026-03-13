@@ -21,19 +21,15 @@
 
 The JR environment relies on the following macOS-specific components:
 
-**Xcode Command Line Tools** — required for git, make, and compiler
-toolchain used by some R packages:
+**Xcode Command Line Tools** — required by the administrator only, for git
+and the compiler toolchain used by some R packages during repo building:
 ```zsh
 xcode-select --install
 ```
+End users do not need Xcode Command Line Tools — they install packages from
+the pre-built local repository only.
 
-**Homebrew** — optional but recommended for installing shellcheck and
-other development tools:
-```zsh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-**Dropbox** — required to access the local package repositories
+**Dropbox** — required by all users to access the local package repositories
 (`R_repo/` and `Python_repo/`). The repositories are distributed via
 Dropbox to keep large binary files out of Git.
 
@@ -41,6 +37,9 @@ Dropbox to keep large binary files out of Git.
 as the binary type for miniCRAN downloads. Intel Mac users may need the
 admin to rebuild the local repo with `mac.binary` instead. This is
 controlled by the `BINARY_TYPE` variable in `admin/R/admin_R_install.R`.
+
+> ℹ️ A more elegant mechanism for configuring the binary type without
+> editing R code directly is planned for v1.1.
 
 **zsh** — all wrapper scripts are written for zsh, which is the default
 shell on macOS since Catalina (10.15). If you are running bash, switch to
@@ -114,6 +113,6 @@ degrade the macOS experience. See `CONTRIBUTING.md` for details.
 
 ## Docker
 
-Docker is explicitly not a goal for this project. See `docs/COMPARISON.md`
+Docker is explicitly not a goal for this project. See [docs/COMPARISON.md](docs/COMPARISON.md)
 for a detailed discussion of why a native validated environment is preferred
 over Docker for medical device development contexts.

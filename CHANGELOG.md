@@ -10,42 +10,63 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
-## [1.0.0] — 2026-03-07
+## [1.0.0] — 2026-03-12
 
 ### Initial release
+
+**Architecture**
+- Unified `jrrun` wrapper in `bin/` replaces all per-script wrappers (`jrr`, `jrpy`, `jrR_hello`, `jrPy_hello`) — extension-based routing dispatches `.R` scripts to the R environment and `.py` scripts to the Python environment
+- `bin/` folder for JR infrastructure scripts (`jrrun`, `jr_versions`, `jr_uninstall`)
+- `wrapper/` folder for user entry point scripts (`jr_animate`, `jr_static`)
+- `help/` folder for per-script help text files — `jrrun myscript.R --help` displays `help/myscript.txt`
+- `setup_jr_path.zsh` adds both `bin/` and `wrapper/` to PATH via `~/.zprofile` with begin/end markers for clean removal
+- All scripts in `bin/` use `PROJECT_ROOT=$(dirname SCRIPT_DIR)` pattern for correct path resolution
 
 **R environment**
 - Controlled local R package repository using miniCRAN stored in a shared Dropbox folder
 - Pinned package versions via `R_requirements.txt` and `renv.lock`
-- Automated renv library creation and rebuild on version change via zsh wrapper hash check
-- SHA256 integrity verification of local package repository
-- Explicit renv library path enforcement via `.libPaths()` to prevent fallback to system library
+- R packages installed into isolated per-project library at `~/.renv/[PROJECT_ID]/library/` using explicit `install.packages(lib=lib_path)` — never the system library
+- Automated R library rebuild on version change via hash check in `jrrun`
+- SHA256 integrity verification of local package repository on every install
+- `--add packagename==version` argument to add a single package without rebuilding the entire repo
 - Separation of user packages (`R_requirements.txt`) and base R packages (`R_base_requirements.txt`)
 
 **Python environment**
 - Controlled local Python package repository using `pip download` stored in a shared Dropbox folder
-- Pinned package versions via `python_requirements.txt`
-- Automated venv creation and rebuild on version change via zsh wrapper hash check
-- SHA256 integrity verification of local package repository
+- Pinned package versions via `python_requirements.txt` — pip honours exact version pins end-to-end
+- Automated venv rebuild on version change via hash check in `jrrun`
+- SHA256 integrity verification of local package repository on every install
+- `--add packagename==version` argument to add a single package without rebuilding the entire repo
 - Separation of user packages (`python_requirements.txt`) and standard library modules (`python_base_requirements.txt`)
 
 **Validation framework**
-- Project integrity verification via `project_integrity.sha256` checked before every script run
+- Project integrity verification via `project_integrity.sha256` checked by `jrrun` before every script execution
 - Auto-generated R validation script (`validate_R_env.R`) from `R_requirements.txt`
 - Auto-generated Python validation script (`validate_Python_env.py`) from `python_requirements.txt`
-- Validation report showing package versions and load paths for audit purposes
-- `jrpy` wrapper for running arbitrary Python scripts in the validated environment
-- `jrR` wrapper for running arbitrary R scripts in the validated environment
+- `admin_validate` produces a timestamped combined IQ evidence file at `~/.jrscript/[PROJECT_ID]/validation/`
+- Bypass protection: R scripts explicitly check for `RENV_PATHS_ROOT` at startup and halt if called outside `jrrun`; Python scripts fail at import time without the validated venv
+- Run log at `~/.jrscript/[PROJECT_ID]/run.log` — every `jrrun` execution logged with timestamp, script name, arguments, and exit code
+- Admin log at `~/.jrscript/[PROJECT_ID]/admin.log` — all admin actions logged with outcome
+- Validation Plan template (`docs/templates/validation_plan_template.docx`) covering IQ, OQ, PQ
+- Validation Report template (`docs/templates/jr_validation_report_template.docx`) covering IQ, OQ, PQ
 
 **Admin tooling**
-- `admin_install_R` — builds local R repo and installs renv library
-- `admin_install_Python` — builds local Python repo and installs venv
+- `admin_install_R` — builds local R repo and installs isolated R library; supports `--rebuild` and `--add`
+- `admin_install_Python` — builds local Python repo and installs venv; supports `--rebuild` and `--add`
 - `admin_create_hash` — generates project integrity file
-- `admin_validate` — generates project validation report
-- `generate_validate_R.zsh` — generates R validation script from requirements
-- `generate_validate_Python.zsh` — generates Python validation script from requirements
-- `setup_path.zsh` — one-time PATH configuration for end users
-- zsh wrapper templates for R and Python scripts
+- `admin_validate` — generates validation scripts and produces timestamped IQ evidence file
+- `admin_uninstall` — removes the entire JR environment from the machine
+- `bin/jr_uninstall` — removes the current user's local environment components (R library, venv, run log, PATH entry)
+- `bin/jr_versions` — displays current R, Python, and all package versions
+
+**Known limitations (documented)**
+- miniCRAN `--rebuild` and `--add` fetch current CRAN versions, not pinned versions. The local repository is the version control artefact for R. Rebuilding requires re-validation.
+- Python scripts invoked directly outside `jrrun` fail at import time rather than displaying an explicit error referencing the wrapper. Improvement planned for v1.1.
+
+**Removed**
+- `jrr`, `jrpy` — replaced by `jrrun`
+- `jrR_hello`, `jrPy_hello` — replaced by `jr_static` and `jr_animate`
+- `templates/jrr_template`, `templates/jrpython_template` — replaced by `jrrun` dispatch model
 
 ---
 

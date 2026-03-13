@@ -1,8 +1,9 @@
-# Base and recommended Python packages
-# These ship with Python and are validated by python_version.txt
-# Format: packagename (no version needed — version is guaranteed by R version pin)
-os
-sys
-math
-statistics
+# Python standard library requirements
+# Modules that ship with Python itself — no version pinning needed.
+# Never remove entries without updating the validation evidence.
+# Add new packages below this line.
 
+sys
+os
+math
+random

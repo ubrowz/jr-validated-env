@@ -64,23 +64,16 @@ It is designed for small to medium medical device development teams on macOS who
 git clone https://github.com/yourorg/jr-validated-environment.git
 cd jr-validated-environment
 
-# 2. Copy and edit the configuration file
-cp config.zsh.template config.zsh
-# Edit config.zsh to set your LOCAL_REPO path (Dropbox folder)
-
-# 3. Build the local package repository and install the environment
-export LOCAL_REPO="$HOME/Dropbox/my-cran-repo"
-BUILD_REPO=true ./admin_install_R
-
-export LOCAL_REPO="$HOME/Dropbox/my-python-repo"
-./admin_install_Python --rebuild
+# 2. Build the local package repositories and install the environments
+./admin/admin_install_R --rebuild
+./admin/admin_install_Python --rebuild
 ```
 
 **Subsequent setups** (no internet needed):
 
 ```zsh
-./admin_install_R
-./admin_install_Python
+./admin/admin_install_R
+./admin/admin_install_Python
 ```
 
 ---
@@ -138,8 +131,7 @@ The two approaches can also be combined — the `R_requirements.txt` and
 `python_requirements.txt` files can serve as the source of truth for both the JR
 local repository and a Dockerfile.
 
-> For a detailed comparison including reproducibility, offline use, and regulatory
-> considerations, see [docs/COMPARISON.md](docs/COMPARISON.md).
+> For a detailed discussion of reproducibility, offline use, and regulatory considerations, the comparison table above covers the key decision points.
 
 
 ## Repository Structure
@@ -150,60 +142,70 @@ jr-validated-environment/
 ├── README.md                        ← this file
 ├── LICENSE
 ├── CHANGELOG.md
-├── config.zsh.template              ← copy to config.zsh and edit
-├── setup_path.zsh                   ← run once per machine to add to PATH
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── PLATFORMS.md
+├── setup_jr_path.zsh                ← run once per machine to add bin/ and wrapper/ to PATH
 │
-├── admin_install_R                  ← admin: set up R environment
-├── admin_install_Python             ← admin: set up Python environment
-├── admin_create_hash                ← admin: regenerate integrity file
-├── generate_validate_R.zsh          ← admin: regenerate R validation script
-├── generate_validate_Python.zsh     ← admin: regenerate Python validation script
+├── bin/
+│   ├── jrrun                        ← users: run any R or Python script in the environment
+│   ├── jr_versions                  ← users: show installed R, Python, and package versions
+│   └── jr_uninstall                 ← users: remove local environment components
 │
-├── validate_R_env                   ← auditors: validate R environment
-├── validate_Python_env              ← auditors: validate Python environment
-├── jrpy                             ← users: run any Python script in the environment
+├── wrapper/
+│   ├── jr_animate                   ← example wrapper calling jrrun jrhello.py
+│   └── jr_static                    ← example wrapper calling jrrun jrhello.R
+│
+├── help/                            ← per-script help text files (same base name as script)
 │
 ├── R/                               ← R analysis scripts
 ├── Python/                          ← Python analysis scripts
-│
-├── templates/
-│   ├── jrR_template                 ← template for new R wrappers
-│   └── jrPython_template            ← template for new Python wrappers
 │
 ├── admin/
 │   ├── R_requirements.txt           ← pinned R package versions
 │   ├── R_base_requirements.txt      ← base R packages (verified, not installed)
 │   ├── python_requirements.txt      ← pinned Python package versions
 │   ├── python_base_requirements.txt ← standard library modules (verified)
-│   ├── renv.lock                    ← renv lockfile (auto-generated)
+│   ├── renv.lock                    ← R package lockfile (auto-generated)
 │   ├── r_version.txt                ← required R version e.g. 4.5
 │   ├── python_version.txt           ← required Python version e.g. 3.11.9
-│   └── project_integrity.sha256     ← SHA256 integrity file
+│   ├── project_id.txt               ← unique project identifier
+│   ├── admin_install_R              ← admin: set up R environment
+│   ├── admin_install_Python         ← admin: set up Python environment
+│   ├── admin_create_hash            ← admin: regenerate integrity file
+│   ├── admin_validate               ← admin: generate validation scripts and IQ evidence
+│   └── admin_uninstall              ← admin: remove entire environment from this machine
 │
 └── docs/
-    └── admin_manual.docx            ← full administrator manual
+    ├── admin_manual.docx            ← full administrator manual
+    └── templates/
+        ├── validation_plan_template.docx
+        └── jr_validation_report_template.docx
 ```
 
 ---
 
 ## Validation Evidence
 
-To generate a validation report suitable for an audit, run:
+To generate validation scripts and a timestamped IQ evidence file suitable for an audit, run:
 
 ```zsh
-# R environment
-admin_validate_R_env
-
-# Python environment
-admin_validate_Python_env
+./admin/admin_validate
 ```
 
-Each command produces a report showing:
-- R or Python version
-- Every package version and the exact path it was loaded from
-- Pass / fail status for each requirement
+This generates the R and Python validation scripts from the requirements files, runs a full IQ check, and writes a timestamped evidence file to `~/.jrscript/[PROJECT_ID]/validation/`.
 
-These scripts are auto-generated from the requirements files and can be re-generated at any time with `admin_generate_validate_R.zsh` or `admin_generate_validate_Python.zsh`.
+To check currently installed versions at any time:
+
+```zsh
+jr_versions
+```
+
+---
+
+## Important Note on Validation Scope
+
+The validation evidence included in docs/ covers the specific R version, Python version, and package versions listed in the requirements files at the time of release. If you install the JR environment with different versions — because newer R or Python installers are available, or because you add or update packages — the included validation evidence no longer applies to your installation. You must perform your own revalidation using the provided Validation Plan and Validation Report templates in docs/templates/ before using the environment in a regulated context.
 
 ---
 
@@ -223,15 +225,13 @@ the environment for your project:
    your scripts require.
 2. Edit `admin/r_version.txt` and `admin/python_version.txt` with the R and Python versions
    you want to pin.
-3. Set `LOCAL_REPO` in `config.zsh` to point to your shared Dropbox folder.
-4. Run `admin_install_R --rebuild` and `admin_install_Python --rebuild` to build your own
+3. Run `./admin/admin_install_R --rebuild` and `./admin/admin_install_Python --rebuild` to build your own
    local package repository in Dropbox.
-5. Add your R and Python scripts to the `R/` and `Python/` subfolders following the
+4. Add your R and Python scripts to the `R/` and `Python/` subfolders following the
    Admin Manual.
-6. Create zsh wrappers for your scripts using the provided templates.
-7. Run `admin_create_hash` to generate the project integrity file.
-8. Run `generate_validate_R.zsh` and `generate_validate_Python.zsh` to generate the
-   validation scripts.
+5. Optionally add per-script help files to `help/` and named wrappers to `wrapper/`.
+6. Run `./admin/admin_create_hash` to generate the project integrity file.
+7. Run `./admin/admin_validate` to generate the validation scripts and confirm the environment is working.
 
 Team members then run `setup_jr_path.zsh` once on their machine and the environment is ready.
 

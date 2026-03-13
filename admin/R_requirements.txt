@@ -1,9 +1,6 @@
-# R package requirements — pinned versions for validated environment
-# Format: packagename==version
-# Do not edit without a documented validation change decision.
+# R package requirements
+# Packages not included in the base R installation, pinned to exact versions.
+# Never remove entries without updating the validation evidence.
+# Add new packages below this line.
 
-tolerance==3.0.0
-e1071==1.7-17
 ggplot2==4.0.2
-
-jsonlite==2.0.0
