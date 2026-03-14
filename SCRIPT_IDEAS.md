@@ -21,14 +21,25 @@ adopted into a release are moved to the relevant section of CHANGELOG.md.
 | Status | Script | Description |
 |---|---|---|
 | ✅ | `jrc_ss_discrete` | Minimum sample size for pass/fail (binomial) verification. Table for f=0..10 allowed failures. Zero-failure rule based on ASTM F3172. |
+| ✅ | `jrc_ss_discrete_ci` | Given confidence, n, f → proportion achieved. Exact Clopper-Pearson method. Tables over f and n. |
 | ✅ | `jrc_ss_attr` | Minimum sample size for continuous (attribute) verification using statistical tolerance intervals. Normal and Box-Cox. |
 | ✅ | `jrc_ss_attr_check` | Fast check: does a planned N meet the tolerance interval requirement? Single k-factor comparison, no search loop. Run before `jrc_ss_attr`. |
-| ✅  | `jrc_ss_discrete_ci` | Inverse of `jrc_ss_discrete`: given a test result (n tested, f failures), what confidence level does this achieve for a given proportion? Exact binomial method. Useful for post-test analysis and test report documentation. |
-| ✅  | `jrc_ss_attr_ci` | Inverse of `jrc_ss_attr`: given a dataset and a planned N, what proportion and confidence level does the resulting tolerance interval actually achieve? Useful for post-test reporting when the test was run with a fixed N. |
-| 💡 | `jrc_ss_equivalence` | Sample size for equivalence testing (TOST). Given a maximum allowable difference (delta) and a measurement SD, returns the N needed to demonstrate equivalence at a given alpha and power. Common in 510(k) comparative testing. |
-| 💡 | `jrc_ss_gauge_rr` | Sample size for Gauge R&R / MSA studies. Returns the number of parts, operators, and replicates needed to achieve a target precision-to-tolerance ratio. Ensures the measurement system study is adequately powered before a verification study begins. |
-| 💡 | `jrc_ss_fatigue` | Sample size for fatigue and lifetime testing. Weibull-based: given a target B-life (e.g. B10) and confidence level, returns the minimum N and number of allowed failures. Relevant for implants and reusable devices. |
-| 💡 | `jrc_ss_paired` | Sample size for paired comparison studies (before/after, device A vs B). t-test based: given expected difference, SD of differences, and desired power, returns N. Common in usability and bench testing. |
+| ✅ | `jrc_ss_attr_ci` | Given dataset and confidence, what proportion does the tolerance interval achieve? Bisection search. Back-transforms to original units. |
+| ✅ | `jrc_ss_sigma` | Minimum pilot sample size to trust the sigma estimate. t-test power based. Table over power/confidence combinations. |
+| ✅ | `jrc_ss_paired` | Sample size for paired comparison studies (before/after, device A vs B). Given delta, SD of differences, and sides (1 or 2). Table over power/confidence combinations. |
+| ✅ | `jrc_ss_equivalence` | Sample size for equivalence testing (TOST). Given delta, SD, and sides. Table over power/confidence combinations. Explains TOST concept in output. |
+| ✅ | `jrc_ss_fatigue` | Sample size for fatigue and lifetime testing. Weibull-based: given B-life reliability, confidence, shape, and acceleration factor. Table for f=0..5. Sensitivity to shape parameter shown. |
+| ✅ | `jrc_ss_gauge_rr` | Gauge R&R study design guidance (AIAG MSA). Given target %GRR and reference (process SD or tolerance), shows table over operators × replicates with ndc, df, and AIAG verdict. |
+
+---
+
+## Diagnostic
+
+| Status | Script | Description |
+|---|---|---|
+| ✅ | `jrc_normality` | Normality testing: skewness, Shapiro-Wilk, Anderson-Darling, Box-Cox attempt. Verdict and transformation recommendation for jrc_ss_attr. |
+| ✅ | `jrc_outliers` | Outlier detection: Grubbs test (iterative, up to 10% of N) and IQR method. Reports row IDs of flagged observations. |
+| ✅ | `jrc_capability` | Process capability: Cp, Cpk, Pp, Ppk with 95% CIs. Overall SD used for all indices. Verdict against Cpk thresholds (1.00, 1.33, 1.67). |
 
 ---
 
@@ -37,21 +48,9 @@ adopted into a release are moved to the relevant section of CHANGELOG.md.
 | Status | Script | Description |
 |---|---|---|
 | 💡 | `calc_tolerance_interval` | Statistical tolerance intervals (normal and non-parametric) |
-| 💡 | `calc_process_capability` | Cp, Cpk, Pp, Ppk with confidence intervals and control charts |
-| 💡 | `calc_gauge_rr` | Gauge R&R (measurement system analysis) — ANOVA and range methods |
-| 💡 | `calc_normality` | Normality testing — Shapiro-Wilk, Anderson-Darling, Q-Q plots |
 | 💡 | `calc_descriptive_stats` | Descriptive statistics summary — mean, SD, CI, percentiles, clean output table |
-| 💡 | `calc_outliers` | Outlier detection — Grubbs test and IQR-based method |
-
----
-
-## Design Verification
-
-| Status | Script | Description |
-|---|---|---|
-| 💡 | `calc_equivalence` | Equivalence testing (TOST) — showing two methods or designs perform the same |
-| 💡 | `calc_weibull` | Reliability and survival analysis — Weibull fitting for fatigue and lifetime testing |
 | 💡 | `calc_bland_altman` | Bland-Altman analysis — comparing two measurement methods |
+| 💡 | `calc_weibull` | Reliability and survival analysis — Weibull fitting for fatigue and lifetime data |
 
 ---
 
@@ -59,9 +58,13 @@ adopted into a release are moved to the relevant section of CHANGELOG.md.
 
 | Status | Script | Description |
 |---|---|---|
-| ✅  | `jrc_gen_normal` | Generate a synthetic normally distributed dataset with specified mean, SD, and N. Output folder passed as argument. Filename auto-generated from parameters (e.g. `normal_n30_mean0_sd1.csv`). Useful for OQ evidence and script testing. |
-| ✅  | `jrc_gen_lognormal` | Generate a synthetic log-normally distributed dataset. Same interface as `jrc_gen_normal`. |
-| 💡 | `jrc_gen_uniform` | Generate a synthetic uniformly distributed dataset. Same interface as `jrc_gen_normal`. |
+| ✅ | `jrc_gen_normal` | Normal: n, mean, sd, folder, [seed]. Filename auto-generated from parameters. |
+| ✅ | `jrc_gen_lognormal` | Log-normal: n, meanlog, sdlog, folder, [seed]. Always strictly positive. |
+| ✅ | `jrc_gen_sqrt` | Chi-squared scaled: n, df, scale, folder, [seed]. Right-skewed, non-negative. |
+| ✅ | `jrc_gen_boxcox` | Weibull: n, shape, scale, folder, [seed]. Right-skewed, strictly positive. |
+| ✅ | `jrc_gen_uniform` | Uniform: n, min, max, folder, [seed]. |
+
+All generators output CSV with columns `id` (row names) and `value`.
 
 ---
 
@@ -84,4 +87,4 @@ adopted into a release are moved to the relevant section of CHANGELOG.md.
 
 ---
 
-*Last updated: 2026-03-13 — jrc_ss_discrete_ci marked in progress; jrc_ss_attr_ci, jrc_ss_equivalence, jrc_ss_gauge_rr, jrc_ss_fatigue, jrc_ss_paired added*
+*Last updated: 2026-03-14 — All sample size, diagnostic, and data generation scripts marked ✅*
