@@ -1,0 +1,12 @@
+
+Description: TODO: one or two sentence description of what this script does.
+
+Usage: jrc_gen_uniform "arg1" "arg2" ...
+
+Arguments:
+	arg1        TODO: describe arg1
+	arg2        TODO: describe arg2
+	-h| --help  Show this help message
+
+Example:
+       jrc_gen_uniform "value1" "value2"

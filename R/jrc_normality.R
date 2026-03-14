@@ -28,6 +28,19 @@
 # Author: Joep Rous
 # Version: 1.0
 
+renv_lib <- Sys.getenv("RENV_PATHS_ROOT")
+if (renv_lib == "") {
+  stop("❌ RENV_PATHS_ROOT is not set. Run this script from the provided zsh wrapper.")
+}
+r_ver    <- paste0("R-", R.version$major, ".",
+                   sub("\\..*", "", R.version$minor))
+platform <- R.version$platform
+lib_path <- file.path(renv_lib, "renv", "library", "macos", r_ver, platform)
+if (!dir.exists(lib_path)) {
+  stop(paste("❌ renv library not found at:", lib_path))
+}
+.libPaths(c(lib_path, .libPaths()))
+
 suppressPackageStartupMessages({
   library(stats)
   library(MASS)

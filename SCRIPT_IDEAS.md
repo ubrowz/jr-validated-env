@@ -23,8 +23,8 @@ adopted into a release are moved to the relevant section of CHANGELOG.md.
 | ✅ | `jrc_ss_discrete` | Minimum sample size for pass/fail (binomial) verification. Table for f=0..10 allowed failures. Zero-failure rule based on ASTM F3172. |
 | ✅ | `jrc_ss_attr` | Minimum sample size for continuous (attribute) verification using statistical tolerance intervals. Normal and Box-Cox. |
 | ✅ | `jrc_ss_attr_check` | Fast check: does a planned N meet the tolerance interval requirement? Single k-factor comparison, no search loop. Run before `jrc_ss_attr`. |
-| 🚧 | `jrc_ss_discrete_ci` | Inverse of `jrc_ss_discrete`: given a test result (n tested, f failures), what confidence level does this achieve for a given proportion? Exact binomial method. Useful for post-test analysis and test report documentation. |
-| 💡 | `jrc_ss_attr_ci` | Inverse of `jrc_ss_attr`: given a dataset and a planned N, what proportion and confidence level does the resulting tolerance interval actually achieve? Useful for post-test reporting when the test was run with a fixed N. |
+| ✅  | `jrc_ss_discrete_ci` | Inverse of `jrc_ss_discrete`: given a test result (n tested, f failures), what confidence level does this achieve for a given proportion? Exact binomial method. Useful for post-test analysis and test report documentation. |
+| ✅  | `jrc_ss_attr_ci` | Inverse of `jrc_ss_attr`: given a dataset and a planned N, what proportion and confidence level does the resulting tolerance interval actually achieve? Useful for post-test reporting when the test was run with a fixed N. |
 | 💡 | `jrc_ss_equivalence` | Sample size for equivalence testing (TOST). Given a maximum allowable difference (delta) and a measurement SD, returns the N needed to demonstrate equivalence at a given alpha and power. Common in 510(k) comparative testing. |
 | 💡 | `jrc_ss_gauge_rr` | Sample size for Gauge R&R / MSA studies. Returns the number of parts, operators, and replicates needed to achieve a target precision-to-tolerance ratio. Ensures the measurement system study is adequately powered before a verification study begins. |
 | 💡 | `jrc_ss_fatigue` | Sample size for fatigue and lifetime testing. Weibull-based: given a target B-life (e.g. B10) and confidence level, returns the minimum N and number of allowed failures. Relevant for implants and reusable devices. |
@@ -59,8 +59,8 @@ adopted into a release are moved to the relevant section of CHANGELOG.md.
 
 | Status | Script | Description |
 |---|---|---|
-| 💡 | `jrc_gen_normal` | Generate a synthetic normally distributed dataset with specified mean, SD, and N. Output folder passed as argument. Filename auto-generated from parameters (e.g. `normal_n30_mean0_sd1.csv`). Useful for OQ evidence and script testing. |
-| 💡 | `jrc_gen_lognormal` | Generate a synthetic log-normally distributed dataset. Same interface as `jrc_gen_normal`. |
+| ✅  | `jrc_gen_normal` | Generate a synthetic normally distributed dataset with specified mean, SD, and N. Output folder passed as argument. Filename auto-generated from parameters (e.g. `normal_n30_mean0_sd1.csv`). Useful for OQ evidence and script testing. |
+| ✅  | `jrc_gen_lognormal` | Generate a synthetic log-normally distributed dataset. Same interface as `jrc_gen_normal`. |
 | 💡 | `jrc_gen_uniform` | Generate a synthetic uniformly distributed dataset. Same interface as `jrc_gen_normal`. |
 
 ---
