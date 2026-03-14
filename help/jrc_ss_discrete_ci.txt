@@ -1,0 +1,16 @@
+
+Description: Computes the confidence level achieved by a discrete (pass/fail) design
+             verification test, using the exact binomial method based on the incomplete
+             beta function: confidence = 1 - pbeta(proportion, n - f, f + 1)
+
+Usage: jrc_ss_discrete_ci "proportion" "n" "f"
+
+Arguments:
+       proportion  is the minimum fraction of the population that must conform
+                   to the specification (e.g. 0.99)
+       n           total number of units tested (positive integer)
+       f           number of failures observed (non-negative integer, f <= n)
+       -h| --help  Show this help message
+
+Example:
+       jrc_ss_discrete_ci "0.95" "30" "0"

@@ -1,0 +1,25 @@
+
+Description: Checks whether a planned sample size meets the statistical tolerance interval
+             requirement for attribute (continuous measurement) design verification, based
+             on a pilot data set. Non-normal data are handled via Box-Cox transformation.
+
+             Use this script first to validate your planned N quickly. If it fails, run
+             jrc_ss_attr to find the true minimum sample size.
+
+
+Usage: jrc_ss_attr_check "proportion" "confidence" "file_path" "column_name" "spec1" "spec2" "planned_N"
+
+Arguments:
+	proportion  is the minimum fraction of the population that must be within
+ 	            the tolerance interval (e.g. 0.95)
+	confidence  is the confidence level for that claim (e.g. 0.95)
+	file_path   should point to a csv file with column names as the first row
+	column_name should be one of the column names in the csv file
+                    (NOT the name of the first column, which is used for row names)
+	spec1       lower spec limit, or "-" if not applicable
+	spec2       upper spec limit, or "-" if not applicable
+	planned_N   the sample size you plan to use for verification (positive integer)
+        -h| --help  Show this help message
+
+Example:
+       jrc_ss_attr_check "0.95" "0.95" "/home/mydatafiles/file1.csv" "col1" "0.03" "-" "30"

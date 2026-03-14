@@ -1,0 +1,22 @@
+
+Description: Determines the minimal sample size needed to calculate the 1-sided or 2-sided
+             tolerance interval. Checks whether the data are normally distributed. If not,
+             a Box-Cox transformation is attempted. If the data are not normally distributed
+             and cannot be transformed, this script should be used with care. 
+
+
+Usage: jrc_ss_attr "proportion" "confidence" "file_path" "column_name" "spec1" "spec2"
+
+Arguments:
+	proportion  is the minimum fraction of the population that must be within
+ 	            the tolerance interval (e.g. 0.95)
+	confidence  is the confidence level for that claim (e.g. 0.95)
+	file_path   should point to a csv file with column names as the first row
+	column_name should be one of the column names in the csv file
+                    (NOT the name of the first column, which is used for row names)
+	spec1       lower spec limit, or "-" if not applicable
+	spec2       upper spec limit, or "-" if not applicable
+        -h| --help  Show this help message
+
+Example:
+       jrc_ss_attr "0.95" "0.95" "/home/mydatafiles/file1.csv" "col1" "0.03" "-"

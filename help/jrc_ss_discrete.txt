@@ -1,0 +1,16 @@
+
+Description: Computes the minimum sample size required for discrete (pass/fail) design
+             verification, assuming a binomial process model. Results are shown for
+             0 to 10 allowed failures so the engineer can evaluate the full trade-off
+             between sample size and acceptance criterion.
+
+Usage: jrc_ss_discrete "proportion" "confidence"
+
+Arguments:
+       proportion  is the minimum fraction of the population that must conform
+                   to the specification (e.g. 0.99)
+       confidence  is the statistical confidence level for that claim (e.g. 0.95)
+       -h| --help  Show this help message
+
+Example:
+       jrc_ss_discrete "0.95" "0.95"

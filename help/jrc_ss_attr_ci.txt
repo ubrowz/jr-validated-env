@@ -1,0 +1,20 @@
+
+Description: Given a fixed confidence level and a verification dataset, determines the
+             maximum proportion of the population that the data can demonstrate conforms
+             to the specification. The tolerance interval bounds are reported in original
+             units so the result can be compared directly to the spec limits.
+
+
+Usage: jrc_ss_attr_ci "confidence" "file_path" "column_name" "spec1" "spec2"
+
+Arguments:
+	confidence  is the confidence level for that claim (e.g. 0.95)
+	file_path   should point to a csv file with column names as the first row
+	column_name should be one of the column names in the csv file
+                    (NOT the name of the first column, which is used for row names)
+	spec1       lower spec limit, or "-" if not applicable
+	spec2       upper spec limit, or "-" if not applicable
+        -h| --help  Show this help message
+
+Example:
+       jrc_ss_attr_ci "0.95" "/home/mydatafiles/file1.csv" "col1" "0.03" "-"
