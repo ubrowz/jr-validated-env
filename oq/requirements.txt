@@ -1,0 +1,4 @@
+# OQ test suite requirements — frozen, separate from the user venv.
+# Install with: pip install --no-index --find-links <repo> -r oq/requirements.txt
+# or (if internet is available during setup): pip install -r oq/requirements.txt
+pytest==8.3.4

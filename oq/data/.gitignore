@@ -1,0 +1,6 @@
+# Exclude test output artefacts generated during OQ runs.
+# Only the committed input data files below should be tracked.
+*.png
+convert_multicolumn_col*.csv
+convert_singlecolumn_*.csv
+normal_n*.csv

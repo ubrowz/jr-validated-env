@@ -238,17 +238,17 @@ df_plot <- data.frame(means = means, diffs = diffs)
 p <- ggplot(df_plot, aes(x = means, y = diffs)) +
 
   # CI bands on LoA (drawn first, behind everything)
-  geom_ribbon(aes(ymin = loa_upper_lo, ymax = loa_upper_hi),
-              xmin = -Inf, xmax = Inf,
-              fill = "#AEC6E8", alpha = 0.35, inherit.aes = FALSE) +
-  geom_ribbon(aes(ymin = loa_lower_lo, ymax = loa_lower_hi),
-              xmin = -Inf, xmax = Inf,
-              fill = "#AEC6E8", alpha = 0.35, inherit.aes = FALSE) +
+  annotate("rect", xmin = -Inf, xmax = Inf,
+           ymin = loa_upper_lo, ymax = loa_upper_hi,
+           fill = "#AEC6E8", alpha = 0.35) +
+  annotate("rect", xmin = -Inf, xmax = Inf,
+           ymin = loa_lower_lo, ymax = loa_lower_hi,
+           fill = "#AEC6E8", alpha = 0.35) +
 
   # CI band on bias
-  geom_ribbon(aes(ymin = bias_ci_lo, ymax = bias_ci_hi),
-              xmin = -Inf, xmax = Inf,
-              fill = "#AEC6E8", alpha = 0.50, inherit.aes = FALSE) +
+  annotate("rect", xmin = -Inf, xmax = Inf,
+           ymin = bias_ci_lo, ymax = bias_ci_hi,
+           fill = "#AEC6E8", alpha = 0.50) +
 
   # Zero reference line
   geom_hline(yintercept = 0,       colour = "grey50",  linetype = "dashed",

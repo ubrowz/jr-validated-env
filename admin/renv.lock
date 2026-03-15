@@ -20,6 +20,18 @@
       "Version": "4.0.2",
       "Source": "Repository",
       "Repository": "LOCAL"
+    },
+    "outliers": {
+      "Package": "outliers",
+      "Version": "0.15",
+      "Source": "Repository",
+      "Repository": "LOCAL"
+    },
+    "nortest": {
+      "Package": "nortest",
+      "Version": "1.0-4",
+      "Source": "Repository",
+      "Repository": "LOCAL"
     }
   }
 }

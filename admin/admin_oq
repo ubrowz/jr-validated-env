@@ -1,0 +1,161 @@
+#!/bin/zsh
+#
+# admin_oq — Run the OQ test suite and produce a timestamped evidence file.
+#
+# Usage: admin_oq [pytest_options...]
+#
+# Sets up the OQ venv at ~/.venvs/<PROJECT_ID>_oq/ (separate from the user
+# venv) if it does not exist or if oq/requirements.txt has changed, then
+# runs pytest against oq/test_*.py.
+#
+# Evidence output:
+#   ~/.jrscript/<PROJECT_ID>/validation/oq_execution_<timestamp>.txt
+#
+# Author: Joep Rous
+# Version: 1.0
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolve paths — same pattern as other admin scripts
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+ADMIN_HOME="$PROJECT_ROOT/admin"
+OQ_DIR="$PROJECT_ROOT/oq"
+
+# ---------------------------------------------------------------------------
+# Project identity
+# ---------------------------------------------------------------------------
+
+PROJECT_ID_FILE="$ADMIN_HOME/project_id.txt"
+if [[ ! -f "$PROJECT_ID_FILE" ]]; then
+  echo "❌ project_id.txt not found. Contact your administrator."
+  exit 1
+fi
+PROJECT_ID="$(tr -d '[:space:]' < "$PROJECT_ID_FILE")"
+
+OQ_VENV="$HOME/.venvs/${PROJECT_ID}_oq"
+OQ_REQ="$OQ_DIR/requirements.txt"
+
+# ---------------------------------------------------------------------------
+# Set up OQ venv if requirements changed
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "$OQ_REQ" ]]; then
+  echo "❌ oq/requirements.txt not found at: $OQ_REQ"
+  exit 1
+fi
+
+REQ_HASH="$(shasum "$OQ_REQ" | cut -d' ' -f1)"
+HASH_FILE="$OQ_VENV/.oq_req_hash"
+NEED_REBUILD=false
+
+if [[ ! -d "$OQ_VENV" ]]; then
+  NEED_REBUILD=true
+elif [[ ! -f "$HASH_FILE" ]]; then
+  NEED_REBUILD=true
+elif [[ "$(cat "$HASH_FILE")" != "$REQ_HASH" ]]; then
+  NEED_REBUILD=true
+fi
+
+if $NEED_REBUILD; then
+  echo "🔄 Setting up OQ venv at: $OQ_VENV"
+  rm -rf "$OQ_VENV"
+  python3 -m venv "$OQ_VENV"
+  "$OQ_VENV/bin/pip" install --quiet -r "$OQ_REQ"
+  echo "$REQ_HASH" > "$HASH_FILE"
+  echo "✅ OQ venv ready"
+fi
+
+# ---------------------------------------------------------------------------
+# Prepare evidence output location
+# ---------------------------------------------------------------------------
+
+TIMESTAMP="$(date '+%Y%m%dT%H%M%S')"
+EVIDENCE_DIR="$HOME/.jrscript/$PROJECT_ID/validation"
+mkdir -p "$EVIDENCE_DIR"
+EVIDENCE_FILE="$EVIDENCE_DIR/oq_execution_${TIMESTAMP}.txt"
+
+# ---------------------------------------------------------------------------
+# Collect environment info for evidence header
+# ---------------------------------------------------------------------------
+
+R_VERSION="$(Rscript --vanilla -e 'cat(R.version$major, R.version$minor, sep=".")' 2>/dev/null || echo 'unknown')"
+PY_VERSION="$("$OQ_VENV/bin/python" --version 2>&1 | awk '{print $2}')"
+PYTEST_VERSION="$("$OQ_VENV/bin/pytest" --version 2>&1 | head -1)"
+HOSTNAME="$(hostname)"
+
+# ---------------------------------------------------------------------------
+# Write evidence header
+# ---------------------------------------------------------------------------
+
+{
+  echo "JR Validated Environment — OQ Execution Evidence"
+  echo "================================================="
+  echo "Document:        OQ Execution Report"
+  echo "Project ID:      $PROJECT_ID"
+  echo "Timestamp:       $(date '+%Y-%m-%dT%H:%M:%S')"
+  echo "Host:            $HOSTNAME"
+  echo "R version:       $R_VERSION"
+  echo "Python version:  $PY_VERSION"
+  echo "pytest version:  $PYTEST_VERSION"
+  echo "Test directory:  $OQ_DIR"
+  echo "Evidence file:   $EVIDENCE_FILE"
+  echo ""
+  echo "Validation Plan: JR-VP-002 v1.0 (docs/oq_validation_plan.docx)"
+  echo ""
+  echo "-----------------------------------------------------------------"
+  echo "pytest output:"
+  echo "-----------------------------------------------------------------"
+  echo ""
+} > "$EVIDENCE_FILE"
+
+# ---------------------------------------------------------------------------
+# Run pytest, tee to screen and evidence file
+# ---------------------------------------------------------------------------
+
+echo " "
+echo "✅ Running OQ test suite..."
+echo "   Evidence file: $EVIDENCE_FILE"
+echo " "
+
+PYTEST_ARGS=("$@")
+if [[ ${#PYTEST_ARGS[@]} -eq 0 ]]; then
+  PYTEST_ARGS=("-v" "--tb=short")
+fi
+
+cd "$OQ_DIR"
+
+# Run pytest; capture exit code without triggering set -e
+"$OQ_VENV/bin/pytest" "${PYTEST_ARGS[@]}" | tee -a "$EVIDENCE_FILE"
+PYTEST_EXIT="${PIPESTATUS[0]}"
+
+# ---------------------------------------------------------------------------
+# Write evidence footer
+# ---------------------------------------------------------------------------
+
+{
+  echo ""
+  echo "-----------------------------------------------------------------"
+  if [[ "$PYTEST_EXIT" -eq 0 ]]; then
+    echo "OQ RESULT: PASS — all tests passed."
+  else
+    echo "OQ RESULT: FAIL — one or more tests failed. See above for details."
+  fi
+  echo "Completed: $(date '+%Y-%m-%dT%H:%M:%S')"
+  echo "-----------------------------------------------------------------"
+} >> "$EVIDENCE_FILE"
+
+echo " "
+if [[ "$PYTEST_EXIT" -eq 0 ]]; then
+  echo "✅ OQ suite PASSED. Evidence written to:"
+else
+  echo "❌ OQ suite FAILED. Evidence written to:"
+fi
+echo "   $EVIDENCE_FILE"
+echo " "
+
+exit "$PYTEST_EXIT"
