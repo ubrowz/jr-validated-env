@@ -41,6 +41,9 @@ admin/Python/validate_Python_env.py
 # Plain-text OQ validation report — superseded by OQ_validation_report.docx
 docs/OQ_validation_report_20260315.txt
 
+# Local archive folder — not for version control
+docs/ignore/
+
 # -----------------------------------------------------------------------------
 # Python auto-generated files
 # -----------------------------------------------------------------------------
