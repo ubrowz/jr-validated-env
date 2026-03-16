@@ -32,6 +32,13 @@ export LOCAL_REPO="$PROJECT_ROOT/R_repo/my-cran-repo"
 export BUILD_REPO="false"
 export ADD_PACKAGE=""
 
+# --- Detect macOS architecture for binary package paths
+if [[ "$(uname -m)" == "arm64" ]]; then
+  export R_MACOS_PLATFORM="big-sur-arm64"
+else
+  export R_MACOS_PLATFORM="big-sur"
+fi
+
 # --- Clear R library overrides
 unset R_LIBS
 unset R_LIBS_USER

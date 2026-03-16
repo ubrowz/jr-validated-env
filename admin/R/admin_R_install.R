@@ -35,11 +35,22 @@ if (LOCAL_REPO == "") {
   ))
 }
 
-RENV_HOME   <- Sys.getenv("RENV_PATHS_ROOT")
-BUILD_REPO  <- Sys.getenv("BUILD_REPO",  unset = "false") == "true"
-ADD_PACKAGE <- Sys.getenv("ADD_PACKAGE", unset = "")
+RENV_HOME      <- Sys.getenv("RENV_PATHS_ROOT")
+BUILD_REPO     <- Sys.getenv("BUILD_REPO",      unset = "false") == "true"
+ADD_PACKAGE    <- Sys.getenv("ADD_PACKAGE",     unset = "")
+MACOS_PLATFORM <- Sys.getenv("R_MACOS_PLATFORM", unset = "")
+if (MACOS_PLATFORM == "") {
+  stop(paste(
+    "❌ R_MACOS_PLATFORM is not set.",
+    "   Call this R script only via zsh wrapper admin_install_R",
+    "   to ensure correct environment variable setting.",
+    sep = "\n"
+  ))
+}
 CRAN_MIRROR <- "https://cloud.r-project.org"
-BINARY_TYPE <- "mac.binary.big-sur-arm64"
+BINARY_TYPE <- paste0("mac.binary.", MACOS_PLATFORM)
+r_minor     <- paste(R.version$major,
+                     sub("\\..*", "", R.version$minor), sep = ".")
 
 # ---------------------------------------------------------------------------
 # Determine mode
@@ -219,7 +230,7 @@ if (MODE == "ADD") {
 
   # Rebuild PACKAGES index
   tools::write_PACKAGES(
-    file.path(LOCAL_REPO, "bin/macosx/big-sur-arm64/contrib/4.5"),
+    file.path(LOCAL_REPO, "bin/macosx", MACOS_PLATFORM, "contrib", r_minor),
     type = "mac.binary"
   )
   cat("📋 PACKAGES index rebuilt.\n\n")
@@ -312,11 +323,11 @@ if (MODE == "BUILD") {
   renv_version <- as.character(packageVersion("renv"))
   renv_binary  <- sprintf("renv_%s.tgz", renv_version)
   renv_url     <- sprintf(
-    "https://cran.r-project.org/bin/macosx/big-sur-arm64/contrib/4.5/%s",
-    renv_binary
+    "https://cran.r-project.org/bin/macosx/%s/contrib/%s/%s",
+    MACOS_PLATFORM, r_minor, renv_binary
   )
   renv_dest <- file.path(LOCAL_REPO,
-                         "bin/macosx/big-sur-arm64/contrib/4.5",
+                         "bin/macosx", MACOS_PLATFORM, "contrib", r_minor,
                          renv_binary)
 
   if (!file.exists(renv_dest)) {
@@ -332,7 +343,7 @@ if (MODE == "BUILD") {
 
   # Rebuild PACKAGES index
   tools::write_PACKAGES(
-    file.path(LOCAL_REPO, "bin/macosx/big-sur-arm64/contrib/4.5"),
+    file.path(LOCAL_REPO, "bin/macosx", MACOS_PLATFORM, "contrib", r_minor),
     type = "mac.binary"
   )
   cat("📋 PACKAGES index updated.\n\n")
