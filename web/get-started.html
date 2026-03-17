@@ -41,7 +41,7 @@
       <li>R — version specified in <code>admin/r_version.txt</code></li>
       <li>Python — version specified in <code>admin/python_version.txt</code></li>
       <li>Dropbox — for sharing the local package repository across the team</li>
-      <li>Xcode Command Line Tools — run <code>xcode-select --install</code> in Terminal if not already installed</li>
+      <li id="req-xcode" class="hidden">Xcode Command Line Tools — run <code>xcode-select --install</code> in Terminal if not already installed</li>
     </ul>
     <p class="req-note">Package versions are pinned in requirements files. The environment installs from a local Dropbox repository — no internet access required once the admin has built the repo.</p>
   </div>
@@ -241,15 +241,20 @@ cd jr-validated-env</div>
 </footer>
 
 <script>
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    ["users", "admins", "adapt"].forEach(id => {
-      document.getElementById("tab-" + id).classList.add("hidden");
-    });
-    document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
+const xcodeReq = document.getElementById("req-xcode");
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
+  ["users", "admins", "adapt"].forEach(id => {
+    document.getElementById("tab-" + id).classList.add("hidden");
   });
+  document.getElementById("tab-" + tab).classList.remove("hidden");
+  xcodeReq.classList.toggle("hidden", tab === "users");
+}
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
 });
 
 function copyCmd(text, btn) {
