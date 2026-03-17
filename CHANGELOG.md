@@ -10,6 +10,17 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [1.5.0] — 2026-03-17
+
+### Added
+- `web/faq.html` — new FAQ page with 18 Q&As across three sections: using the scripts, setup and administration, and validation and compliance. Covers data format, first-run build time, RStudio restriction, cross-machine consistency, offline use, adding packages, integrity check behaviour, `admin_validate` vs `admin_oq`, Dropbox alternatives (SMB + Git, Syncthing, Resilio Sync, Nextcloud, iCloud Drive), revalidation triggers, and audit evidence.
+
+### Changed
+- `web/style.css`: added FAQ accordion styles using native `<details>`/`<summary>` — no JavaScript required.
+- `web/index.html`, `web/get-started.html`, `web/script_guide.html`: FAQ link added to site nav; footer version updated to v1.5.0.
+
+---
+
 ## [1.4.0] — 2026-03-17
 
 ### Added
