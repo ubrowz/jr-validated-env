@@ -14,6 +14,7 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Added
 - `web/faq.html` — new FAQ page with 18 Q&As across three sections: using the scripts, setup and administration, and validation and compliance. Covers data format, first-run build time, RStudio restriction, cross-machine consistency, offline use, adding packages, integrity check behaviour, `admin_validate` vs `admin_oq`, Dropbox alternatives (SMB + Git, Syncthing, Resilio Sync, Nextcloud, iCloud Drive), revalidation triggers, and audit evidence.
+- `web/favicon.svg` — browser tab icon (navy rounded square, blue "JR" text, white background). Added to all four pages.
 
 ### Changed
 - `web/style.css`: added FAQ accordion styles using native `<details>`/`<summary>` — no JavaScript required.
