@@ -44,6 +44,7 @@ if (!dir.exists(lib_path)) {
 
 suppressPackageStartupMessages({
   library(ggplot2)
+  library(base64enc)
 })
 
 # ---------------------------------------------------------------------------
@@ -69,14 +70,14 @@ fmt_num <- function(x, digits = 4) {
   formatC(x, format = "f", digits = digits)
 }
 
-embed_svg <- function(gg, width = 7, height = 4.5) {
-  tmp <- tempfile(fileext = ".svg")
-  svg(tmp, width = width, height = height)
+embed_png <- function(gg, width = 7, height = 4.5) {
+  tmp <- tempfile(fileext = ".png")
+  png(tmp, width = width * 96, height = height * 96, res = 96)
   print(gg)
   dev.off()
-  lines <- readLines(tmp)
-  lines <- lines[!grepl("^<\\?xml|^<!DOCTYPE", lines)]
-  paste(lines, collapse = "\n")
+  b64 <- base64enc::base64encode(tmp)
+  paste0('<img src="data:image/png;base64,', b64,
+         '" style="max-width:100%;height:auto;display:block">')
 }
 
 # ---------------------------------------------------------------------------
@@ -408,7 +409,7 @@ p_pareto <- ggplot(pareto_df, aes(x = effect, y = term, fill = significant)) +
   geom_col(width = 0.6) +
   scale_fill_manual(values = c("TRUE" = "#2E5BBA", "FALSE" = "#A0B0D0"), guide = "none") +
   geom_vline(xintercept = 2.0, linetype = "dashed", colour = "red", linewidth = 0.8) +
-  annotate("text", x = 2.0, y = Inf, label = "\u03b1 = 0.05",
+  annotate("text", x = 2.0, y = Inf, label = "alpha = 0.05",
            colour = "red", hjust = -0.1, vjust = 1.4, size = 3.2) +
   labs(
     title = "Pareto Chart of Standardised Effects",
@@ -417,7 +418,7 @@ p_pareto <- ggplot(pareto_df, aes(x = effect, y = term, fill = significant)) +
   ) +
   jr_theme
 
-svg_pareto <- embed_svg(p_pareto, width = 7, height = max(3.5, 0.45 * nrow(pareto_df) + 1.5))
+svg_pareto <- embed_png(p_pareto, width = 7, height = max(3.5, 0.45 * nrow(pareto_df) + 1.5))
 
 # --- Plot 2: Main effects plot ---
 
@@ -451,7 +452,7 @@ p_me <- ggplot(me_df, aes(x = actual_label, y = mean_response, group = 1)) +
   ) +
   jr_theme
 
-svg_me <- embed_svg(p_me, width = max(7, 3.2 * min(k, 4)), height = 4.5)
+svg_me <- embed_png(p_me, width = max(7, 3.2 * min(k, 4)), height = 4.5)
 
 # --- Plot 3: Two-factor interaction plot ---
 
@@ -517,7 +518,7 @@ if (design_type %in% c("full2", "fractional") && k >= 2) {
     n_pairs    <- length(factor_pairs)
     plot_ncols <- min(n_pairs, 3)
     plot_nrows <- ceiling(n_pairs / plot_ncols)
-    svg_int    <- embed_svg(p_int, width = 7, height = 3 + 3 * plot_nrows)
+    svg_int    <- embed_png(p_int, width = 7, height = 3 + 3 * plot_nrows)
 
     interaction_html <- paste0(
       '<div class="card">',
