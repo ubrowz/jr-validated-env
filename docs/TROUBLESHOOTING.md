@@ -275,7 +275,7 @@ Run this script from the provided zsh wrapper.
 **Cause**
 
 This is expected behaviour, not a bug. The JR environment requires scripts
-to be run through their zsh wrappers (e.g. `jrr`, `jrR_hello`) so that
+to be run through their zsh wrappers (e.g. `jrrun`, `jrc_R_hello`) so that
 `RENV_PATHS_ROOT` and other environment variables are set correctly before
 R starts.
 

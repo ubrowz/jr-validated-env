@@ -10,6 +10,24 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [1.4.0] — 2026-03-17
+
+### Added
+- `oq/test_core.py` — automated OQ/IQ test suite for core infrastructure (JR-VP-001). Covers TC-CORE-IQ-001, TC-CORE-OQ-001..005: admin_validate evidence, R and Python hello-world runs, integrity tamper detection, R and Python bypass protection. Brings total automated OQ tests to 142.
+- `admin/python_requirements.txt`: added `matplotlib==3.10.8`, `numpy==2.4.3`, and transitive dependencies (`contourpy`, `cycler`, `fonttools`, `kiwisolver`, `packaging`, `pillow`, `pyparsing`, `python-dateutil`, `six`). Previously the Python environment contained no third-party packages.
+
+### Changed
+- `R/jrc_R_hello.R` (renamed from `R/jrhello.R`), `Python/jrc_py_hello.py` (from `Python/jrhello.py`) — hello-world scripts aligned to `jrc_*` naming convention.
+- `wrapper/jrc_R_hello` (from `jr_static`), `wrapper/jrc_py_hello` (from `jr_animate`), `wrapper/jrc_helloworld` (from `jr_helloworld`) — wrapper names now match script names.
+- `help/jrc_R_hello.txt`, `help/jrc_py_hello.txt` — help files renamed and updated to match new wrapper names.
+- `web/`: expanded to a three-page static site (`index.html`, `get-started.html`, `script_guide.html`) with shared `style.css`.
+
+### Fixed
+- `docs/ignore/oq_validation_plan.md`: corrected script names from `jrhello.R/jrhello.py` to `jrc_R_hello.R/jrc_py_hello.py`; clarified that hello-world scripts are covered by the core IQ/OQ plan.
+- `docs/TROUBLESHOOTING.md`: corrected wrapper name from `jrR_hello` to `jrc_R_hello`.
+
+---
+
 ## [1.3.0] — 2026-03-17
 
 ### Added
