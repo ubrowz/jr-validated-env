@@ -8,3 +8,5 @@ e1071==1.7-17
 ggplot2==4.0.2
 outliers==0.15
 nortest==1.0-4
+FrF2==2.3-4
+DoE.base==1.2-5

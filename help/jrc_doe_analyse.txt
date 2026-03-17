@@ -1,0 +1,147 @@
+
+NAME
+	jrc_doe_analyse — Analyse a completed DoE run matrix and produce an HTML report
+
+USAGE
+	jrc_doe_analyse "results_file" "output_folder"
+
+DESCRIPTION
+	Reads a completed DoE companion CSV (produced by jrc_doe_design with the
+	response column filled in by the engineer), fits a linear model in coded
+	factor space, and writes a fully self-contained HTML analysis report.
+
+	The report contains:
+	  - An Analysis Summary (design type, runs, R², residual std error)
+	  - An ANOVA table with significance highlighting
+	  - A Pareto chart of standardised effects
+	  - A main effects plot
+	  - A two-factor interaction plot (full2 and fractional designs only)
+	  - A curvature test (when centre points are present)
+	  - A plain-English significant factors summary
+
+	All statistical modelling uses coded factor values (-1, 0, +1) so that
+	effect sizes are directly comparable across factors regardless of their
+	physical units or ranges.
+
+ARGUMENTS
+	results_file   Path to the completed companion CSV file from jrc_doe_design.
+	               The file must have the metadata comment as its first line
+	               and all factorial run responses filled in. See INPUT FILE
+	               FORMAT below.
+	output_folder  Path to the folder where the HTML report is saved.
+	               The folder must already exist.
+	-h | --help    Show this help message.
+
+INPUT FILE FORMAT
+	The companion CSV is produced automatically by jrc_doe_design alongside
+	the HTML design sheet. It has the following structure:
+
+	  Line 1 (comment):
+	    # jrc_doe_design: type=<type>, response=<response_name>
+
+	  Line 2 onwards (CSV data):
+	    run, std_order, is_centre, [factor1], [factor2], ..., [response]
+
+	  - run        : integer run number in the randomised order
+	  - std_order  : standard order within the base design (blank for centre points)
+	  - is_centre  : TRUE for centre-point runs, FALSE for factorial runs
+	  - factor cols: actual factor values (the physical settings used)
+	  - response   : EMPTY — the engineer fills these in after each run
+
+	Before running jrc_doe_analyse, open the CSV in a spreadsheet editor and
+	enter the measured response value for each run in the response column.
+	Centre-point responses may be left blank; they will be excluded from the
+	curvature test with a warning but will not cause an error.
+
+OUTPUT
+	A single self-contained HTML file is saved to output_folder:
+
+	  doe_analysis_<response_name>_<YYYYMMDD_HHMMSS>.html
+
+	The file has no external dependencies and can be opened in any browser,
+	emailed, or archived. It contains all plots as inline SVG.
+
+ANALYSIS DETAILS
+	Model fitting
+	  Factor columns are converted to coded values (-1, 0, +1) before fitting.
+	  The model formula depends on the design type recorded in the comment line:
+
+	    full2 / fractional : response ~ (F1 + F2 + ...)^2
+	                         (main effects + all 2-way interactions)
+	    full3              : response ~ F1 + F2 + ... + I(F1^2) + I(F2^2) + ...
+	                         (main effects + quadratic terms per factor)
+	    pb                 : response ~ F1 + F2 + ...
+	                         (main effects only — PB does not support interactions)
+
+	  lm() is used on factorial runs only. Centre-point data is used only for
+	  the curvature test.
+
+	ANOVA table
+	  Sequential (Type I) ANOVA via anova(lm(...)).
+	  Rows with p < 0.05 are highlighted in light blue.
+
+	Pareto chart
+	  Standardised effects are computed as coef / residual_std_error (intercept
+	  excluded). The reference line at |effect| = 2.0 approximates the t-critical
+	  value for α = 0.05 and is a conventional screening threshold.
+
+	Main effects plot
+	  Mean response at each factor level, computed from factorial runs. One
+	  panel per factor. X-axis shows actual (physical) values.
+
+	Interaction plot
+	  Available for full2 and fractional designs with k ≤ 6 factors. Each panel
+	  shows one pair of factors: lines connect mean response values at each level
+	  of factor 1, with separate lines for each level of factor 2. Non-parallel
+	  lines indicate an interaction.
+
+	Curvature test
+	  Only performed when centre-point responses are available. The curvature
+	  sum of squares is:
+
+	    SS_c = (n_f * n_c * (ybar_f - ybar_c)^2) / (n_f + n_c)
+
+	  where n_f = factorial runs, n_c = centre-point runs, ybar_f = factorial
+	  mean, ybar_c = centre-point mean. This is compared to the residual mean
+	  square from the factorial model as an F-test on 1 and df_residual degrees
+	  of freedom. A significant result (p < 0.05) suggests a non-linear response
+	  and recommends a higher-order design.
+
+EXAMPLES
+	1. Analyse a completed 3-factor full factorial with centre points:
+
+	   jrc_doe_analyse doe_design_full2_SealStrength_N_20260317_150000.csv ~/doe_output
+
+	   Produces: doe_analysis_SealStrength_N_20260317_150022.html
+
+	2. Analyse a Plackett-Burman screening design result:
+
+	   jrc_doe_analyse doe_design_pb_Torque_Nm_20260317_090000.csv ~/doe_output
+
+	   Produces: doe_analysis_Torque_Nm_20260317_090045.html
+	   Note: for pb designs only main effects are fitted; no interaction plot
+	   is generated.
+
+NOTES
+	Coded values: all modelling uses coded values (-1, 0, +1). This ensures
+	that effect estimates (regression coefficients) are directly comparable
+	across factors of different scales. Actual factor values are used only
+	for axis labels in the main effects and interaction plots.
+
+	Significance threshold: α = 0.05 is used throughout. The Pareto chart
+	reference line at |standardised effect| = 2.0 is a conventional approximation
+	to this threshold and is consistent with many DoE textbooks. The exact p-
+	values in the ANOVA table should be used for formal conclusions.
+
+	Plackett-Burman limitations: PB designs are main-effects-only screening
+	designs. Two-factor interactions are partially confounded with main effects.
+	The interaction plot is not generated for pb designs. Significant main effects
+	from a PB screen should be followed up with a full or fractional factorial.
+
+	Degrees of freedom: if the model cannot be fitted due to insufficient
+	degrees of freedom (e.g. a saturated design with no replication), the script
+	will stop with an informative message. Add centre points or replicates to
+	the original design to provide a pure-error estimate.
+
+	After analysing results, update CHANGELOG.md and run admin/admin_create_hash
+	if any script files were modified.
