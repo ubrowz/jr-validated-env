@@ -340,6 +340,10 @@ if (n_centre > 0) {
     df_resid <- resid_row[["Df"]]
     p_curv  <- pf(f_curv, df1 = 1, df2 = df_resid, lower.tail = FALSE)
 
+    message(paste0("   Curvature:    ",
+                   if (p_curv < 0.05) "significant" else "not significant",
+                   " (p = ", fmt_p(p_curv), ")"))
+
     if (p_curv < 0.05) {
       curv_verdict <- paste0(
         '<p style="color:#B22222;font-weight:600">\u26a0\ufe0f Curvature detected ',
