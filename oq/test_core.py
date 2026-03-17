@@ -113,7 +113,8 @@ class TestCoreOQ:
             assert "Validation" in out
         except subprocess.TimeoutExpired as exc:
             # Still running after 15 s — GUI window is open. Check partial output.
-            partial = (exc.stdout or "") + (exc.stderr or "")
+            # exc.stdout/stderr are bytes even when text=True is used.
+            partial = (exc.stdout or b"").decode() + (exc.stderr or b"").decode()
             assert "Validation" in partial, (
                 f"Script timed out without printing the expected message.\n"
                 f"Partial output:\n{partial}"
