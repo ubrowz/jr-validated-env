@@ -358,6 +358,98 @@
 
     /* ── Hidden ──────────────────────────────────────────────── */
     .hidden { display: none !important; }
+
+    /* ── DoE Planner intro ───────────────────────────────────── */
+    .doe-intro {
+      max-width: 700px;
+      margin: 24px auto 0;
+      padding: 20px 24px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .doe-intro h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1A1A2E;
+      margin-bottom: 10px;
+    }
+
+    .doe-intro p {
+      font-size: 0.95rem;
+      color: #3A3A5A;
+      margin-bottom: 12px;
+    }
+
+    .doe-intro-sub {
+      font-size: 0.88rem !important;
+      color: #7080A0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    .doe-script-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .doe-script-pill {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      background: #F0F2F7;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+    }
+
+    .doe-pill-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #2E5BBA;
+      background: #E0E8FF;
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .doe-script-pill code {
+      font-family: "SF Mono", "Fira Code", "Menlo", monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #1A1A2E;
+    }
+
+    .doe-hint {
+      max-width: 700px;
+      margin: 0 auto 12px;
+      padding: 8px 16px;
+      background: #E8F0FF;
+      border-left: 3px solid #2E5BBA;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.88rem;
+      color: #1A3A8A;
+      font-weight: 600;
+    }
+
+    .doe-back-btn {
+      display: block;
+      margin: 16px auto 0;
+      background: transparent;
+      border: 1px solid #C0C8E0;
+      color: #5060A0;
+      border-radius: 6px;
+      padding: 7px 18px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .doe-back-btn:hover { background: #F0F2F7; color: #1A1A2E; }
   </style>
 </head>
 <body>
@@ -373,6 +465,7 @@
   <div class="tab-nav-wrap">
     <div class="tab-nav">
       <button class="tab-btn active" data-tab="find">Find a script</button>
+      <button class="tab-btn" data-tab="doe">DoE Planner</button>
       <button class="tab-btn" data-tab="all">All scripts</button>
     </div>
   </div>
@@ -385,6 +478,20 @@
   <div id="tab-find">
     <div id="question-area"></div>
     <div id="result-area" class="hidden"></div>
+  </div>
+
+  <div id="tab-doe" class="hidden">
+    <div class="doe-intro">
+      <h2>Design of Experiments</h2>
+      <p><strong>DoE</strong> lets you vary multiple process factors simultaneously to find which ones drive your response — with far fewer runs than one-factor-at-a-time testing. Two scripts work together:</p>
+      <div class="doe-script-row">
+        <div class="doe-script-pill"><span class="doe-pill-label">Step 1</span><code>jrc_doe_design</code> — generates the randomised run matrix as a printable lab sheet + companion CSV</div>
+        <div class="doe-script-pill"><span class="doe-pill-label">Step 2</span><code>jrc_doe_analyse</code> — reads the completed CSV and produces ANOVA, effect plots, and a significance summary</div>
+      </div>
+      <p class="doe-intro-sub">Use the planner below to choose the right design type, then follow the --help output for each script.</p>
+    </div>
+    <div id="doe-question-area"></div>
+    <div id="doe-result-area" class="hidden"></div>
   </div>
 
   <div id="tab-all" class="hidden">
@@ -666,6 +773,27 @@ const SCRIPTS = [
     syntax: 'jrc_convert_txt "file_path" ["start_line"] ["end_line"]',
     example: 'jrc_convert_txt "~/data/measurements.txt"',
     tags: ["convert", "text", "single column", "data prep", "format"]
+  },
+
+  /* ── Design of Experiments ───────────────────────────────────────────────── */
+  {
+    id: "jrc_doe_design",
+    name: "jrc_doe_design",
+    description: "Generates a DoE run matrix as a printable HTML lab sheet and a companion CSV with an empty response column ready for data entry. Supports full factorial (2- and 3-level), fractional factorial, and Plackett-Burman designs.",
+    when_to_use: "Use at the start of a DoE study to create the randomised run order and factor settings sheet that engineers take to the lab.",
+    syntax: 'jrrun jrc_doe_design.R <type> <factors_file> <response_name> <output_folder>\n                              [centre_points] [replicates]',
+    example: 'jrrun jrc_doe_design.R full2 factors.csv SealStrength_N ~/doe/results',
+    tags: ["doe", "design of experiments", "factorial", "fractional", "plackett-burman", "screening", "full factorial", "run matrix"]
+  },
+
+  {
+    id: "jrc_doe_analyse",
+    name: "jrc_doe_analyse",
+    description: "Reads a completed DoE companion CSV, fits a linear model in coded factor space, and produces a self-contained HTML report with an ANOVA table, Pareto chart of standardised effects, main effects and interaction plots, optional curvature test, and a plain-English significance summary.",
+    when_to_use: "Use after completing your DoE runs and entering the response values into the companion CSV produced by jrc_doe_design.",
+    syntax: 'jrrun jrc_doe_analyse.R <results_file> <output_folder>',
+    example: 'jrrun jrc_doe_analyse.R ~/doe/results/doe_results.csv ~/doe/analysis',
+    tags: ["doe", "design of experiments", "anova", "regression", "effects", "analysis", "pareto", "interaction", "curvature"]
   }
 
 ];
@@ -706,6 +834,10 @@ const CATEGORIES = [
   {
     label: "Prepare Data",
     ids: ["jrc_convert_csv", "jrc_convert_txt"]
+  },
+  {
+    label: "Design of Experiments",
+    ids: ["jrc_doe_design", "jrc_doe_analyse"]
   }
 ];
 
@@ -811,6 +943,40 @@ const TREE = {
       { label: "Multi-column delimited file (CSV, TSV, space-separated, semicolons)", scripts: ["jrc_convert_csv"] },
       { label: "Single-column plain text file (one number per line)",                 scripts: ["jrc_convert_txt"] }
     ]
+  },
+
+  /* ── DoE Planner ─────────────────────────────────────────────────────── */
+  doe_root: {
+    question: "What stage of your DoE study are you at?",
+    choices: [
+      { label: "Planning — I need to generate my run matrix",                        next: "doe_goal" },
+      { label: "Analysis — I have completed my runs and want to analyse the results", scripts: ["jrc_doe_analyse"] }
+    ]
+  },
+
+  doe_goal: {
+    question: "What is the goal of your experiment?",
+    choices: [
+      { label: "Screen many factors to identify which ones matter most",  next: "doe_screen" },
+      { label: "Characterise effects and interactions in detail",          next: "doe_char" }
+    ]
+  },
+
+  doe_screen: {
+    question: "How many factors do you want to screen?",
+    choices: [
+      { label: "4–7 factors — fractional factorial (resolution III, cleaner alias structure)", scripts: ["jrc_doe_design"], hint: "type=fractional" },
+      { label: "6–12 factors — Plackett-Burman (maximum factor coverage per run)",            scripts: ["jrc_doe_design"], hint: "type=pb" }
+    ]
+  },
+
+  doe_char: {
+    question: "Do you expect the response to be non-linear across factor levels?",
+    choices: [
+      { label: "No — 2-level full factorial (main effects + all interactions)",         scripts: ["jrc_doe_design"], hint: "type=full2" },
+      { label: "Not sure — add centre points to detect curvature without extra levels", scripts: ["jrc_doe_design"], hint: "type=full2 with centre_points > 0" },
+      { label: "Yes — 3-level full factorial (fits quadratic terms per factor)",        scripts: ["jrc_doe_design"], hint: "type=full3" }
+    ]
   }
 
 };
@@ -834,10 +1000,13 @@ const breadcrumbEl    = document.getElementById("breadcrumb-list");
 const breadcrumbWrap  = document.getElementById("breadcrumb");
 const btnRestart      = document.getElementById("btn-restart");
 const tabFind         = document.getElementById("tab-find");
+const tabDoe          = document.getElementById("tab-doe");
 const tabAll          = document.getElementById("tab-all");
 const searchInput     = document.getElementById("search-input");
 const allContent      = document.getElementById("all-scripts-content");
 const noResults       = document.getElementById("no-results");
+const doeQuestionArea = document.getElementById("doe-question-area");
+const doeResultArea   = document.getElementById("doe-result-area");
 
 // ── Tab switching ────────────────────────────────────────────────────────────
 
@@ -847,16 +1016,21 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
 
+    tabFind.classList.add("hidden");
+    tabDoe.classList.add("hidden");
+    tabAll.classList.add("hidden");
+    breadcrumbWrap.classList.add("hidden");
+    btnRestart.classList.add("hidden");
+
     if (activeTab === "find") {
       tabFind.classList.remove("hidden");
-      tabAll.classList.add("hidden");
       breadcrumbWrap.classList.remove("hidden");
       btnRestart.classList.remove("hidden");
+    } else if (activeTab === "doe") {
+      tabDoe.classList.remove("hidden");
+      if (!doeQuestionArea.hasChildNodes()) renderDoe("doe_root");
     } else {
-      tabFind.classList.add("hidden");
       tabAll.classList.remove("hidden");
-      breadcrumbWrap.classList.add("hidden");
-      btnRestart.classList.add("hidden");
       if (!allContent.hasChildNodes()) renderAllScripts();
       searchInput.focus();
     }
@@ -979,6 +1153,97 @@ function buildResultCard(s) {
   card.appendChild(note);
 
   return card;
+}
+
+// ── Render: DoE Planner tab ──────────────────────────────────────────────────
+
+let doeHistory = [];
+
+function renderDoe(nodeId) {
+  const node = TREE[nodeId];
+  if (!node) { console.error("Unknown DoE node:", nodeId); return; }
+
+  doeResultArea.classList.add("hidden");
+  doeResultArea.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "question-card";
+
+  const h2 = document.createElement("h2");
+  h2.textContent = node.question;
+  card.appendChild(h2);
+
+  const choices = document.createElement("div");
+  choices.className = "choices";
+
+  node.choices.forEach(choice => {
+    const btn = document.createElement("button");
+    btn.className = "choice-btn";
+    btn.textContent = choice.label;
+    btn.addEventListener("click", () => {
+      doeHistory.push({ nodeId, choiceLabel: choice.label });
+      if (choice.scripts) {
+        showDoeResults(choice.scripts, choice.hint);
+      } else if (choice.next) {
+        doeQuestionArea.innerHTML = "";
+        renderDoe(choice.next);
+      }
+    });
+    choices.appendChild(btn);
+  });
+
+  card.appendChild(choices);
+
+  if (doeHistory.length > 0) {
+    const backBtn = document.createElement("button");
+    backBtn.className = "doe-back-btn";
+    backBtn.textContent = "← Back";
+    backBtn.addEventListener("click", () => {
+      doeHistory.pop();
+      const prev = doeHistory.length > 0 ? doeHistory[doeHistory.length - 1].nodeId : "doe_root";
+      doeHistory.pop();
+      renderDoe(prev);
+    });
+    card.appendChild(backBtn);
+  }
+
+  doeQuestionArea.innerHTML = "";
+  doeQuestionArea.appendChild(card);
+}
+
+function showDoeResults(scriptIds, hint) {
+  doeQuestionArea.innerHTML = "";
+  doeResultArea.classList.remove("hidden");
+  doeResultArea.innerHTML = "";
+
+  const heading = document.createElement("div");
+  heading.className = "results-heading";
+  heading.textContent = scriptIds.length === 1 ? "Recommended script" : `Recommended scripts (${scriptIds.length})`;
+  doeResultArea.appendChild(heading);
+
+  if (hint) {
+    const hintEl = document.createElement("div");
+    hintEl.className = "doe-hint";
+    hintEl.textContent = "Design type: " + hint;
+    doeResultArea.appendChild(hintEl);
+  }
+
+  scriptIds.forEach(id => {
+    const s = SCRIPT_MAP[id];
+    if (!s) { console.warn("Script not found:", id); return; }
+    doeResultArea.appendChild(buildResultCard(s));
+  });
+
+  const backBtn = document.createElement("button");
+  backBtn.className = "doe-back-btn";
+  backBtn.textContent = "← Start over";
+  backBtn.addEventListener("click", () => {
+    doeHistory = [];
+    doeResultArea.classList.add("hidden");
+    doeResultArea.innerHTML = "";
+    renderDoe("doe_root");
+  });
+  doeResultArea.appendChild(backBtn);
 }
 
 // ── Render: All scripts tab ──────────────────────────────────────────────────
