@@ -1,3 +1,0 @@
-#!/bin/zsh
-"$(dirname "$0")/../bin/jrrun" jrhello.R "Hello R"
-"$(dirname "$0")/../bin/jrrun" jrhello.py "Hello Python"

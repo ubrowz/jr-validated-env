@@ -1,0 +1,14 @@
+
+Description: Runs a hello-world R script in the validated environment. Displays a text
+             message and saves a static plot as a PNG to the Downloads folder.
+             Used to verify that the R validated environment is working correctly.
+
+Usage: jrc_R_hello "text"
+
+Arguments:
+       text              string between quotes. Should contain no special characters
+       -h| --help        Show this help message
+
+Example:
+       jrc_R_hello "Hello World"
+
