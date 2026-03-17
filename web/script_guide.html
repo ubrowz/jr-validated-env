@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JR Script Guide</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      background: #F0F2F7;
+      color: #1A1A2E;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: #1A1A2E;
+      color: #fff;
+      padding: 20px 16px 0;
+    }
+
+    .header-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 12px;
+      justify-content: space-between;
+      padding-bottom: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-text p {
+      font-size: 0.9rem;
+      color: #A0A8C8;
+      margin-top: 2px;
+    }
+
+    #btn-restart {
+      background: transparent;
+      border: 1px solid #A0A8C8;
+      color: #A0A8C8;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+      min-height: 36px;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+
+    #btn-restart:hover {
+      background: #A0A8C8;
+      color: #1A1A2E;
+    }
+
+    /* ── Tab navigation ──────────────────────────────────────── */
+    .tab-nav-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: #7080B0;
+      font-size: 0.92rem;
+      font-family: inherit;
+      font-weight: 600;
+      padding: 10px 16px 9px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: #C8D6FF; }
+
+    .tab-btn.active {
+      color: #fff;
+      border-bottom-color: #2E5BBA;
+    }
+
+    /* ── Breadcrumb ──────────────────────────────────────────── */
+    #breadcrumb {
+      background: #1A1A2E;
+      border-top: 1px solid #2a2a4a;
+      padding: 0 16px 12px;
+    }
+
+    .breadcrumb-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      font-size: 0.82rem;
+      color: #7080B0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 4px;
+      align-items: center;
+      min-height: 20px;
+    }
+
+    .breadcrumb-inner span { color: #5060A0; }
+    .breadcrumb-inner .crumb { color: #A0A8C8; }
+
+    /* ── Main content ────────────────────────────────────────── */
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Question card ───────────────────────────────────────── */
+    .question-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px 20px 20px;
+      margin-bottom: 24px;
+    }
+
+    .question-card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1A1A2E;
+      margin-bottom: 16px;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .choice-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      min-height: 48px;
+      background: #fff;
+      border: 2px solid #1A1A2E;
+      border-radius: 6px;
+      color: #1A1A2E;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1.4;
+    }
+
+    .choice-btn:hover {
+      background: #1A1A2E;
+      color: #fff;
+    }
+
+    /* ── Result cards ────────────────────────────────────────── */
+    .results-heading {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #5060A0;
+      margin-bottom: 16px;
+    }
+
+    .result-card {
+      background: #F8F9FF;
+      border-radius: 8px;
+      border-left: 4px solid #2E5BBA;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 20px 20px 18px;
+      margin-bottom: 20px;
+    }
+
+    .result-card h3 {
+      font-family: "SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1A1A2E;
+      margin-bottom: 6px;
+    }
+
+    .result-description {
+      font-size: 0.95rem;
+      color: #3a3a5e;
+      margin-bottom: 8px;
+    }
+
+    .result-when {
+      font-size: 0.88rem;
+      color: #5060A0;
+      margin-bottom: 14px;
+      font-style: italic;
+    }
+
+    .result-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #2E5BBA;
+      margin-bottom: 4px;
+      margin-top: 12px;
+    }
+
+    .syntax-block {
+      background: #1A1A2E;
+      color: #C8D6FF;
+      font-family: "SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      padding: 10px 14px;
+      overflow-x: auto;
+      white-space: pre;
+      margin-bottom: 0;
+    }
+
+    .example-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .example-block {
+      background: #1A1A2E;
+      color: #7FDBCA;
+      font-family: "SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      padding: 10px 14px;
+      overflow-x: auto;
+      white-space: pre;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .copy-btn {
+      background: #2E5BBA;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0 14px;
+      min-height: 40px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-family: inherit;
+      transition: background 0.15s;
+      align-self: stretch;
+    }
+
+    .copy-btn:hover { background: #1A3A8A; }
+    .copy-btn.copied { background: #2E7A4A; }
+
+    .result-note {
+      font-size: 0.8rem;
+      color: #7080A0;
+      margin-top: 10px;
+    }
+
+    /* ── All scripts tab ─────────────────────────────────────── */
+    .search-wrap {
+      margin-bottom: 20px;
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 2px solid #C8D0E8;
+      border-radius: 8px;
+      background: #fff;
+      color: #1A1A2E;
+      outline: none;
+      transition: border-color 0.15s;
+      min-height: 48px;
+    }
+
+    #search-input:focus { border-color: #2E5BBA; }
+    #search-input::placeholder { color: #9098B8; }
+
+    .category-section { margin-bottom: 32px; }
+
+    .category-heading {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2E5BBA;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #D0D8F0;
+    }
+
+    .overview-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      padding: 16px 18px 14px;
+      margin-bottom: 10px;
+      border-left: 3px solid #2E5BBA;
+    }
+
+    .overview-card.hidden { display: none; }
+
+    .overview-name {
+      font-family: "SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1A1A2E;
+      margin-bottom: 4px;
+    }
+
+    .overview-desc {
+      font-size: 0.88rem;
+      color: #3a3a5e;
+      margin-bottom: 8px;
+    }
+
+    .overview-syntax {
+      background: #1A1A2E;
+      color: #C8D6FF;
+      font-family: "SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace;
+      font-size: 0.78rem;
+      border-radius: 5px;
+      padding: 7px 12px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .no-results {
+      text-align: center;
+      color: #7080A0;
+      font-size: 0.95rem;
+      padding: 40px 0;
+    }
+
+    /* ── Hidden ──────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>JR Script Guide</h1>
+      <p>Find the right script for your analysis</p>
+    </div>
+    <button id="btn-restart">Start over</button>
+  </div>
+  <div class="tab-nav-wrap">
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="find">Find a script</button>
+      <button class="tab-btn" data-tab="all">All scripts</button>
+    </div>
+  </div>
+</header>
+<div id="breadcrumb">
+  <div class="breadcrumb-inner" id="breadcrumb-list"></div>
+</div>
+
+<main>
+  <div id="tab-find">
+    <div id="question-area"></div>
+    <div id="result-area" class="hidden"></div>
+  </div>
+
+  <div id="tab-all" class="hidden">
+    <div class="search-wrap">
+      <input type="search" id="search-input" placeholder="Filter scripts by name, description, or keyword…" autocomplete="off">
+    </div>
+    <div id="all-scripts-content"></div>
+    <div id="no-results" class="no-results hidden">No scripts match your search.</div>
+  </div>
+</main>
+
+<script>
+/* ==========================================================================
+   SCRIPT DATA
+   --------------------------------------------------------------------------
+   To add a new script, copy one entry below and fill in all fields.
+     id          — unique identifier, must match the wrapper/script name
+     name        — displayed script name
+     description — one or two sentences describing what the script does
+     when_to_use — one sentence: when should a user reach for this script?
+     syntax      — full argument list as shown by --help
+     example     — a realistic ready-to-run example command
+     tags        — free-form strings used for search filtering
+   After adding the entry here, also add its id to the CATEGORIES array
+   and to the appropriate leaf node in the TREE below.
+   ========================================================================== */
+const SCRIPTS = [
+
+  /* ── Sample size: discrete (pass/fail) ─────────────────────────────────── */
+  {
+    id: "jrc_ss_discrete",
+    name: "jrc_ss_discrete",
+    description: "Computes the minimum sample size required for discrete (pass/fail) design verification using a binomial process model. Results are shown for 0–10 allowed failures so you can evaluate the full sample-size / acceptance-criterion trade-off.",
+    when_to_use: "Use when your verification test has pass/fail outcomes and you need to plan the minimum N before running the test.",
+    syntax: 'jrc_ss_discrete "proportion" "confidence"',
+    example: 'jrc_ss_discrete "0.95" "0.95"',
+    tags: ["sample size", "binomial", "pass fail", "attribute", "planning"]
+  },
+
+  {
+    id: "jrc_ss_discrete_ci",
+    name: "jrc_ss_discrete_ci",
+    description: "Computes the confidence level achieved by a completed discrete (pass/fail) verification test, using the exact binomial method based on the incomplete beta function.",
+    when_to_use: "Use after running a pass/fail test to calculate what confidence level was actually achieved given the observed number of failures.",
+    syntax: 'jrc_ss_discrete_ci "proportion" "n" "f"',
+    example: 'jrc_ss_discrete_ci "0.95" "30" "0"',
+    tags: ["confidence interval", "binomial", "pass fail", "attribute", "post-test"]
+  },
+
+  /* ── Sample size: attribute (continuous tolerance interval) ─────────────── */
+  {
+    id: "jrc_ss_attr",
+    name: "jrc_ss_attr",
+    description: "Determines the minimum sample size needed to calculate a 1-sided or 2-sided tolerance interval for continuous measurement data. Handles non-normal data via Box-Cox transformation.",
+    when_to_use: "Use when your device produces continuous measurements and you need to plan the minimum N to demonstrate a population proportion meets spec limits.",
+    syntax: 'jrc_ss_attr "proportion" "confidence" "file_path" "column_name" "spec1" "spec2"',
+    example: 'jrc_ss_attr "0.95" "0.95" "/home/mydatafiles/file1.csv" "col1" "0.03" "-"',
+    tags: ["sample size", "tolerance interval", "continuous", "attribute", "planning"]
+  },
+
+  {
+    id: "jrc_ss_attr_ci",
+    name: "jrc_ss_attr_ci",
+    description: "Given a fixed confidence level and a verification dataset, determines the maximum proportion of the population that the data can demonstrate conforms to the specification. Tolerance interval bounds are reported in original units.",
+    when_to_use: "Use after collecting data to find what population proportion you can actually demonstrate at your chosen confidence level.",
+    syntax: 'jrc_ss_attr_ci "confidence" "file_path" "column_name" "spec1" "spec2"',
+    example: 'jrc_ss_attr_ci "0.95" "/home/mydatafiles/file1.csv" "col1" "0.03" "-"',
+    tags: ["confidence interval", "tolerance interval", "continuous", "post-test"]
+  },
+
+  {
+    id: "jrc_ss_attr_check",
+    name: "jrc_ss_attr_check",
+    description: "Checks whether a planned sample size meets the statistical tolerance interval requirement for continuous measurement design verification, based on a pilot dataset. Non-normal data are handled via Box-Cox transformation.",
+    when_to_use: "Use to quickly validate your planned N against pilot data before committing to a full study. If it fails, run jrc_ss_attr to find the true minimum N.",
+    syntax: 'jrc_ss_attr_check "proportion" "confidence" "file_path" "column_name" "spec1" "spec2" "planned_N"',
+    example: 'jrc_ss_attr_check "0.95" "0.95" "/home/mydatafiles/file1.csv" "col1" "0.03" "-" "30"',
+    tags: ["sample size", "tolerance interval", "continuous", "planning", "check"]
+  },
+
+  /* ── Sample size: sigma pilot ───────────────────────────────────────────── */
+  {
+    id: "jrc_ss_sigma",
+    name: "jrc_ss_sigma",
+    description: "Determines the minimum number of pilot samples needed to estimate the process standard deviation sigma with sufficient precision, so that tolerance interval calculations in jrc_ss_attr and jrc_ss_attr_ci are trustworthy.",
+    when_to_use: "Use when you need a pilot study to estimate sigma before running jrc_ss_attr. Specify the process shift (in multiples of sigma) your pilot study must be able to detect.",
+    syntax: 'jrc_ss_sigma "precision" "spec1" "spec2"',
+    example: 'jrc_ss_sigma "1.0" "0.2" "0.5"',
+    tags: ["sample size", "sigma", "pilot", "planning", "continuous"]
+  },
+
+  /* ── Sample size: Gauge R&R ─────────────────────────────────────────────── */
+  {
+    id: "jrc_ss_gauge_rr",
+    name: "jrc_ss_gauge_rr",
+    description: "Provides Gauge R&R study design guidance based on AIAG MSA rules. Reports %GRR, number of distinct categories (ndc), an AIAG acceptance verdict, and a table of operator/replicate combinations with degrees of freedom.",
+    when_to_use: "Use when qualifying a continuous measurement system (MSA / Gauge R&R). Choose between expressing %GRR as a percentage of process variation or tolerance width.",
+    syntax: 'jrc_ss_gauge_rr "grr" "type" "sigma_or_tolerance"',
+    example: 'jrc_ss_gauge_rr "10" "process" "0.5"',
+    tags: ["measurement system", "gauge r&r", "MSA", "AIAG", "planning"]
+  },
+
+  /* ── Sample size: fatigue / reliability ─────────────────────────────────── */
+  {
+    id: "jrc_ss_fatigue",
+    name: "jrc_ss_fatigue",
+    description: "Computes the minimum number of units required for fatigue or lifetime demonstration testing using a Weibull reliability model. Results are shown for 0–5 allowed failures and include a sensitivity table for the Weibull shape parameter.",
+    when_to_use: "Use when planning a fatigue, durability, or reliability demonstration test where failure follows a Weibull distribution (typical for wear-out and metallic/polymer fatigue).",
+    syntax: 'jrc_ss_fatigue "reliability" "confidence" "shape" "af"',
+    example: 'jrc_ss_fatigue "0.90" "0.95" "2.0" "1.0"',
+    tags: ["sample size", "fatigue", "Weibull", "reliability", "planning"]
+  },
+
+  /* ── Sample size: equivalence & paired ─────────────────────────────────── */
+  {
+    id: "jrc_ss_equivalence",
+    name: "jrc_ss_equivalence",
+    description: "Determines the minimum number of paired observations needed to demonstrate equivalence between two conditions using the TOST (Two One-Sided Tests) procedure. Results span standard power and confidence combinations, with the FDA-recommended pair highlighted.",
+    when_to_use: "Use when you need to demonstrate that two measurement methods or conditions are equivalent (not merely that you failed to detect a difference). Requires a pre-specified equivalence margin.",
+    syntax: 'jrc_ss_equivalence "delta" "sd" "sides"',
+    example: 'jrc_ss_equivalence "0.5" "1.0" "2"',
+    tags: ["sample size", "equivalence", "TOST", "paired", "planning"]
+  },
+
+  {
+    id: "jrc_ss_paired",
+    name: "jrc_ss_paired",
+    description: "Determines the minimum number of paired observations needed to detect a specified difference between two conditions using a paired t-test. Results span standard power and confidence combinations, with the FDA-recommended pair highlighted.",
+    when_to_use: "Use when comparing two conditions on the same units/subjects and you want to detect a minimum meaningful difference (difference testing, not equivalence).",
+    syntax: 'jrc_ss_paired "delta" "sd" "sides"',
+    example: 'jrc_ss_paired "0.5" "1.0" "2"',
+    tags: ["sample size", "paired t-test", "difference", "planning"]
+  },
+
+  /* ── Analysis: Bland-Altman ─────────────────────────────────────────────── */
+  {
+    id: "jrc_bland_altman",
+    name: "jrc_bland_altman",
+    description: "Bland-Altman method comparison analysis. Computes bias, limits of agreement (LoA), and proportional bias between two paired measurement methods. Saves a Bland-Altman plot as PNG.",
+    when_to_use: "Use when comparing two measurement methods or devices on the same subjects to assess agreement — for example, comparing a new device against a reference standard.",
+    syntax: 'jrc_bland_altman "file1" "col1" "file2" "col2"',
+    example: 'jrc_bland_altman "~/data/device_a.csv" "ForceN" "~/data/device_b.csv" "ForceN"',
+    tags: ["bland altman", "method comparison", "agreement", "bias", "LoA"]
+  },
+
+  /* ── Analysis: descriptive statistics ──────────────────────────────────── */
+  {
+    id: "jrc_descriptive",
+    name: "jrc_descriptive",
+    description: "Descriptive statistics summary for a single column. Reports central tendency, spread, range, percentiles, distribution shape (skewness, kurtosis), and a 95% CI on the mean.",
+    when_to_use: "Use as the first step to characterise any dataset before running normality tests, sample size scripts, or verification scripts.",
+    syntax: 'jrc_descriptive "file_path" "column_name"',
+    example: 'jrc_descriptive "~/data/mydata.csv" "ForceN"',
+    tags: ["descriptive", "summary statistics", "mean", "SD", "percentile"]
+  },
+
+  /* ── Analysis: verify attribute (tolerance interval) ───────────────────── */
+  {
+    id: "jrc_verify_attr",
+    name: "jrc_verify_attr",
+    description: "Statistical tolerance interval verification for continuous (attribute) data. Calculates the tolerance interval and compares it against one or two spec limits. Non-normal data are handled via Box-Cox transformation. Saves a histogram PNG.",
+    when_to_use: "Use after collecting verification data to determine whether the dataset demonstrates the required population proportion meets your specification limits.",
+    syntax: 'jrc_verify_attr "proportion" "confidence" "file_path" "column_name" "spec1" "spec2"',
+    example: 'jrc_verify_attr "0.95" "0.95" "~/data/mydata.csv" "ForceN" "10.0" "-"',
+    tags: ["verify", "tolerance interval", "spec", "pass fail", "continuous"]
+  },
+
+  /* ── Analysis: Weibull ──────────────────────────────────────────────────── */
+  {
+    id: "jrc_weibull",
+    name: "jrc_weibull",
+    description: "Fits a 2-parameter Weibull distribution to lifetime or fatigue data, including right-censored observations, using Maximum Likelihood Estimation.",
+    when_to_use: "Use to fit and characterise the failure distribution of reliability or fatigue test data, including studies where some units did not fail (right-censored).",
+    syntax: 'jrc_weibull "file_path" "time_col" "status_col"',
+    example: 'jrc_weibull "~/Downloads/myweibuldata.csv" "time" "status"',
+    tags: ["Weibull", "reliability", "MLE", "censored", "fatigue", "survival"]
+  },
+
+  /* ── Analysis: normality ────────────────────────────────────────────────── */
+  {
+    id: "jrc_normality",
+    name: "jrc_normality",
+    description: "Tests whether a dataset follows a normal distribution using three complementary methods: skewness/kurtosis (moment-based), Shapiro-Wilk test (gold standard for N ≤ 5000), and Anderson-Darling test (sensitive to tail departures).",
+    when_to_use: "Use before running tolerance interval scripts (jrc_ss_attr, jrc_verify_attr) to confirm whether your data can be treated as normal or requires transformation.",
+    syntax: 'jrc_normality "file_path" "column_name"',
+    example: 'jrc_normality "~/data/mydata.csv" "value"',
+    tags: ["normality", "Shapiro-Wilk", "Anderson-Darling", "distribution"]
+  },
+
+  /* ── Analysis: outliers ─────────────────────────────────────────────────── */
+  {
+    id: "jrc_outliers",
+    name: "jrc_outliers",
+    description: "Tests for outliers using two complementary methods: the iterative Grubbs test (standard for small samples, assumes approximate normality) and the IQR method (distribution-free, flags moderate and extreme outliers).",
+    when_to_use: "Use to identify suspect data points before running analysis scripts. Both a parametric and a non-parametric method are reported so you can compare results.",
+    syntax: 'jrc_outliers "file_path" "column_name"',
+    example: 'jrc_outliers "~/Downloads/myfile.csv" "col1"',
+    tags: ["outliers", "Grubbs", "IQR", "data quality"]
+  },
+
+  /* ── Analysis: process capability ──────────────────────────────────────── */
+  {
+    id: "jrc_capability",
+    name: "jrc_capability",
+    description: "Computes process capability and performance indices: Cp/Pp (spread-only, requires both spec limits) and Cpk/Ppk (centring-aware, works with one or both spec limits).",
+    when_to_use: "Use to assess whether a process is capable of consistently meeting its specification limits, typically during process characterisation or design transfer.",
+    syntax: 'jrc_capability "file_path" "column_name" "spec1" "spec2"',
+    example: 'jrc_capability "~/Downloads/myfile.csv" "col1" "3.0" "-"',
+    tags: ["capability", "Cp", "Cpk", "Pp", "Ppk", "process"]
+  },
+
+  /* ── Data generation ────────────────────────────────────────────────────── */
+  {
+    id: "jrc_gen_normal",
+    name: "jrc_gen_normal",
+    description: "Generates a synthetic normally distributed dataset and writes it to a CSV file in the standard jrc format (columns: id, value).",
+    when_to_use: "Use to generate test data for validating analysis scripts or creating worked examples with a normal distribution.",
+    syntax: 'jrc_gen_normal "n" "mean" "sd" "output_folder" ["seed"]',
+    example: 'jrc_gen_normal "30" "2.5" "1.0" "~/Downloads/mynormaldataset.csv"',
+    tags: ["generate", "synthetic", "normal", "test data"]
+  },
+
+  {
+    id: "jrc_gen_lognormal",
+    name: "jrc_gen_lognormal",
+    description: "Generates a synthetic log-normally distributed dataset and writes it to a CSV file in the standard jrc format. Parameters are specified on the log scale.",
+    when_to_use: "Use to generate right-skewed test data following a log-normal distribution, e.g. for testing Box-Cox transformation logic.",
+    syntax: 'jrc_gen_lognormal "n" "meanlog" "sdlog" "output_folder" ["seed"]',
+    example: 'jrc_gen_lognormal "3" "3.0" "1.2" "~/Downloads/mylognormaldataset.csv" "123"',
+    tags: ["generate", "synthetic", "lognormal", "test data"]
+  },
+
+  {
+    id: "jrc_gen_boxcox",
+    name: "jrc_gen_boxcox",
+    description: "Generates a synthetic right-skewed dataset from a Weibull distribution, suitable for testing Box-Cox transformation in jrc_ss_attr and related scripts. All values are strictly positive.",
+    when_to_use: "Use to generate test data with a known right-skewed distribution (Weibull) for validating Box-Cox transformation behaviour in analysis scripts.",
+    syntax: 'jrc_gen_boxcox "n" "shape" "scale" "output_folder" ["seed"]',
+    example: 'jrc_gen_boxcox "30" "1.5" "2.0" "~/Downloads/myboxcoxdataset.csv" "123"',
+    tags: ["generate", "synthetic", "Weibull", "Box-Cox", "test data"]
+  },
+
+  {
+    id: "jrc_gen_sqrt",
+    name: "jrc_gen_sqrt",
+    description: "Generates a synthetic right-skewed dataset from a chi-squared distribution scaled by a constant, suitable for testing square-root and Box-Cox transformations.",
+    when_to_use: "Use to generate right-skewed test data based on a chi-squared distribution for validating transformation and normality logic.",
+    syntax: 'jrc_gen_sqrt "n" "df" "scale" "output_folder" ["seed"]',
+    example: 'jrc_gen_sqrt "30" "2" "3.0" "~/Downloads/mysqrtdataset.csv" "123"',
+    tags: ["generate", "synthetic", "chi-squared", "sqrt", "test data"]
+  },
+
+  {
+    id: "jrc_gen_uniform",
+    name: "jrc_gen_uniform",
+    description: "Generates a synthetic uniformly distributed dataset and writes it to a CSV file in the standard jrc format. Useful for testing normality checks and Box-Cox transformation logic.",
+    when_to_use: "Use to generate test data with a uniform distribution — which has bounded support and negative excess kurtosis — for validating normality and transformation scripts.",
+    syntax: 'jrc_gen_uniform "n" "min" "max" "output_folder" ["seed"]',
+    example: 'jrc_gen_uniform "30" "0.0" "1.0" "/path/to/output"',
+    tags: ["generate", "synthetic", "uniform", "test data"]
+  },
+
+  /* ── Data conversion ────────────────────────────────────────────────────── */
+  {
+    id: "jrc_convert_csv",
+    name: "jrc_convert_csv",
+    description: "Converts a multi-column delimited file (CSV, TSV, space-separated) into the standard jrc CSV format (columns: id, value). Supports skipping metadata header lines and auto-detects delimiters. Handles European decimal commas.",
+    when_to_use: "Use when your instrument or data source exports a multi-column delimited file and you need to extract one column into the standard jrc two-column format.",
+    syntax: 'jrc_convert_csv "file_path" "column" "skip_lines" ["delimiter"]',
+    example: 'jrc_convert_csv "~/data/raw.txt" "ForceN" "3"',
+    tags: ["convert", "CSV", "delimited", "data prep", "format"]
+  },
+
+  {
+    id: "jrc_convert_txt",
+    name: "jrc_convert_txt",
+    description: "Converts a single-column plain text file (one numeric value per line) into the standard jrc CSV format. Supports optional line range selection to extract a subset (e.g. skip a stabilisation period). Handles European decimal commas.",
+    when_to_use: "Use when your instrument outputs a plain text file with one number per line and you need to convert it into the standard jrc CSV format, optionally selecting a line range.",
+    syntax: 'jrc_convert_txt "file_path" ["start_line"] ["end_line"]',
+    example: 'jrc_convert_txt "~/data/measurements.txt"',
+    tags: ["convert", "text", "single column", "data prep", "format"]
+  }
+
+];
+
+/* ==========================================================================
+   CATEGORIES
+   --------------------------------------------------------------------------
+   Controls the grouping shown in the "All scripts" tab.
+   To add a new script, add its id to the appropriate category ids array.
+   To add a new category, add a new object with label and ids.
+   ========================================================================== */
+const CATEGORIES = [
+  {
+    label: "Sample Size — Planning",
+    ids: [
+      "jrc_ss_discrete", "jrc_ss_discrete_ci",
+      "jrc_ss_attr", "jrc_ss_attr_ci", "jrc_ss_attr_check",
+      "jrc_ss_sigma", "jrc_ss_gauge_rr",
+      "jrc_ss_fatigue",
+      "jrc_ss_equivalence", "jrc_ss_paired"
+    ]
+  },
+  {
+    label: "Data Analysis",
+    ids: [
+      "jrc_descriptive", "jrc_normality", "jrc_outliers",
+      "jrc_verify_attr", "jrc_bland_altman",
+      "jrc_capability", "jrc_weibull"
+    ]
+  },
+  {
+    label: "Generate Test Data",
+    ids: [
+      "jrc_gen_normal", "jrc_gen_lognormal",
+      "jrc_gen_boxcox", "jrc_gen_sqrt", "jrc_gen_uniform"
+    ]
+  },
+  {
+    label: "Prepare Data",
+    ids: ["jrc_convert_csv", "jrc_convert_txt"]
+  }
+];
+
+/* ==========================================================================
+   DECISION TREE
+   --------------------------------------------------------------------------
+   Each node has a "question" string and a "choices" array.
+   Each choice has a "label" string and either:
+     "next": "node_id"       — navigate to another node
+     "scripts": ["id", ...]  — show result cards for these script IDs (leaf)
+   To add a new branch, add a new node key and reference it from a "next".
+   ========================================================================== */
+const TREE = {
+
+  root: {
+    question: "What are you trying to do?",
+    choices: [
+      { label: "Plan a test — I need a sample size",          next: "plan" },
+      { label: "Analyse data I already have",                 next: "analyse" },
+      { label: "Generate synthetic test data",                next: "generate" },
+      { label: "Prepare my data file",                        next: "prepare" }
+    ]
+  },
+
+  /* ── Plan a test ──────────────────────────────────────────────────────── */
+  plan: {
+    question: "What kind of measurement or test result do you have?",
+    choices: [
+      { label: "Continuous measurements (variables data)",    next: "plan_continuous" },
+      { label: "Pass/Fail results (attribute data)",          next: "plan_attribute" },
+      { label: "Fatigue, durability, or reliability",         scripts: ["jrc_ss_fatigue"] },
+      { label: "Measurement system qualification (MSA)",      next: "plan_msa" }
+    ]
+  },
+
+  plan_continuous: {
+    question: "What is the goal of your continuous-data study?",
+    choices: [
+      { label: "Prove a proportion of the population meets a spec (tolerance interval)", scripts: ["jrc_ss_attr", "jrc_ss_attr_check", "jrc_ss_attr_ci"] },
+      { label: "Estimate sigma before planning a tolerance interval study (pilot)",       scripts: ["jrc_ss_sigma"] },
+      { label: "Prove a proportion meets a spec with pass/fail counting (binomial)",      scripts: ["jrc_ss_discrete", "jrc_ss_discrete_ci"] },
+      { label: "Compare two conditions — detect a difference",                           scripts: ["jrc_ss_paired"] },
+      { label: "Compare two conditions — demonstrate equivalence (TOST)",                scripts: ["jrc_ss_equivalence", "jrc_ss_paired"] }
+    ]
+  },
+
+  plan_attribute: {
+    question: "What kind of attribute planning do you need?",
+    choices: [
+      { label: "Binomial pass/fail — find minimum N",                                    scripts: ["jrc_ss_discrete"] },
+      { label: "Binomial pass/fail — calculate confidence achieved by a completed test", scripts: ["jrc_ss_discrete_ci"] },
+      { label: "Continuous measurement against spec limits (tolerance interval)",        scripts: ["jrc_ss_attr", "jrc_ss_attr_check", "jrc_ss_attr_ci"] }
+    ]
+  },
+
+  plan_msa: {
+    question: "What type of measurement system are you qualifying?",
+    choices: [
+      { label: "Continuous measurement system — Gauge R&R",              scripts: ["jrc_ss_gauge_rr"] },
+      { label: "Continuous measurement against spec (tolerance interval)", scripts: ["jrc_ss_attr", "jrc_ss_attr_ci", "jrc_ss_attr_check"] }
+    ]
+  },
+
+  /* ── Analyse data ────────────────────────────────────────────────────── */
+  analyse: {
+    question: "What analysis do you need to run?",
+    choices: [
+      { label: "Check agreement between two measurement methods or devices",       scripts: ["jrc_bland_altman"] },
+      { label: "Summarise a dataset (mean, SD, percentiles, shape)",               scripts: ["jrc_descriptive"] },
+      { label: "Check whether a device passes a specification (tolerance interval)", scripts: ["jrc_verify_attr"] },
+      { label: "Fit a Weibull distribution to lifetime or fatigue data",           scripts: ["jrc_weibull"] },
+      { label: "Test whether my data are normally distributed",                    scripts: ["jrc_normality"] },
+      { label: "Find outliers in my dataset",                                      scripts: ["jrc_outliers"] },
+      { label: "Compute process capability indices (Cp, Cpk, Pp, Ppk)",           scripts: ["jrc_capability"] },
+      { label: "Check equivalence of two methods or conditions",                   next: "analyse_equivalence" }
+    ]
+  },
+
+  analyse_equivalence: {
+    question: "Are you planning the sample size or analysing collected data?",
+    choices: [
+      { label: "Planning — how many pairs do I need?",         scripts: ["jrc_ss_equivalence", "jrc_ss_paired"] },
+      { label: "Analysing — I want to check method agreement", scripts: ["jrc_bland_altman"] }
+    ]
+  },
+
+  /* ── Generate synthetic data ─────────────────────────────────────────── */
+  generate: {
+    question: "What distribution should the synthetic data follow?",
+    choices: [
+      { label: "Normal distribution",                                    scripts: ["jrc_gen_normal"] },
+      { label: "Log-normal distribution",                                scripts: ["jrc_gen_lognormal"] },
+      { label: "Right-skewed — Weibull (for Box-Cox testing)",           scripts: ["jrc_gen_boxcox"] },
+      { label: "Right-skewed — chi-squared (for sqrt / Box-Cox testing)", scripts: ["jrc_gen_sqrt"] },
+      { label: "Uniform distribution",                                   scripts: ["jrc_gen_uniform"] }
+    ]
+  },
+
+  /* ── Prepare data file ───────────────────────────────────────────────── */
+  prepare: {
+    question: "What kind of file are you starting from?",
+    choices: [
+      { label: "Multi-column delimited file (CSV, TSV, space-separated, semicolons)", scripts: ["jrc_convert_csv"] },
+      { label: "Single-column plain text file (one number per line)",                 scripts: ["jrc_convert_txt"] }
+    ]
+  }
+
+};
+
+/* ==========================================================================
+   ENGINE — do not edit below unless changing the UI behaviour
+   ========================================================================== */
+
+// Index scripts by id for O(1) lookup
+const SCRIPT_MAP = {};
+SCRIPTS.forEach(s => { SCRIPT_MAP[s.id] = s; });
+
+// State
+let history = [];
+let activeTab = "find";
+
+// DOM refs
+const questionArea    = document.getElementById("question-area");
+const resultArea      = document.getElementById("result-area");
+const breadcrumbEl    = document.getElementById("breadcrumb-list");
+const breadcrumbWrap  = document.getElementById("breadcrumb");
+const btnRestart      = document.getElementById("btn-restart");
+const tabFind         = document.getElementById("tab-find");
+const tabAll          = document.getElementById("tab-all");
+const searchInput     = document.getElementById("search-input");
+const allContent      = document.getElementById("all-scripts-content");
+const noResults       = document.getElementById("no-results");
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    if (activeTab === "find") {
+      tabFind.classList.remove("hidden");
+      tabAll.classList.add("hidden");
+      breadcrumbWrap.classList.remove("hidden");
+      btnRestart.classList.remove("hidden");
+    } else {
+      tabFind.classList.add("hidden");
+      tabAll.classList.remove("hidden");
+      breadcrumbWrap.classList.add("hidden");
+      btnRestart.classList.add("hidden");
+      if (!allContent.hasChildNodes()) renderAllScripts();
+      searchInput.focus();
+    }
+  });
+});
+
+// ── Render: Find tab ─────────────────────────────────────────────────────────
+
+function render(nodeId) {
+  const node = TREE[nodeId];
+  if (!node) { console.error("Unknown node:", nodeId); return; }
+
+  resultArea.classList.add("hidden");
+  resultArea.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "question-card";
+
+  const h2 = document.createElement("h2");
+  h2.textContent = node.question;
+  card.appendChild(h2);
+
+  const choices = document.createElement("div");
+  choices.className = "choices";
+
+  node.choices.forEach(choice => {
+    const btn = document.createElement("button");
+    btn.className = "choice-btn";
+    btn.textContent = choice.label;
+    btn.addEventListener("click", () => {
+      history.push({ nodeId, choiceLabel: choice.label });
+      updateBreadcrumb();
+      if (choice.scripts) {
+        showResults(choice.scripts);
+      } else if (choice.next) {
+        questionArea.innerHTML = "";
+        render(choice.next);
+      }
+    });
+    choices.appendChild(btn);
+  });
+
+  card.appendChild(choices);
+  questionArea.innerHTML = "";
+  questionArea.appendChild(card);
+  questionArea.classList.remove("hidden");
+}
+
+// ── Results ──────────────────────────────────────────────────────────────────
+
+function showResults(scriptIds) {
+  questionArea.innerHTML = "";
+  questionArea.classList.add("hidden");
+  resultArea.classList.remove("hidden");
+  resultArea.innerHTML = "";
+
+  const heading = document.createElement("div");
+  heading.className = "results-heading";
+  heading.textContent = scriptIds.length === 1 ? "Recommended script" : `Recommended scripts (${scriptIds.length})`;
+  resultArea.appendChild(heading);
+
+  scriptIds.forEach(id => {
+    const s = SCRIPT_MAP[id];
+    if (!s) { console.warn("Script not found:", id); return; }
+    resultArea.appendChild(buildResultCard(s));
+  });
+}
+
+function buildResultCard(s) {
+  const card = document.createElement("div");
+  card.className = "result-card";
+
+  const h3 = document.createElement("h3");
+  h3.textContent = s.name;
+  card.appendChild(h3);
+
+  const desc = document.createElement("p");
+  desc.className = "result-description";
+  desc.textContent = s.description;
+  card.appendChild(desc);
+
+  const when = document.createElement("p");
+  when.className = "result-when";
+  when.textContent = s.when_to_use;
+  card.appendChild(when);
+
+  const syntaxLabel = document.createElement("div");
+  syntaxLabel.className = "result-label";
+  syntaxLabel.textContent = "Syntax";
+  card.appendChild(syntaxLabel);
+
+  const syntaxBlock = document.createElement("pre");
+  syntaxBlock.className = "syntax-block";
+  syntaxBlock.textContent = s.syntax;
+  card.appendChild(syntaxBlock);
+
+  const exLabel = document.createElement("div");
+  exLabel.className = "result-label";
+  exLabel.textContent = "Example";
+  card.appendChild(exLabel);
+
+  const exRow = document.createElement("div");
+  exRow.className = "example-row";
+
+  const exBlock = document.createElement("pre");
+  exBlock.className = "example-block";
+  exBlock.textContent = s.example;
+  exRow.appendChild(exBlock);
+
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "copy-btn";
+  copyBtn.textContent = "Copy";
+  copyBtn.addEventListener("click", () => copyText(s.example, copyBtn));
+  exRow.appendChild(copyBtn);
+  card.appendChild(exRow);
+
+  const note = document.createElement("p");
+  note.className = "result-note";
+  note.textContent = "Run with --help for full documentation";
+  card.appendChild(note);
+
+  return card;
+}
+
+// ── Render: All scripts tab ──────────────────────────────────────────────────
+
+function renderAllScripts() {
+  allContent.innerHTML = "";
+
+  CATEGORIES.forEach(cat => {
+    const section = document.createElement("div");
+    section.className = "category-section";
+    section.dataset.category = cat.label;
+
+    const heading = document.createElement("div");
+    heading.className = "category-heading";
+    heading.textContent = cat.label;
+    section.appendChild(heading);
+
+    cat.ids.forEach(id => {
+      const s = SCRIPT_MAP[id];
+      if (!s) { console.warn("Script not found in CATEGORIES:", id); return; }
+
+      const card = document.createElement("div");
+      card.className = "overview-card";
+      card.dataset.searchText = [s.name, s.description, s.when_to_use, ...(s.tags || [])].join(" ").toLowerCase();
+
+      const name = document.createElement("div");
+      name.className = "overview-name";
+      name.textContent = s.name;
+      card.appendChild(name);
+
+      const desc = document.createElement("div");
+      desc.className = "overview-desc";
+      desc.textContent = s.description;
+      card.appendChild(desc);
+
+      const syntax = document.createElement("pre");
+      syntax.className = "overview-syntax";
+      syntax.textContent = s.syntax;
+      card.appendChild(syntax);
+
+      section.appendChild(card);
+    });
+
+    allContent.appendChild(section);
+  });
+}
+
+function filterScripts(query) {
+  const q = query.trim().toLowerCase();
+  let anyVisible = false;
+
+  allContent.querySelectorAll(".overview-card").forEach(card => {
+    const match = !q || card.dataset.searchText.includes(q);
+    card.classList.toggle("hidden", !match);
+    if (match) anyVisible = true;
+  });
+
+  // Hide category headings when all their cards are hidden
+  allContent.querySelectorAll(".category-section").forEach(section => {
+    const hasVisible = [...section.querySelectorAll(".overview-card")].some(c => !c.classList.contains("hidden"));
+    section.classList.toggle("hidden", !hasVisible);
+  });
+
+  noResults.classList.toggle("hidden", anyVisible || !q);
+}
+
+searchInput.addEventListener("input", () => filterScripts(searchInput.value));
+
+// ── Copy helper ──────────────────────────────────────────────────────────────
+
+function copyText(text, btn) {
+  const reset = () => {
+    btn.textContent = "Copy";
+    btn.classList.remove("copied");
+  };
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(reset, 2000);
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(reset, 2000);
+  });
+}
+
+// ── Breadcrumb ───────────────────────────────────────────────────────────────
+
+function updateBreadcrumb() {
+  breadcrumbEl.innerHTML = "";
+  history.forEach((step, idx) => {
+    if (idx > 0) {
+      const sep = document.createElement("span");
+      sep.textContent = " › ";
+      breadcrumbEl.appendChild(sep);
+    }
+    const crumb = document.createElement("span");
+    crumb.className = "crumb";
+    crumb.textContent = step.choiceLabel;
+    breadcrumbEl.appendChild(crumb);
+  });
+}
+
+// ── Restart ──────────────────────────────────────────────────────────────────
+
+function restart() {
+  history = [];
+  updateBreadcrumb();
+  resultArea.classList.add("hidden");
+  resultArea.innerHTML = "";
+  questionArea.classList.remove("hidden");
+  render("root");
+}
+
+btnRestart.addEventListener("click", restart);
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+render("root");
+
+</script>
+</body>
+</html>
