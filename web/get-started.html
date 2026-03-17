@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Get Started — JR Validated Environment</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="site-nav-wrap">
+    <nav class="site-nav">
+      <a href="index.html" class="site-nav-link">Home</a>
+      <a href="get-started.html" class="site-nav-link active">Get Started</a>
+      <a href="script_guide.html" class="site-nav-link">Script Guide</a>
+    </nav>
+  </div>
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>Get Started</h1>
+      <p>Set up the JR Validated Environment on your team</p>
+    </div>
+  </div>
+  <div class="tab-nav-wrap">
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="users">End Users</button>
+      <button class="tab-btn" data-tab="admins">Administrators</button>
+      <button class="tab-btn" data-tab="adapt">For your project</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Requirements (shown on all tabs) -->
+  <div class="req-card">
+    <h2>Requirements</h2>
+    <ul class="req-list">
+      <li>macOS (Apple Silicon or Intel)</li>
+      <li>R — version specified in <code>admin/r_version.txt</code></li>
+      <li>Python — version specified in <code>admin/python_version.txt</code></li>
+      <li>Dropbox — for sharing the local package repository across the team</li>
+      <li>Xcode Command Line Tools — run <code>xcode-select --install</code> in Terminal if not already installed</li>
+    </ul>
+    <p class="req-note">Package versions are pinned in requirements files. The environment installs from a local Dropbox repository — no internet access required once the admin has built the repo.</p>
+  </div>
+
+  <!-- ── End Users tab ─────────────────────────────────────────────────────── -->
+  <div id="tab-users">
+
+    <div class="section-heading">Quick start — End users</div>
+    <div class="card">
+      <div class="gs-step">
+        <div class="gs-step-num">1</div>
+        <div class="gs-step-body">
+          <p>Make sure <strong>Dropbox is installed and fully synced</strong> on your Mac before continuing.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">2</div>
+        <div class="gs-step-body">
+          <p>Open <strong>Terminal</strong>: press <kbd>⌘ Space</kbd>, type <code>Terminal</code>, press Enter.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">3</div>
+        <div class="gs-step-body">
+          <p>Find <code>setup_jr_path.zsh</code> in the JR project folder in Finder. <strong>Drag it into the Terminal window</strong> and press Enter.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">4</div>
+        <div class="gs-step-body">
+          <p>You will see:</p>
+          <div class="cmd-block">✅ PATH updated successfully.</div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">5</div>
+        <div class="gs-step-body">
+          <p>Open a <strong>new Terminal window</strong> (<kbd>⌘ N</kbd>). You are ready.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">6</div>
+        <div class="gs-step-body">
+          <p>Type the name of any JR script and press Enter. On first run the environment builds automatically — this may take a minute. All subsequent runs are fast.</p>
+        </div>
+      </div>
+      <div class="callout">You only need to run <code>setup_jr_path.zsh</code> once per machine. Use the <a href="script_guide.html" class="github-link">Script Guide</a> to find the right script for your analysis.</div>
+    </div>
+
+    <div class="section-heading">Check installed versions</div>
+    <div class="card">
+      <p style="font-size:0.92rem;color:#3a3a5e;margin-bottom:4px">To see the currently installed R, Python, and package versions at any time:</p>
+      <div class="cmd-row">
+        <div class="cmd-block">jr_versions</div>
+        <button class="copy-btn" onclick="copyCmd('jr_versions', this)">Copy</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Administrators tab ─────────────────────────────────────────────────── -->
+  <div id="tab-admins" class="hidden">
+
+    <div class="section-heading">First-time setup</div>
+    <div class="card">
+      <p style="font-size:0.88rem;color:#5060A0;font-style:italic;margin-bottom:16px">Requires internet access to download packages.</p>
+      <div class="gs-step">
+        <div class="gs-step-num">1</div>
+        <div class="gs-step-body">
+          <p>Clone the repository:</p>
+          <div class="cmd-row">
+            <div class="cmd-block">git clone https://github.com/ubrowz/jr-validated-env.git
+cd jr-validated-env</div>
+            <button class="copy-btn" onclick="copyCmd('git clone https://github.com/ubrowz/jr-validated-env.git\ncd jr-validated-env', this)">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">2</div>
+        <div class="gs-step-body">
+          <p>Build the local package repositories and install the environments:</p>
+          <div class="cmd-row">
+            <div class="cmd-block">./admin/admin_install_R --rebuild
+./admin/admin_install_Python --rebuild</div>
+            <button class="copy-btn" onclick="copyCmd('./admin/admin_install_R --rebuild\n./admin/admin_install_Python --rebuild', this)">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">3</div>
+        <div class="gs-step-body">
+          <p>Generate the project integrity file:</p>
+          <div class="cmd-row">
+            <div class="cmd-block">./admin/admin_create_hash</div>
+            <button class="copy-btn" onclick="copyCmd('./admin/admin_create_hash', this)">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">4</div>
+        <div class="gs-step-body">
+          <p>Generate validation scripts and confirm the environment is working:</p>
+          <div class="cmd-row">
+            <div class="cmd-block">./admin/admin_validate</div>
+            <button class="copy-btn" onclick="copyCmd('./admin/admin_validate', this)">Copy</button>
+          </div>
+          <p style="margin-top:8px">A timestamped IQ evidence file is written to <code>~/.jrscript/&lt;PROJECT_ID&gt;/validation/</code> — suitable for an audit or FDA submission.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-heading">Subsequent setups</div>
+    <div class="card">
+      <p style="font-size:0.92rem;color:#3a3a5e;margin-bottom:8px">No internet needed — installs from the local Dropbox repository.</p>
+      <div class="cmd-row">
+        <div class="cmd-block">./admin/admin_install_R
+./admin/admin_install_Python</div>
+        <button class="copy-btn" onclick="copyCmd('./admin/admin_install_R\n./admin/admin_install_Python', this)">Copy</button>
+      </div>
+    </div>
+
+    <div class="section-heading">Adding new team members</div>
+    <div class="card">
+      <p style="font-size:0.92rem;color:#3a3a5e">Share the JR project folder via Dropbox (already synced for existing members). The new team member runs <code>setup_jr_path.zsh</code> once on their machine — the environment is built automatically on first script run.</p>
+      <p style="font-size:0.88rem;color:#7080A0;margin-top:10px">For teams with a mix of Apple Silicon and Intel Macs, see the multi-architecture section in <code>docs/admin_manual.pdf</code>.</p>
+    </div>
+
+    <div class="section-heading">OQ validation</div>
+    <div class="card">
+      <p style="font-size:0.92rem;color:#3a3a5e;margin-bottom:12px">To run the full OQ test suite against all community scripts:</p>
+      <div class="gs-step">
+        <div class="gs-step-num">1</div>
+        <div class="gs-step-body">
+          <p>Pre-flight check — verifies the OQ environment before running:</p>
+          <div class="cmd-row">
+            <div class="cmd-block">./admin/admin_oq_validate</div>
+            <button class="copy-btn" onclick="copyCmd('./admin/admin_oq_validate', this)">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">2</div>
+        <div class="gs-step-body">
+          <p>Run the OQ test suite and produce a timestamped evidence file:</p>
+          <div class="cmd-row">
+            <div class="cmd-block">./admin/admin_oq</div>
+            <button class="copy-btn" onclick="copyCmd('./admin/admin_oq', this)">Copy</button>
+          </div>
+          <p style="margin-top:8px">Evidence is written to <code>~/.jrscript/&lt;PROJECT_ID&gt;/validation/oq_execution_&lt;timestamp&gt;.txt</code>.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── For your project tab ───────────────────────────────────────────────── -->
+  <div id="tab-adapt" class="hidden">
+
+    <div class="section-heading">Adapting for your project</div>
+    <p style="font-size:0.92rem;color:#3a3a5e;margin-bottom:16px">There are two ways to use the JR Validated Environment depending on your needs.</p>
+
+    <div class="adapt-option">
+      <h3>Option 1 — Install and configure (recommended)</h3>
+      <p>Download from <a href="https://github.com/ubrowz/jr-validated-env/releases" class="github-link">GitHub Releases</a> and follow the Admin Manual. After installation, the admin configures the environment for the project:</p>
+      <ol>
+        <li>Edit <code>admin/R_requirements.txt</code> and <code>admin/python_requirements.txt</code> with the packages your scripts require</li>
+        <li>Edit <code>admin/r_version.txt</code> and <code>admin/python_version.txt</code> with the R and Python versions to pin</li>
+        <li>Run <code>./admin/admin_install_R --rebuild</code> and <code>./admin/admin_install_Python --rebuild</code> to build the local package repository</li>
+        <li>Add R and Python scripts to the <code>R/</code> and <code>Python/</code> subfolders following the Admin Manual</li>
+        <li>Run <code>./admin/admin_create_hash</code> then <code>./admin/admin_validate</code> to generate validation artefacts</li>
+      </ol>
+      <p>Team members then run <code>setup_jr_path.zsh</code> once on their machine. The environment is ready.</p>
+    </div>
+
+    <div class="adapt-option">
+      <h3>Option 2 — Fork and extend</h3>
+      <p>To modify the architecture, contribute improvements, or significantly extend the framework for your own purposes, fork the repository on GitHub and make your changes. Please open an issue before submitting a pull request so the proposed change can be discussed first.</p>
+      <p><a href="https://github.com/ubrowz/jr-validated-env" class="github-link">github.com/ubrowz/jr-validated-env</a></p>
+    </div>
+
+    <div class="callout">The validation evidence included in <code>docs/</code> covers the specific R, Python, and package versions at the time of release. If you install with different versions — because newer installers are available, or because you add or update packages — the included evidence no longer applies. You must perform your own revalidation using the templates in <code>docs/templates/</code> before using the environment in a regulated context.</div>
+
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>JR Validated Environment</span>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/ubrowz/jr-validated-env" class="footer-link">GitHub</a>
+    <span class="footer-sep">·</span>
+    <span>Apache 2.0</span>
+    <span class="footer-sep">·</span>
+    <span>v1.3.0</span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    ["users", "admins", "adapt"].forEach(id => {
+      document.getElementById("tab-" + id).classList.add("hidden");
+    });
+    document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
+  });
+});
+
+function copyCmd(text, btn) {
+  const reset = () => { btn.textContent = "Copy"; btn.classList.remove("copied"); };
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "Copied!"; btn.classList.add("copied"); setTimeout(reset, 2000);
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+    document.body.removeChild(ta);
+    btn.textContent = "Copied!"; btn.classList.add("copied"); setTimeout(reset, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
