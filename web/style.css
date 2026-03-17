@@ -793,5 +793,66 @@ footer {
 .footer-link { color: #7080B0; text-decoration: none; }
 .footer-link:hover { color: #A0A8C8; }
 
+/* ── FAQ accordion ─────────────────────────────────────────────────────────── */
+.faq-group {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 4px 20px;
+  margin-bottom: 24px;
+}
+
+.faq-item { border-bottom: 1px solid #EEF0F8; }
+.faq-item:last-child { border-bottom: none; }
+
+.faq-item summary {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1A1A2E;
+  padding: 15px 0;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.faq-item summary::-webkit-details-marker { display: none; }
+
+.faq-item summary::after {
+  content: "+";
+  color: #2E5BBA;
+  font-size: 1.2rem;
+  font-weight: 300;
+  flex-shrink: 0;
+  line-height: 1.25;
+  margin-top: 1px;
+}
+
+.faq-item[open] > summary::after { content: "−"; }
+
+.faq-answer {
+  font-size: 0.9rem;
+  color: #3a3a5e;
+  line-height: 1.65;
+  padding-bottom: 16px;
+}
+
+.faq-answer p + p { margin-top: 8px; }
+
+.faq-answer code {
+  background: #EEF0F8;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.85em;
+  font-family: "SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace;
+}
+
+.faq-answer a { color: #2E5BBA; text-decoration: none; font-weight: 600; }
+.faq-answer a:hover { text-decoration: underline; }
+
 /* ── Utility ───────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }

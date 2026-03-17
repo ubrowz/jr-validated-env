@@ -103,3 +103,4 @@ docs/oq_validation_plan.md
 *.swo
 *~
 Rplots.pdf
+session_log.txt
