@@ -10,6 +10,13 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [1.6.1] — 2026-03-18
+
+### Removed
+- `bin/jrwhich` — obsolete script that referenced `jr_animate` and `jr_static` (removed in v1.4.0) and listed none of the community scripts. Superseded by the website Script Guide.
+
+---
+
 ## [1.6.0] — 2026-03-18
 
 ### Added
