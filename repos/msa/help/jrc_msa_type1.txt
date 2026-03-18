@@ -1,0 +1,84 @@
+
+What this script does:
+       Answers the question: "How capable is this gauge on its own?"
+
+       A Type 1 study is the simplest MSA study — one operator, one reference
+       part, measured repeatedly (typically 25-50 times). It evaluates the
+       gauge's natural variation and bias before you even involve multiple
+       operators.
+
+       Two key outputs:
+
+         Cg  — gauge potential. Compares the gauge's natural spread (6 sigma)
+               to the tolerance. If 6 sigma is small relative to the tolerance,
+               the gauge is capable of detecting meaningful differences.
+               Formula: Cg = 0.2 x T / (6 x sigma). Requires Cg >= 1.33.
+
+         Cgk — gauge capability (with bias). Same as Cg but also penalises
+               for bias. A gauge can have good repeatability (high Cg) but
+               still fail if it reads consistently high or low (low Cgk).
+               Formula: Cgk = (0.1 x T - |bias|) / (3 x sigma). Requires Cgk >= 1.33.
+
+       The run chart shows whether the gauge drifts over time. The shaded
+       band is the acceptance window (reference +/- 10% of tolerance).
+       Measurements should stay within the band with no trend or drift.
+
+       Run this study before Gauge R&R — if the gauge fails the Type 1 study
+       there is no point running a full Gauge R&R.
+
+Description: Type 1 Gauge Study. Computes Cg, Cgk, %Var, and %Bias from
+             repeated measurements of a single reference part. Reference value
+             and tolerance are supplied as arguments. Saves a run chart and
+             histogram PNG to ~/Downloads/.
+
+Usage: jrc_msa_type1 <data.csv> --reference <value> --tolerance <value>
+
+Arguments:
+       data.csv              CSV file with a 'value' column containing the
+                             repeated measurements. An optional 'id' column
+                             is used as the run chart x-axis; if absent,
+                             observation order (1, 2, 3 ...) is used.
+       --reference <value>   Known true value of the reference part (required).
+       --tolerance <value>   Process tolerance USL - LSL (required).
+       -h | --help           Show this help message
+
+Input CSV format (minimal):
+       value
+       10.012
+       10.008
+       10.015
+       ...
+
+Input CSV format (with id):
+       id,value
+       1,10.012
+       2,10.008
+       3,10.015
+       ...
+
+       Minimum: 10 measurements. Recommended: 25-50.
+
+Output — Terminal:
+       Descriptive statistics (mean, SD, bias, 95% CI, bias t-test)
+       Cg and Cgk with verdict
+       %Var and %Bias
+       Pass/fail verdict
+
+Output — PNG (~/Downloads/):
+       Left panel:  Run chart — values over time with reference, mean,
+                    and +/-0.1xT acceptance band
+       Right panel: Histogram with normal curve overlay and the same
+                    reference / acceptance band lines
+
+Acceptance criteria (AIAG/VDA):
+       Cg  >= 1.33   Acceptable
+       Cg  1.00-1.33 Marginal
+       Cg  < 1.00    Unacceptable
+       Cgk >= 1.33   Acceptable
+       Cgk 1.00-1.33 Marginal
+       Cgk < 1.00    Unacceptable
+
+Examples:
+       jrc_msa_type1 data.csv --reference 10.000 --tolerance 0.5
+       jrc_msa_type1 data.csv --reference 25.4   --tolerance 1.0
+
