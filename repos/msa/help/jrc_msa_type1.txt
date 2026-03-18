@@ -1,35 +1,49 @@
 
 What this script does:
-       Answers the question: "How capable is this gauge on its own?"
+       Answers the question: "Is this gauge worth using at all?"
 
-       A Type 1 study is the simplest MSA study — one operator, one reference
-       part, measured repeatedly (typically 25-50 times). It evaluates the
-       gauge's natural variation and bias before you even involve multiple
-       operators.
+       Before running a full Gauge R&R with multiple operators, you want to
+       check a more basic question first: is the gauge itself consistent and
+       accurate? A Type 1 study does exactly that.
 
-       Two key outputs:
+       One person picks up a part whose true value is already known — measured
+       by a reference standard or a calibration lab — and measures it 25 to 50
+       times, back to back, under identical conditions. No other variables. Just
+       the gauge.
 
-         Cg  — gauge potential. Compares the gauge's natural spread (6 sigma)
-               to the tolerance. If 6 sigma is small relative to the tolerance,
-               the gauge is capable of detecting meaningful differences.
-               Formula: Cg = 0.2 x T / (6 x sigma). Requires Cg >= 1.33.
+       From those repeated measurements you get two numbers:
 
-         Cgk — gauge capability (with bias). Same as Cg but also penalises
-               for bias. A gauge can have good repeatability (high Cg) but
-               still fail if it reads consistently high or low (low Cgk).
-               Formula: Cgk = (0.1 x T - |bias|) / (3 x sigma). Requires Cgk >= 1.33.
+         Cg  — is the gauge consistent?
+               Compares the gauge's natural scatter (6 sigma) to 20% of your
+               tolerance. If 6 sigma fits comfortably within that window, the
+               gauge is repeatable enough to be useful. Target: Cg >= 1.33.
 
-       The run chart shows whether the gauge drifts over time. The shaded
-       band is the acceptance window (reference +/- 10% of tolerance).
-       Measurements should stay within the band with no trend or drift.
+         Cgk — is the gauge also accurate?
+               A gauge can be perfectly consistent but always read 0.1 mm too
+               high. Cgk catches that — it applies a penalty for bias on top
+               of the repeatability check. A gauge can pass Cg and fail Cgk.
+               That tells you the gauge is precise but not accurate.
+               Target: Cgk >= 1.33.
 
-       Run this study before Gauge R&R — if the gauge fails the Type 1 study
-       there is no point running a full Gauge R&R.
+       The run chart adds a time dimension: are the readings randomly scattered
+       around the reference value, or do they drift upward over the first 10
+       measurements? A drift or trend in the run chart is a red flag even if Cg
+       looks fine — it can indicate the gauge warms up, the operator's technique
+       changes, or the part deforms under repeated clamping.
 
-Description: Type 1 Gauge Study. Computes Cg, Cgk, %Var, and %Bias from
-             repeated measurements of a single reference part. Reference value
-             and tolerance are supplied as arguments. Saves a run chart and
-             histogram PNG to ~/Downloads/.
+       The shaded band on the run chart is the acceptance window: reference
+       +/- 10% of tolerance. Measurements should stay within this band with no
+       visible trend or pattern.
+
+       Rule of thumb: run a Type 1 study before committing to a full Gauge R&R.
+       If the gauge fails the Type 1, fix the gauge first — there is no point
+       running the bigger study with a gauge that cannot even repeat on itself.
+
+Description: Type 1 Gauge Study (AIAG/VDA method). Computes Cg, Cgk, %Var,
+             and %Bias from repeated measurements of a single reference part.
+             Performs a t-test for bias significance. Reference value and
+             tolerance are required arguments. Saves a run chart and histogram
+             PNG to ~/Downloads/.
 
 Usage: jrc_msa_type1 <data.csv> --reference <value> --tolerance <value>
 
@@ -65,8 +79,8 @@ Output — Terminal:
        Pass/fail verdict
 
 Output — PNG (~/Downloads/):
-       Left panel:  Run chart — values over time with reference, mean,
-                    and +/-0.1xT acceptance band
+       Left panel:  Run chart — values over time with reference line, mean
+                    line, and +/-0.1xT acceptance band (shaded)
        Right panel: Histogram with normal curve overlay and the same
                     reference / acceptance band lines
 
