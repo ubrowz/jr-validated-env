@@ -401,6 +401,10 @@ if (MODE == "BUILD") {
   }
 
   # Ensure renv is in the local repo
+  # Install renv from CRAN first if not present (BUILD mode has internet access)
+  if (!requireNamespace("renv", quietly = TRUE)) {
+    install.packages("renv", repos = CRAN_MIRROR)
+  }
   renv_version <- as.character(packageVersion("renv"))
   renv_binary  <- sprintf("renv_%s.tgz", renv_version)
   renv_url     <- sprintf(
