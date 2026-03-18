@@ -10,6 +10,68 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [1.7.0] — 2026-03-18
+
+### Added
+
+**MSA Module — `repos/msa/`**
+
+Five new R scripts for Measurement System Analysis, self-contained under
+`repos/msa/` with shared infrastructure (wrappers, help files, sample data,
+OQ test suite, validation documents, user manual).
+
+- `jrc_msa_gauge_rr` — Standard Gauge R&R (crossed design, two-way ANOVA).
+  Computes repeatability, reproducibility, %GRR, ndc, variance components, and
+  AIAG verdict. Four-panel PNG (components of variation, by-part, by-operator,
+  interaction plot).
+- `jrc_msa_nested_grr` — Nested Gauge R&R for destructive/semi-destructive
+  measurement systems. Each operator receives their own specimens (no crossing).
+  One-way nested ANOVA; estimates EV, AV, part-within-operator variation, %GRR.
+  Two-panel PNG.
+- `jrc_msa_linearity_bias` — Linearity and Bias study. Regresses observed bias
+  against reference value; reports slope, intercept, R², %Linearity, and per-part
+  bias with significance flags. Two-panel PNG.
+- `jrc_msa_type1` — Type 1 Gauge Study (Cg/Cgk). Single reference part measured
+  repeatedly; reports Cg, Cgk, bias, and t-test for bias significance. Run chart
+  and histogram PNG.
+- `jrc_msa_attribute` — Attribute Agreement Analysis. Computes within-appraiser
+  % agreement and Cohen's Kappa, between-appraiser Fleiss' Kappa, and optionally
+  each appraiser's Kappa vs a reference standard. Two-panel PNG.
+
+**MSA OQ test suite**
+- `repos/msa/oq/` — 53 pytest-based tests across 5 test files (10–11 per script),
+  covering happy paths, known-data numerical checks, error handling, and bypass
+  protection
+- `repos/msa/admin_msa_oq` — MSA OQ runner; reuses the `${PROJECT_ID}_oq` venv,
+  writes timestamped evidence to `~/.jrscript/<PROJECT_ID>/validation/`
+
+**MSA validation documents** (`repos/msa/docs/`)
+- `msa_validation_plan.docx` (JR-VP-MSA-001 v1.0) — OQ validation plan covering
+  24 user requirements and 53 test cases with full RTM
+- `msa_validation_report.docx` (JR-VR-MSA-001 v1.0) — OQ validation report;
+  53/53 tests passed, 0 deviations
+- `msa_user_manual.docx` — engineer-facing guide covering all 5 MSA scripts with
+  recommended study workflow (Type 1 → Gauge R&R → Linearity/Bias), argument
+  tables, worked examples, and interpretation guidance for %GRR, Cg/Cgk, and Kappa
+
+**Web interface**
+- `web/script_guide.html`: 5 new MSA script entries; new "Measurement System
+  Analysis (MSA)" category in All Scripts tab; new "Qualify a measurement system
+  (MSA)" root branch in the Find-a-script questionnaire with `msa` and
+  `msa_continuous` decision-tree nodes
+- `web/downloads.html`: MSA User Manual card (Manuals section); new MSA Module
+  Validation Documents section with plan and report cards
+
+**Infrastructure**
+- `bin/jrrun`: bare filename resolution extended to search `repos/*/R/` and
+  `repos/*/Python/` after the core `R/` and `Python/` directories; help lookup
+  extended to `repos/*/help/`
+- `setup_jr_path.zsh`: adds all `repos/*/wrapper/` directories to PATH
+  dynamically via a `for` loop written to `~/.zprofile`
+- `repos/msa/sample_data/` — sample CSV files for each of the 5 MSA scripts
+
+---
+
 ## [1.6.1] — 2026-03-18
 
 ### Changed
