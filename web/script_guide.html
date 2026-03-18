@@ -358,6 +358,57 @@ const SCRIPTS = [
     syntax: 'jrc_doe_analyse <results_file> <output_folder>',
     example: 'jrc_doe_analyse "~/doe/results/doe_results.csv" "~/doe/analysis"',
     tags: ["doe", "design of experiments", "anova", "regression", "effects", "analysis", "pareto", "interaction", "curvature"]
+  },
+
+  /* ── MSA — Measurement System Analysis ─────────────────────────────────── */
+  {
+    id: "jrc_msa_gauge_rr",
+    name: "jrc_msa_gauge_rr",
+    description: "Standard Gauge R&R using the two-way ANOVA method (crossed design). Computes repeatability, reproducibility, %GRR, and ndc from a balanced part/operator/value dataset. Saves a four-panel PNG.",
+    when_to_use: "Use when the same physical parts can be re-measured by all operators. Run before using a continuous measurement system for design verification.",
+    syntax: 'jrc_msa_gauge_rr <data.csv> [--tolerance <value>]',
+    example: 'jrc_msa_gauge_rr ~/msa/gauge_study.csv --tolerance 0.50',
+    tags: ["MSA", "gauge R&R", "repeatability", "reproducibility", "%GRR", "ndc", "ANOVA", "measurement system"]
+  },
+
+  {
+    id: "jrc_msa_nested_grr",
+    name: "jrc_msa_nested_grr",
+    description: "Nested Gauge R&R for destructive or semi-destructive measurement systems. Each operator receives their own set of specimens. Uses a nested ANOVA to estimate repeatability, reproducibility, and part-within-operator variation.",
+    when_to_use: "Use when the same specimen cannot be measured by multiple operators — e.g. tensile testing, chemical analysis, or any test that destroys or alters the part.",
+    syntax: 'jrc_msa_nested_grr <data.csv> [--tolerance <value>]',
+    example: 'jrc_msa_nested_grr ~/msa/destructive_study.csv --tolerance 10.0',
+    tags: ["MSA", "gauge R&R", "nested", "destructive", "repeatability", "reproducibility", "measurement system"]
+  },
+
+  {
+    id: "jrc_msa_type1",
+    name: "jrc_msa_type1",
+    description: "Type 1 gauge capability study (Cg / Cgk). A single reference part of known value is measured repeatedly. Reports gauge spread (Cg) and bias-adjusted capability (Cgk) relative to the process tolerance. Saves a run chart and histogram PNG.",
+    when_to_use: "Use as a quick initial gauge screen before committing to a full Gauge R&R. Run Type 1 first — if Cg < 1.33, the gauge is not capable for this tolerance.",
+    syntax: 'jrc_msa_type1 <data.csv> --reference <value> --tolerance <value>',
+    example: 'jrc_msa_type1 ~/msa/type1_study.csv --reference 50.0 --tolerance 1.0',
+    tags: ["MSA", "type 1", "gauge capability", "Cg", "Cgk", "bias", "measurement system"]
+  },
+
+  {
+    id: "jrc_msa_linearity_bias",
+    name: "jrc_msa_linearity_bias",
+    description: "Linearity and bias analysis. Regresses observed bias against reference value to assess whether gauge accuracy changes across its operating range. Reports slope, intercept, R², %Linearity, and per-part bias with significance flags. Saves a two-panel PNG.",
+    when_to_use: "Use to check whether a gauge is equally accurate at low and high measured values. Significant slope means accuracy varies across the range.",
+    syntax: 'jrc_msa_linearity_bias <data.csv> [--tolerance <value>]',
+    example: 'jrc_msa_linearity_bias ~/msa/linearity_study.csv --tolerance 5.0',
+    tags: ["MSA", "linearity", "bias", "calibration", "regression", "measurement system"]
+  },
+
+  {
+    id: "jrc_msa_attribute",
+    name: "jrc_msa_attribute",
+    description: "Attribute Agreement Analysis for categorical inspection systems. Computes within-appraiser % agreement and Cohen's Kappa, between-appraiser Fleiss' Kappa, and optionally each appraiser's Kappa vs a reference standard. Saves a two-panel PNG.",
+    when_to_use: "Use to qualify a pass/fail or categorical inspection system. Multiple appraisers each inspect the same set of parts multiple times.",
+    syntax: 'jrc_msa_attribute <data.csv>',
+    example: 'jrc_msa_attribute ~/msa/attribute_study.csv',
+    tags: ["MSA", "attribute", "Kappa", "Cohen", "Fleiss", "agreement", "inspection", "pass fail", "measurement system"]
   }
 
 ];
@@ -402,6 +453,14 @@ const CATEGORIES = [
   {
     label: "Design of Experiments",
     ids: ["jrc_doe_design", "jrc_doe_analyse"]
+  },
+  {
+    label: "Measurement System Analysis (MSA)",
+    ids: [
+      "jrc_msa_gauge_rr", "jrc_msa_nested_grr",
+      "jrc_msa_type1", "jrc_msa_linearity_bias",
+      "jrc_msa_attribute"
+    ]
   }
 ];
 
@@ -421,6 +480,7 @@ const TREE = {
     choices: [
       { label: "Plan a test — I need a sample size",          next: "plan" },
       { label: "Analyse data I already have",                 next: "analyse" },
+      { label: "Qualify a measurement system (MSA)",          next: "msa" },
       { label: "Generate synthetic test data",                next: "generate" },
       { label: "Prepare my data file",                        next: "prepare" }
     ]
@@ -460,8 +520,28 @@ const TREE = {
   plan_msa: {
     question: "What type of measurement system are you qualifying?",
     choices: [
-      { label: "Continuous measurement system — Gauge R&R",              scripts: ["jrc_ss_gauge_rr"] },
-      { label: "Continuous measurement against spec (tolerance interval)", scripts: ["jrc_ss_attr", "jrc_ss_attr_ci", "jrc_ss_attr_check"] }
+      { label: "Continuous measurement system — Gauge R&R study design guidance", scripts: ["jrc_ss_gauge_rr"] },
+      { label: "Continuous measurement against spec (tolerance interval)",         scripts: ["jrc_ss_attr", "jrc_ss_attr_ci", "jrc_ss_attr_check"] }
+    ]
+  },
+
+  /* ── MSA module ──────────────────────────────────────────────────────── */
+  msa: {
+    question: "What type of measurement system are you qualifying?",
+    choices: [
+      { label: "Continuous gauge — parts can be re-measured by all operators",           next: "msa_continuous" },
+      { label: "Continuous gauge — destructive testing (each part measured by one operator only)", scripts: ["jrc_msa_nested_grr"] },
+      { label: "Attribute / pass-fail inspection system",                                scripts: ["jrc_msa_attribute"] }
+    ]
+  },
+
+  msa_continuous: {
+    question: "Which study do you want to run?",
+    choices: [
+      { label: "Full Gauge R&R — multiple operators × parts × replicates",   scripts: ["jrc_msa_gauge_rr"] },
+      { label: "Type 1 gauge capability — single reference part (Cg, Cgk)",  scripts: ["jrc_msa_type1"] },
+      { label: "Linearity and bias — accuracy across the measurement range",  scripts: ["jrc_msa_linearity_bias"] },
+      { label: "Study design guidance — how many operators and replicates?",  scripts: ["jrc_ss_gauge_rr"] }
     ]
   },
 
