@@ -409,6 +409,57 @@ const SCRIPTS = [
     syntax: 'jrc_msa_attribute <data.csv>',
     example: 'jrc_msa_attribute ~/msa/attribute_study.csv',
     tags: ["MSA", "attribute", "Kappa", "Cohen", "Fleiss", "agreement", "inspection", "pass fail", "measurement system"]
+  },
+
+  /* ── SPC — Statistical Process Control ─────────────────────────────────── */
+  {
+    id: "jrc_spc_imr",
+    name: "jrc_spc_imr",
+    description: "Individuals and Moving Range (I-MR) chart for individual continuous measurements. Computes X-bar, MR-bar, control limits (UCL/LCL), and applies all 8 Western Electric rules. Saves a two-panel PNG (Individuals chart + MR chart).",
+    when_to_use: "Use when data arrive as individual values rather than subgroups — e.g. one measurement per batch, one per shift, or one per unit in slow processes.",
+    syntax: 'jrc_spc_imr <data.csv> [--ucl <value>] [--lcl <value>]',
+    example: 'jrc_spc_imr ~/spc/fill_weights.csv',
+    tags: ["SPC", "I-MR", "individuals", "moving range", "control chart", "Western Electric", "process control"]
+  },
+
+  {
+    id: "jrc_spc_xbar_r",
+    name: "jrc_spc_xbar_r",
+    description: "X-bar and R (range) chart for subgrouped continuous data with n = 2–10. Computes grand mean, R-bar, control limits using tabulated constants (A2, D3, D4), and applies all 8 Western Electric rules. Saves a two-panel PNG.",
+    when_to_use: "Use when data are collected in small rational subgroups (2–10 per subgroup). Preferred over X-bar/S for very small subgroup sizes (n ≤ 5).",
+    syntax: 'jrc_spc_xbar_r <data.csv> [--ucl <value>] [--lcl <value>]',
+    example: 'jrc_spc_xbar_r ~/spc/dimension_study.csv',
+    tags: ["SPC", "X-bar R", "Xbar-R", "range chart", "subgroup", "control chart", "Western Electric", "process control"]
+  },
+
+  {
+    id: "jrc_spc_xbar_s",
+    name: "jrc_spc_xbar_s",
+    description: "X-bar and S (standard deviation) chart for subgrouped continuous data with any subgroup size n ≥ 2. Computes grand mean, S-bar, control limits using analytical c4 constants, and applies all 8 Western Electric rules. Saves a two-panel PNG.",
+    when_to_use: "Use for subgroup sizes n > 10 (where the range is inefficient), or any time a more sensitive estimate of within-subgroup variation is needed.",
+    syntax: 'jrc_spc_xbar_s <data.csv> [--ucl <value>] [--lcl <value>]',
+    example: 'jrc_spc_xbar_s ~/spc/dimension_study.csv',
+    tags: ["SPC", "X-bar S", "Xbar-S", "standard deviation chart", "subgroup", "control chart", "Western Electric", "process control"]
+  },
+
+  {
+    id: "jrc_spc_p",
+    name: "jrc_spc_p",
+    description: "P-chart (proportion defective) for attribute data with variable subgroup sizes. Computes p-bar, per-subgroup control limits, standardised z-values, and applies all 8 Western Electric rules. Saves a PNG with step-line control limits.",
+    when_to_use: "Use when tracking the proportion of defective units per subgroup (pass/fail inspection). Subgroup sizes need not be equal.",
+    syntax: 'jrc_spc_p <data.csv>',
+    example: 'jrc_spc_p ~/spc/inspection_results.csv',
+    tags: ["SPC", "P-chart", "proportion defective", "attribute", "control chart", "Western Electric", "process control"]
+  },
+
+  {
+    id: "jrc_spc_c",
+    name: "jrc_spc_c",
+    description: "C-chart (count of defects per unit) for Poisson-distributed defect counts with a constant inspection area. Computes c-bar, UCL/LCL = c-bar ± 3√c-bar, and applies all 8 Western Electric rules. Saves a PNG with sigma zone lines.",
+    when_to_use: "Use when counting discrete defects (scratches, voids, solder joints) per unit where each unit inspected is the same size or area. Requires equal-area inspection.",
+    syntax: 'jrc_spc_c <data.csv>',
+    example: 'jrc_spc_c ~/spc/defect_counts.csv',
+    tags: ["SPC", "C-chart", "defects per unit", "Poisson", "attribute", "control chart", "Western Electric", "process control"]
   }
 
 ];
@@ -461,6 +512,13 @@ const CATEGORIES = [
       "jrc_msa_type1", "jrc_msa_linearity_bias",
       "jrc_msa_attribute"
     ]
+  },
+  {
+    label: "Statistical Process Control (SPC)",
+    ids: [
+      "jrc_spc_imr", "jrc_spc_xbar_r", "jrc_spc_xbar_s",
+      "jrc_spc_p", "jrc_spc_c"
+    ]
   }
 ];
 
@@ -480,6 +538,7 @@ const TREE = {
     choices: [
       { label: "Plan a test — I need a sample size",          next: "plan" },
       { label: "Analyse data I already have",                 next: "analyse" },
+      { label: "Monitor a process (SPC control chart)",       next: "spc" },
       { label: "Qualify a measurement system (MSA)",          next: "msa" },
       { label: "Generate synthetic test data",                next: "generate" },
       { label: "Prepare my data file",                        next: "prepare" }
@@ -542,6 +601,34 @@ const TREE = {
       { label: "Type 1 gauge capability — single reference part (Cg, Cgk)",  scripts: ["jrc_msa_type1"] },
       { label: "Linearity and bias — accuracy across the measurement range",  scripts: ["jrc_msa_linearity_bias"] },
       { label: "Study design guidance — how many operators and replicates?",  scripts: ["jrc_ss_gauge_rr"] }
+    ]
+  },
+
+  /* ── SPC module ──────────────────────────────────────────────────────── */
+  spc: {
+    question: "What type of data are you charting?",
+    choices: [
+      { label: "Individual continuous measurements (one value per time point)",        next: "spc_individual" },
+      { label: "Subgroups of continuous measurements (multiple values per time point)", next: "spc_subgroup" },
+      { label: "Proportion defective per inspection lot (pass/fail)",                  scripts: ["jrc_spc_p"] },
+      { label: "Count of defects per unit (same-size inspection area)",                scripts: ["jrc_spc_c"] }
+    ]
+  },
+
+  spc_individual: {
+    question: "Are you using fixed control limits from a prior study, or computing from the data?",
+    choices: [
+      { label: "Compute limits from the data (baseline phase)",  scripts: ["jrc_spc_imr"] },
+      { label: "Apply known UCL / LCL (monitoring phase)",       scripts: ["jrc_spc_imr"] }
+    ]
+  },
+
+  spc_subgroup: {
+    question: "How large are your subgroups?",
+    choices: [
+      { label: "n = 2 to 10 (use range-based chart)",           scripts: ["jrc_spc_xbar_r"] },
+      { label: "n > 10 (use standard-deviation-based chart)",   scripts: ["jrc_spc_xbar_s"] },
+      { label: "Not sure — use X-bar/S (works for any n ≥ 2)",  scripts: ["jrc_spc_xbar_s"] }
     ]
   },
 

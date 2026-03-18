@@ -10,6 +10,50 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [1.8.0] — 2026-03-18
+
+### Added
+
+**SPC Module — `repos/spc/`**
+
+Five new R scripts for Statistical Process Control, self-contained under
+`repos/spc/` with shared infrastructure (wrappers, help files, sample data,
+OQ test suite). All scripts implement all 8 Western Electric rules, save a
+PNG chart to `~/Downloads/`, and include bypass protection.
+
+- `jrc_spc_imr` — Individuals and Moving Range chart for individual
+  continuous measurements. Uses d2=1.128, D4=3.267. Supports optional
+  `--ucl`/`--lcl` to apply pre-established limits in monitoring phase.
+  Two-panel PNG (Individuals chart + MR chart).
+- `jrc_spc_xbar_r` — X-bar and R chart for subgrouped data with n = 2–10.
+  Tabulated A2, D3, D4 constants embedded; rejects n > 10 with a suggestion
+  to use X-bar/S. Supports optional `--ucl`/`--lcl`. Two-panel PNG.
+- `jrc_spc_xbar_s` — X-bar and S chart for subgrouped data with any n ≥ 2.
+  Analytical c4(n) using the gamma function; computes A3, B3, B4 dynamically.
+  Supports optional `--ucl`/`--lcl`. Two-panel PNG.
+- `jrc_spc_p` — P-chart (proportion defective) for attribute data with
+  variable subgroup sizes. Per-subgroup UCL/LCL; Western Electric rules
+  applied to standardised z-values. Step-line control limits in PNG.
+- `jrc_spc_c` — C-chart (count of defects per unit) for constant-area
+  inspection. UCL/LCL = c-bar ± 3√c-bar; sigma zone lines in PNG.
+
+**SPC OQ test suite**
+- `repos/spc/oq/` — 55 pytest-based tests across 5 test files (10–12 per
+  script), covering happy paths, known-data numerical checks, error handling,
+  and bypass protection
+- `repos/spc/admin_spc_oq` — SPC OQ runner; reuses the `${PROJECT_ID}_oq`
+  venv, writes timestamped evidence to `~/.jrscript/<PROJECT_ID>/validation/`
+
+**Web interface**
+- `web/script_guide.html`: 5 new SPC script entries; new "Statistical Process
+  Control (SPC)" category in All Scripts tab; new "Monitor a process (SPC
+  control chart)" root branch in the Find-a-script questionnaire with `spc`,
+  `spc_individual`, and `spc_subgroup` decision-tree nodes
+- `web/downloads.html`: SPC Module Validation Documents section with plan and
+  report cards (JR-VP-SPC-001, JR-VR-SPC-001)
+
+---
+
 ## [1.7.0] — 2026-03-18
 
 ### Added
