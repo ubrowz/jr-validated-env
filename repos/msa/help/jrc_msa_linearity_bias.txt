@@ -1,0 +1,54 @@
+
+Description: Gauge Linearity and Bias analysis. Assesses whether the gauge is
+             equally accurate across its operating range (linearity) and whether
+             it reads systematically high or low compared to a reference standard
+             (bias). Fits a linear regression of bias vs reference value and
+             performs per-part t-tests for bias = 0.
+             Saves a two-panel PNG to ~/Downloads/.
+
+Usage: jrc_msa_linearity_bias <data.csv> [--tolerance <value>]
+
+Arguments:
+       data.csv             CSV file with columns: part, reference, value.
+                              part      — part identifier
+                              reference — known true (reference) value
+                              value     — measured value
+                            At least 2 parts and 2 replicates per part required.
+       --tolerance <value>  Optional. Process tolerance (USL - LSL).
+                            When supplied, %Bias and %Linearity are expressed
+                            relative to tolerance. Otherwise expressed relative
+                            to the reference value range.
+       -h | --help          Show this help message
+
+Input CSV format:
+       part,reference,value
+       1,10.00,10.012
+       1,10.00,10.008
+       2,12.50,12.531
+       ...
+
+Output — Terminal:
+       Per-part bias table (mean, bias, 95% CI, p-value)
+       Linearity regression (slope, intercept, R², p-values)
+       Summary (%Linearity, %Bias)
+       Pass/fail verdict
+
+Output — PNG (~/Downloads/):
+       Left panel:  Bias vs Reference — scatter, regression line, 95% CI band
+       Right panel: Per-part bias bar chart with 95% CI error bars
+
+Acceptance criteria (industry standard):
+       %Linearity < 10%   Acceptable
+       %Linearity 10-30%  Marginal
+       %Linearity > 30%   Unacceptable
+       %Bias < 10%        Acceptable
+       %Bias 10-30%       Marginal
+       %Bias > 30%        Unacceptable
+
+       Slope p-value < 0.05 indicates statistically significant linearity error.
+       Per-part p-value < 0.05 indicates significant bias at that reference point.
+
+Examples:
+       jrc_msa_linearity_bias data.csv
+       jrc_msa_linearity_bias data.csv --tolerance 1.0
+
