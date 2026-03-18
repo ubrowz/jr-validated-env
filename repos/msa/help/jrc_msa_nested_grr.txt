@@ -1,0 +1,86 @@
+
+What this script does:
+       Answers the question: "Can we trust our measurement tool — even when we
+       can't measure the same part twice across operators?"
+
+       Some tests destroy or alter the specimen (tensile strength, chemical
+       analysis, plating adhesion). When operators must each receive their own
+       set of specimens, you cannot run a standard Gauge R&R — because you
+       never know whether differences between operators reflect real gauge
+       variation or just natural specimen-to-specimen variation within each
+       operator's batch.
+
+       The Nested Gauge R&R is designed exactly for this situation. Each
+       operator receives a unique set of specimens (their "parts"). The
+       analysis estimates:
+
+         Repeatability — within one operator's batch, how consistent are
+                         repeated measurements of the same specimen?
+         Reproducibility — do different operators get systematically different
+                           readings even when measuring their own specimens?
+         Part-to-Part — how much variation exists between specimens within a
+                        batch?
+
+       The key output is %GRR: what percentage of total observed variation is
+       due to the measurement system. Industry rule of thumb:
+         < 10%   Acceptable
+         10-30%  Marginal — evaluate based on application
+         > 30%   Unacceptable — gauge must be improved before use
+
+       Note: because parts are not shared, the part-to-part estimate is
+       confounded with the operator assignment. This is unavoidable in
+       destructive testing. The analysis assumes operators all received
+       specimens from the same population.
+
+Description: Nested Gauge R&R for destructive or semi-destructive measurement
+             systems. Uses a one-way nested ANOVA (parts nested within
+             operators). Computes repeatability, reproducibility, part-to-part
+             variation, and %GRR from a balanced nested dataset.
+             Saves a two-panel PNG to ~/Downloads/.
+
+Usage: jrc_msa_nested_grr <data.csv> [--tolerance <value>]
+
+Arguments:
+       data.csv             CSV file with columns: operator, part, replicate, value
+                            Parts are nested within operators — each operator
+                            measures a different set of physical specimens.
+                            Part IDs may be reused across operators (e.g., both
+                            A and B can have "part 1" — they are different
+                            physical specimens).
+       --tolerance <value>  Optional. Process tolerance (USL - LSL). When
+                            supplied, %GRR vs tolerance is also reported.
+       -h | --help          Show this help message
+
+Input CSV format:
+       operator,part,replicate,value
+       A,1,1,52.3
+       A,1,2,52.1
+       A,2,1,48.7
+       A,2,2,48.5
+       B,1,1,51.0
+       ...
+
+       Each operator must have the same number of parts.
+       Each operator-part cell must have the same number of replicates (≥ 2).
+
+Output — Terminal:
+       ANOVA table (operator, part-within-operator, residual)
+       Variance components with % contribution
+       Study variation (%Study Var) for each component
+       %GRR vs tolerance (if --tolerance supplied)
+       Pass/fail verdict
+
+Output — PNG (~/Downloads/):
+       Two-panel chart:
+         Left:  Components of variation bar chart
+         Right: Measurements by operator (jittered, coloured by specimen)
+
+Acceptance criteria (industry standard):
+       %GRR < 10%   Acceptable
+       %GRR 10-30%  Marginal — evaluate based on application
+       %GRR > 30%   Unacceptable
+
+Examples:
+       jrc_msa_nested_grr data.csv
+       jrc_msa_nested_grr data.csv --tolerance 10.0
+
