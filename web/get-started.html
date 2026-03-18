@@ -93,13 +93,42 @@
       <div class="callout">You only need to run <code>setup_jr_path.zsh</code> once per machine. Use the <a href="script_guide.html" class="github-link">Script Guide</a> to find the right script for your analysis.</div>
     </div>
 
-    <div class="section-heading">Check installed versions</div>
+    <div class="section-heading">Utility commands</div>
     <div class="card">
-      <p style="font-size:0.92rem;color:#3a3a5e;margin-bottom:4px">To see the currently installed R, Python, and package versions at any time:</p>
-      <div class="cmd-row">
-        <div class="cmd-block">jr_versions</div>
-        <button class="copy-btn" onclick="copyCmd('jr_versions', this)">Copy</button>
+
+      <div class="gs-step">
+        <div class="gs-step-num" style="background:#2E5BBA;font-size:0.7rem">jrrun</div>
+        <div class="gs-step-body">
+          <p><strong>Run any R or Python script in the validated environment.</strong> Every wrapper script calls jrrun internally, but you can also use it directly — for example to run a script that lives outside the JR folder.</p>
+          <div class="cmd-block">jrrun myscript.R data.csv
+jrrun ./custom/analysis.R data.csv
+jrrun myscript.R --help</div>
+          <p style="margin-top:8px;font-size:0.88rem;color:#5060A0">Bare filename → looks in R/ or Python/. Relative or absolute path → resolves from your current directory.</p>
+        </div>
       </div>
+
+      <div class="gs-step">
+        <div class="gs-step-num" style="background:#2E5BBA;font-size:0.55rem;letter-spacing:-0.03em">jr_ver</div>
+        <div class="gs-step-body">
+          <p><strong>Check installed R, Python, and package versions.</strong> Prints pinned vs installed versions with a pass/fail indicator. Useful after setup, after a package update, or during an audit.</p>
+          <div class="cmd-row">
+            <div class="cmd-block">jr_versions</div>
+            <button class="copy-btn" onclick="copyCmd('jr_versions', this)">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="gs-step">
+        <div class="gs-step-num" style="background:#2E5BBA;font-size:0.55rem;letter-spacing:-0.03em">jr_un</div>
+        <div class="gs-step-body">
+          <p><strong>Remove your local JR environment from this machine.</strong> Removes the R library, Python venv, run log, and PATH entry. The renv package cache is preserved so reinstallation is fast. Type <code>yes</code> to confirm.</p>
+          <div class="cmd-row">
+            <div class="cmd-block">jr_uninstall</div>
+            <button class="copy-btn" onclick="copyCmd('jr_uninstall', this)">Copy</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -225,6 +254,32 @@ cd jr-validated-env</div>
     </div>
 
     <div class="callout">The validation evidence included in <code>docs/</code> covers the specific R, Python, and package versions at the time of release. If you install with different versions — because newer installers are available, or because you add or update packages — the included evidence no longer applies. You must perform your own revalidation using the templates in <code>docs/templates/</code> before using the environment in a regulated context.</div>
+
+    <div class="section-heading" style="margin-top:28px">Contributing a script</div>
+    <p style="font-size:0.92rem;color:#3a3a5e;margin-bottom:16px">There are three ways to share a script you have developed, depending on how widely you want to distribute it.</p>
+
+    <div class="adapt-option">
+      <h3>Personal use — no admin required</h3>
+      <p>Run any R or Python script you have written directly in the validated environment using <code>jrrun</code>:</p>
+      <div class="cmd-block" style="margin-top:8px">jrrun ./myscript.R mydata.csv</div>
+      <p style="margin-top:8px">Your script runs with the same pinned packages and integrity checks as the community scripts. No changes to the project are needed.</p>
+    </div>
+
+    <div class="adapt-option">
+      <h3>Team contribution — ask your administrator</h3>
+      <p>If your script is useful to the wider team, ask your administrator to add it as a community script. You provide:</p>
+      <ol>
+        <li>The finished R or Python script</li>
+        <li>Help text — what it does, what arguments it takes, and a usage example</li>
+      </ol>
+      <p>The administrator uses <code>admin_scaffold_R</code> or <code>admin_scaffold_Python</code> to create the wrapper and help file, adds any required packages, regenerates the integrity file, and runs the OQ suite to confirm everything passes.</p>
+    </div>
+
+    <div class="adapt-option">
+      <h3>Public contribution — GitHub</h3>
+      <p>If your script could be useful beyond your own organisation, contribute it to the public repository. Open a GitHub issue first describing the script — what it does, when an engineer would use it, what inputs and outputs it has, and any new packages required. If the proposal is approved, submit a pull request with the script, wrapper, help file, and OQ tests.</p>
+      <p>Accepted scripts are included in a future minor release with full validation documentation. See <a href="https://github.com/ubrowz/jr-validated-env/blob/main/CONTRIBUTING.md" class="github-link">CONTRIBUTING.md</a> for the full process.</p>
+    </div>
 
   </div>
 

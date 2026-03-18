@@ -1,20 +1,128 @@
 # Contributing to JR Validated Environment
 
-Thank you for your interest in contributing. This document explains how to
-get started, what we expect from contributions, and what kinds of changes
-are and are not accepted.
+Thank you for your interest in contributing. There are three levels of
+contribution depending on how widely you want to share your work.
 
 ---
 
 ## Table of Contents
 
-1. [Before You Start](#before-you-start)
-2. [Setting Up a Development Environment](#setting-up-a-development-environment)
-3. [Branch Naming Conventions](#branch-naming-conventions)
-4. [Commit Message Format](#commit-message-format)
-5. [Linting zsh Scripts](#linting-zsh-scripts)
-6. [Pull Request Process](#pull-request-process)
-7. [What We Will and Will Not Accept](#what-we-will-and-will-not-accept)
+1. [Three levels of contribution](#three-levels-of-contribution)
+2. [Contributing Community Scripts](#contributing-community-scripts)
+3. [Before You Start](#before-you-start)
+4. [Setting Up a Development Environment](#setting-up-a-development-environment)
+5. [Branch Naming Conventions](#branch-naming-conventions)
+6. [Commit Message Format](#commit-message-format)
+7. [Linting zsh Scripts](#linting-zsh-scripts)
+8. [Pull Request Process](#pull-request-process)
+9. [What We Will and Will Not Accept](#what-we-will-and-will-not-accept)
+
+---
+
+## Three levels of contribution
+
+### Level 1 — Personal use (no admin required)
+
+If you have written an R or Python script for your own analysis, you can
+run it immediately in the validated environment using `jrrun`:
+
+```zsh
+jrrun ./myscript.R mydata.csv
+jrrun ./myanalysis.py mydata.csv
+```
+
+Your script runs with the same pinned packages and integrity-checked
+infrastructure as the community scripts. No changes to the project are
+needed and no admin action is required.
+
+---
+
+### Level 2 — Team contribution (admin required)
+
+If your script is useful to the wider team and you want it to become an
+official community script, ask your administrator to add it.
+
+**Your responsibilities:**
+- Provide the finished R or Python script.
+- Provide the help text — what the script does, what arguments it takes,
+  and a usage example. The administrator will use this to populate the
+  help file.
+
+**What the administrator does:**
+1. Runs `admin_scaffold_R jrc_yourscript` (or `admin_scaffold_Python`)
+   to create the script template, wrapper, and help file.
+2. Copies your script content in and fills in the help file.
+3. If new packages are required, adds them:
+   ```zsh
+   ./admin/admin_install_R --add packagename==1.2.3
+   ```
+4. Regenerates the integrity file and runs the OQ suite to confirm all
+   tests still pass.
+5. Updates `CHANGELOG.md` and commits.
+
+The script is then available to all team members on their next sync.
+
+> **Note on revalidation:** Adding a community script is a change to the
+> validated configuration. The administrator must confirm that the OQ test
+> suite passes in full before the script is used in a regulated context.
+
+---
+
+### Level 3 — Public contribution (GitHub)
+
+If your script could be useful to organisations beyond your own team,
+you are welcome to contribute it to this repository. Open an issue
+first to discuss the proposal — see
+[Contributing Community Scripts](#contributing-community-scripts) below
+for the full process.
+
+---
+
+## Contributing Community Scripts
+
+Community scripts are the R and Python analysis scripts in `R/` and
+`Python/`. If you have a validated analysis script that is statistically
+sound and broadly applicable to design verification workflows, here is
+how to contribute it.
+
+### Step 1 — Open a GitHub issue
+
+Before writing code, open an issue describing:
+- What the script does and which statistical method it implements.
+- When an engineer would use it (the decision point in a design
+  verification workflow).
+- What inputs it expects (argument list) and what outputs it produces
+  (terminal output, CSV, PNG).
+- Any R or Python packages it requires that are not already in
+  `admin/R_requirements.txt` or `admin/python_requirements.txt`.
+
+This gives the maintainer a chance to confirm the script fits the
+project's scope and conventions before you invest time writing it.
+
+### Step 2 — Develop the script
+
+Follow the conventions in `docs/admin_manual.pdf`. Key requirements:
+
+| Artefact | Location | Notes |
+|---|---|---|
+| Script | `R/jrc_yourscript.R` or `Python/jrc_yourscript.py` | Follow the bypass-protection pattern in existing scripts |
+| Wrapper | `wrapper/jrc_yourscript` | Generate with `admin_scaffold_R` or `admin_scaffold_Python` |
+| Help file | `help/jrc_yourscript.txt` | Plain text; describes all arguments and gives a usage example |
+| OQ tests | `oq/test_yourscript.py` | pytest; covers at least the happy path and one boundary/edge case |
+
+The script name must follow the `jrc_` prefix convention. Input data
+must follow the standard two-column CSV format (`id`, `value`).
+
+### Step 3 — Submit a pull request
+
+Submit a pull request referencing the issue. The maintainer will:
+- Review the statistical method for correctness and appropriate scope.
+- Test the script against the stated acceptance criteria.
+- Verify the OQ tests pass.
+- Assess the help text for clarity.
+
+Accepted scripts are included in a future minor release with a
+CHANGELOG entry and updated validation documents.
 
 ---
 
