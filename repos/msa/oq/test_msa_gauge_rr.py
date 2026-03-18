@@ -1,0 +1,179 @@
+"""
+OQ test suite — MSA module: jrc_msa_gauge_rr
+
+Maps to validation plan JR-VP-MSA-001 as follows:
+
+  TC-MSA-GRR-001  Balanced dataset → exit 0, key output sections present
+  TC-MSA-GRR-002  Known dataset → %GRR in expected range, verdict ACCEPTABLE
+  TC-MSA-GRR-003  --tolerance flag → %GRR vs tolerance reported, exit 0
+  TC-MSA-GRR-004  PNG written to ~/Downloads/
+  TC-MSA-GRR-005  No arguments → non-zero exit, usage message
+  TC-MSA-GRR-006  File not found → non-zero exit
+  TC-MSA-GRR-007  Missing column → non-zero exit, column name in output
+  TC-MSA-GRR-008  Unbalanced design → non-zero exit, 'unbalanced' in output
+  TC-MSA-GRR-009  Single operator → non-zero exit
+  TC-MSA-GRR-010  Bypass protection — direct Rscript call fails
+"""
+
+import glob
+import os
+import re
+import subprocess
+import time
+
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+
+
+DOWNLOADS = os.path.expanduser("~/Downloads")
+
+
+def _recent_png(pattern, t_start):
+    """Return list of PNGs matching pattern in ~/Downloads created after t_start."""
+    return [
+        f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
+        if os.path.getmtime(f) >= t_start
+    ]
+
+
+# ===========================================================================
+# OQ tests
+# ===========================================================================
+
+class TestGaugeRR:
+
+    def test_tc_msa_grr_001_happy_path_exits_zero(self):
+        """
+        TC-MSA-GRR-001:
+        Balanced 10-part / 3-operator / 3-replicate dataset → exit 0.
+        Output must contain ANOVA table header, variance components section,
+        study variation section, and a verdict line.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
+        assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
+        assert "ANOVA" in out,               "ANOVA table header missing"
+        assert "Variance Components" in out, "Variance components section missing"
+        assert "Study Variation" in out,     "Study variation section missing"
+        assert "Verdict" in out,             "Verdict section missing"
+        assert "Gauge R&R" in out,           "'Gauge R&R' label missing"
+
+    def test_tc_msa_grr_002_known_data_grr_range(self):
+        """
+        TC-MSA-GRR-002:
+        The balanced sample dataset is designed so that part-to-part variation
+        dominates. %GRR must be below 15% and the verdict must be ACCEPTABLE.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
+        assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
+
+        # Extract %GRR value from the Verdict line: "  %GRR (%%Study Var): X.XX%  →  ..."
+        m = re.search(r"%GRR\s*\(%Study Var\)[:\s]+([\d.]+)%", out)
+        assert m, f"Could not parse %%GRR from output:\n{out}"
+        pct_grr = float(m.group(1))
+        assert pct_grr < 15.0, f"%%GRR = {pct_grr:.2f}%% — expected < 15%% for this dataset"
+
+        assert "ACCEPTABLE" in out, f"Expected verdict ACCEPTABLE:\n{out}"
+
+    def test_tc_msa_grr_003_tolerance_flag(self):
+        """
+        TC-MSA-GRR-003:
+        When --tolerance 1.0 is passed, the output must include a %GRR vs
+        tolerance line. Exit code must be 0.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"),
+                "--tolerance", "1.0")
+        assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
+        assert "Tolerance" in out or "tolerance" in out, \
+            f"Expected tolerance line in output:\n{out}"
+
+    def test_tc_msa_grr_004_png_created(self):
+        """
+        TC-MSA-GRR-004:
+        A PNG file matching *_jrc_msa_gauge_rr.png must be created in
+        ~/Downloads/ during this run.
+        """
+        t_start = time.time()
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
+        assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        recent = _recent_png("*_jrc_msa_gauge_rr.png", t_start)
+        assert recent, \
+            "No *_jrc_msa_gauge_rr.png found in ~/Downloads/ after run"
+
+    def test_tc_msa_grr_005_no_arguments(self):
+        """
+        TC-MSA-GRR-005:
+        Calling with no arguments must exit non-zero and print a usage message.
+        """
+        r = run("jrc_msa_gauge_rr.R")
+        assert r.returncode != 0, "Expected non-zero exit with no arguments"
+        out = combined(r)
+        assert "Usage" in out or "usage" in out, \
+            f"Expected usage message:\n{out}"
+
+    def test_tc_msa_grr_006_file_not_found(self):
+        """
+        TC-MSA-GRR-006:
+        A non-existent CSV path must exit non-zero with a message containing
+        'not found' or the filename.
+        """
+        r = run("jrc_msa_gauge_rr.R", "/tmp/does_not_exist_xyz.csv")
+        assert r.returncode != 0, "Expected non-zero exit for missing file"
+        out = combined(r)
+        assert "not found" in out.lower() or "does_not_exist" in out, \
+            f"Expected 'not found' or filename in output:\n{out}"
+
+    def test_tc_msa_grr_007_missing_column(self):
+        """
+        TC-MSA-GRR-007:
+        A CSV missing the 'operator' column must exit non-zero and name the
+        missing column in the error output.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_missing_col.csv"))
+        assert r.returncode != 0, "Expected non-zero exit for missing column"
+        out = combined(r)
+        assert "operator" in out.lower(), \
+            f"Expected 'operator' mentioned in error:\n{out}"
+
+    def test_tc_msa_grr_008_unbalanced_design(self):
+        """
+        TC-MSA-GRR-008:
+        An unbalanced dataset (unequal replicates per cell) must exit non-zero
+        and mention 'unbalanced' or 'replicates' in the output.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_unbalanced.csv"))
+        assert r.returncode != 0, "Expected non-zero exit for unbalanced design"
+        out = combined(r)
+        assert any(kw in out.lower() for kw in ("unbalanced", "replicates", "equal")), \
+            f"Expected unbalanced-design message:\n{out}"
+
+    def test_tc_msa_grr_009_single_operator(self):
+        """
+        TC-MSA-GRR-009:
+        A dataset with only one operator must exit non-zero. Gauge R&R requires
+        at least two operators to estimate reproducibility.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_one_operator.csv"))
+        assert r.returncode != 0, "Expected non-zero exit with only one operator"
+
+    def test_tc_msa_grr_010_bypass_protection(self):
+        """
+        TC-MSA-GRR-010:
+        Calling jrc_msa_gauge_rr.R directly via Rscript without RENV_PATHS_ROOT
+        must exit non-zero and mention RENV_PATHS_ROOT in the error output.
+        """
+        script = os.path.join(MODULE_ROOT, "R", "jrc_msa_gauge_rr.R")
+        env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
+        result = subprocess.run(
+            ["Rscript", script, data("gauge_rr_balanced.csv")],
+            capture_output=True,
+            text=True,
+            env=env,
+            cwd=PROJECT_ROOT,
+        )
+        assert result.returncode != 0, \
+            "Expected non-zero exit when called without RENV_PATHS_ROOT"
+        out = result.stdout + result.stderr
+        assert "RENV_PATHS_ROOT" in out, \
+            f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
