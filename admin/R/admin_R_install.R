@@ -52,7 +52,7 @@ BINARY_TYPE <- paste0("mac.binary.", MACOS_PLATFORM)
 r_minor     <- paste(R.version$major,
                      sub("\\..*", "", R.version$minor), sep = ".")
 
-# miniCRAN 0.3.x does not recognise "mac.binary.big-sur" (Intel macOS).
+# miniCRAN 0.3.x does not recognise "mac.binary.big-sur-x86_64" (Intel macOS).
 # When that type is absent from miniCRAN's repoPrefix switch we fall back to
 # downloading source via miniCRAN and fetching binaries manually.
 MINICRAN_BINARY_TYPES <- c("win.binary", "mac.binary",

@@ -36,7 +36,7 @@ export ADD_PACKAGE=""
 if [[ "$(uname -m)" == "arm64" ]]; then
   export R_MACOS_PLATFORM="big-sur-arm64"
 else
-  export R_MACOS_PLATFORM="big-sur"
+  export R_MACOS_PLATFORM="big-sur-x86_64"
 fi
 
 # --- Clear R library overrides
