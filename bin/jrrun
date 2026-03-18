@@ -75,11 +75,27 @@ elif [[ "$1" == */* ]]; then
   # Relative path with directory component — resolve from CALL_DIR
   TARGET_SCRIPT="$CALL_DIR/$1"
 else
-  # Bare filename — look in the appropriate subfolder based on extension
+  # Bare filename — look in core subfolder first, then search repos/*/
   case "$1" in
-    *.R)  TARGET_SCRIPT="$PROJECT_ROOT/R/$1"      ;;
-    *.py) TARGET_SCRIPT="$PROJECT_ROOT/Python/$1" ;;
-    *)    TARGET_SCRIPT="$CALL_DIR/$1"             ;;
+    *.R)
+      if [[ -f "$PROJECT_ROOT/R/$1" ]]; then
+        TARGET_SCRIPT="$PROJECT_ROOT/R/$1"
+      else
+        for _repo_dir in "$PROJECT_ROOT/repos"/*/R; do
+          if [[ -f "$_repo_dir/$1" ]]; then TARGET_SCRIPT="$_repo_dir/$1"; break; fi
+        done
+      fi
+      ;;
+    *.py)
+      if [[ -f "$PROJECT_ROOT/Python/$1" ]]; then
+        TARGET_SCRIPT="$PROJECT_ROOT/Python/$1"
+      else
+        for _repo_dir in "$PROJECT_ROOT/repos"/*/Python; do
+          if [[ -f "$_repo_dir/$1" ]]; then TARGET_SCRIPT="$_repo_dir/$1"; break; fi
+        done
+      fi
+      ;;
+    *)    TARGET_SCRIPT="$CALL_DIR/$1" ;;
   esac
 fi
 
@@ -99,13 +115,21 @@ shift   # remaining $@ are arguments to the script
 # --- Per-script help: forward --help to the script's help file if present
 for arg in "$@"; do
   if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
-    SCRIPT_HELP="$PROJECT_ROOT/help/$(basename "${TARGET_SCRIPT%.*}").txt"
+    _script_name="$(basename "${TARGET_SCRIPT%.*}")"
+    SCRIPT_HELP="$PROJECT_ROOT/help/${_script_name}.txt"
+    if [[ ! -f "$SCRIPT_HELP" ]]; then
+      for _repo_dir in "$PROJECT_ROOT/repos"/*/help; do
+        if [[ -f "$_repo_dir/${_script_name}.txt" ]]; then
+          SCRIPT_HELP="$_repo_dir/${_script_name}.txt"; break
+        fi
+      done
+    fi
     if [[ -f "$SCRIPT_HELP" ]]; then
       cat "$SCRIPT_HELP"
       exit 0
     else
       echo "ℹ️  No help file found for $(basename "$TARGET_SCRIPT")"
-      echo "   Expected: $SCRIPT_HELP"
+      echo "   Expected: $PROJECT_ROOT/help/${_script_name}.txt"
       exit 0
     fi
   fi

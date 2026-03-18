@@ -1,0 +1,15 @@
+
+Description: Runs a hello-world R script in the MSA validated environment. Displays a text
+             message and saves a static space nebula plot as a PNG to the Downloads folder.
+             Used to verify that the R validated environment is working correctly
+             for the MSA module.
+
+Usage: jrc_msa_R_hello "text"
+
+Arguments:
+       text              string between quotes. Should contain no special characters
+       -h | --help       Show this help message
+
+Example:
+       jrc_msa_R_hello "Hello MSA"
+

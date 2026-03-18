@@ -22,6 +22,10 @@ fi
   echo ""
   echo "# JR Validated Environment — begin"
   echo "export PATH=\"\$PATH:$SCRIPT_DIR/bin:$SCRIPT_DIR/wrapper\""
+  echo "for _jr_repo in \"$SCRIPT_DIR/repos\"/*/wrapper; do"
+  echo "  [[ -d \"\$_jr_repo\" ]] && export PATH=\"\$PATH:\$_jr_repo\""
+  echo "done"
+  echo "unset _jr_repo"
   echo "# JR Validated Environment — end"
 } >> "$ZPROFILE"
 
