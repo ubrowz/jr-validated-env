@@ -793,6 +793,37 @@ footer {
 .footer-link { color: #7080B0; text-decoration: none; }
 .footer-link:hover { color: #A0A8C8; }
 
+.footer-warranty {
+  max-width: 700px;
+  margin: 12px auto 0;
+  border-top: 1px solid #2e2e4e;
+  padding-top: 10px;
+}
+.footer-warranty summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #5060A0;
+  user-select: none;
+  list-style: none;
+}
+.footer-warranty summary::-webkit-details-marker { display: none; }
+.footer-warranty summary::before { content: "▸  "; }
+details.footer-warranty[open] summary::before { content: "▾  "; }
+.footer-warranty summary:hover { color: #7080B0; }
+.footer-warranty-body {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: #5060A0;
+  line-height: 1.55;
+}
+.footer-warranty-body h4 {
+  font-size: 0.72rem;
+  color: #7080B0;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.footer-warranty-body p { margin-bottom: 6px; }
+
 /* ── Downloads page ────────────────────────────────────────────────────────── */
 .download-card {
   background: #fff;
