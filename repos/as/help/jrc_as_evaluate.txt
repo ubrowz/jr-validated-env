@@ -1,0 +1,88 @@
+
+What this script does:
+       This script applies a previously designed acceptance sampling plan to actual
+       lot inspection data and produces a binding ACCEPT or REJECT verdict. It
+       supports two modes: attributes (pass/fail data) and variables (measurement
+       data, k-method).
+
+       In attributes mode, the script reads a CSV of individual inspection results
+       (0 = conforming, 1 = defective), counts the total number of defectives d,
+       and compares to the acceptance number c. If d <= c the lot is accepted; if
+       d > c it is rejected.
+
+       In variables mode, the script reads measurement values, computes the sample
+       mean x-bar and standard deviation s, and computes quality indices Q_L and/or
+       Q_U. These are compared to the acceptability constant k from the variables
+       plan (obtained from jrc_as_variables). The lot is accepted only if all
+       applicable quality indices are >= k.
+
+       For variables mode, the normality assumption applies: the measurement
+       characteristic should be approximately normally distributed. If this
+       assumption is violated, use attributes sampling instead.
+
+Description: Apply an acceptance sampling plan to inspection data and produce
+             an ACCEPT/REJECT verdict. Supports attributes (pass/fail) and
+             variables (measurement, k-method) modes. Saves a PNG summary.
+
+Usage:
+       jrc_as_evaluate <data.csv> --type attributes --c <int>
+       jrc_as_evaluate <data.csv> --type variables --k <value> [--lsl value] [--usl value]
+
+Arguments:
+       data.csv            Input CSV file (see format below).
+       --type              "attributes" or "variables" (required).
+       --c <int>           Attributes mode: acceptance number (non-negative integer).
+       --k <value>         Variables mode: acceptability constant from jrc_as_variables.
+       --lsl <value>       Variables mode: lower specification limit.
+       --usl <value>       Variables mode: upper specification limit.
+                           At least one of --lsl or --usl must be provided in variables mode.
+       -h | --help         Show this help message.
+
+Input CSV format — attributes mode:
+       id,result
+       1,0
+       2,0
+       3,1
+       ...
+
+       The 'id' column is a label (unit ID, date, etc.).
+       The 'result' column must be 0 (conforming) or 1 (defective).
+
+Input CSV format — variables mode:
+       id,value
+       1,10.42
+       2,10.38
+       ...
+
+       The 'id' column is a label. The 'value' column is the numeric measurement.
+
+Output — Terminal (attributes):
+       Number of units inspected, defectives found, acceptance number.
+       Verdict: ACCEPT (d <= c) or REJECT (d > c).
+
+Output — Terminal (variables):
+       Sample size, mean, and standard deviation.
+       Quality indices Q_L and/or Q_U with comparison to k.
+       Verdict: ACCEPT (all Q >= k) or REJECT (any Q < k).
+
+Output — PNG (~/Downloads/):
+       Attributes mode: horizontal bar chart showing defectives vs. acceptance number.
+         Green (blue) fill = ACCEPT; red fill = REJECT.
+       Variables mode: histogram of measurements with vertical lines for LSL/USL,
+         mean, and annotation box showing Q values and verdict.
+       Filename: <datetime>_jrc_as_evaluate.png
+
+Interpretation guidance:
+       The acceptance number c and constant k must come from a validated sampling
+       plan designed with jrc_as_attributes or jrc_as_variables.
+       Do not change c or k after the plan has been validated.
+       A REJECT verdict requires disposition of the lot per your quality procedures
+       (100% inspection, return to supplier, or destruction, as appropriate).
+       A REJECT verdict does not mean every unit is defective — it means the
+       sampled evidence is insufficient to accept the lot at the specified quality level.
+
+Example:
+       jrc_as_evaluate inspection_data.csv --type attributes --c 2
+       jrc_as_evaluate measurements.csv --type variables --k 1.6545 --lsl 9.5
+       jrc_as_evaluate measurements.csv --type variables --k 1.8 --lsl 9.0 --usl 11.0
+

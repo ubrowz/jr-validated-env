@@ -10,9 +10,41 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
-## [Unreleased] — 2026-03-19
+## [1.9.0] — 2026-03-19
 
 ### Added
+
+**Acceptance Sampling Module — `repos/as/`**
+
+Four new R scripts for acceptance sampling plan design and evaluation,
+self-contained under `repos/as/` with shared infrastructure (wrappers,
+help files, sample data, OQ test suite).
+
+- `jrc_as_attributes` — Design an attributes sampling plan. Finds both
+  a single-sampling plan (n, c) and a double-sampling plan (n1, c1, n2, c2)
+  satisfying user-specified AQL, RQL, producer's risk α, and consumer's risk β.
+  Uses hypergeometric distribution when n/N > 0.10, binomial otherwise.
+  Outputs OC curves for both plans and Average Sample Number (ASN) comparison.
+  Saves dual-plan OC curve PNG to `~/Downloads/`.
+- `jrc_as_variables` — Design a variables sampling plan using the k-method
+  with unknown σ (ANSI/ASQ Z1.9 approach). Supports one-sided (`--sides 1`,
+  default) and two-sided (`--sides 2`) specification limits. Reports efficiency
+  gain versus an equivalent attributes plan. Saves OC curve PNG.
+- `jrc_as_oc_curve` — Plot the Operating Characteristic (OC) curve for any
+  user-specified (n, c) attributes plan. Supports finite lot correction via
+  `--lot-size` and optional AQL/RQL annotations.
+- `jrc_as_evaluate` — Apply a plan to actual lot data and produce an
+  ACCEPT/REJECT verdict. Attributes mode: reads a CSV with `id, result`
+  (0=conforming, 1=defective) and compares defective count to acceptance number c.
+  Variables mode: reads a CSV with `id, value` and compares quality index
+  Q = (x̄ − spec limit)/s to acceptability constant k for each applicable limit.
+  Saves a summary PNG to `~/Downloads/`.
+
+All scripts use base R distributions (`pbinom`, `phyper`, `pt`, `qt`) and
+ggplot2 — no new package dependencies. No environment revalidation required.
+
+OQ: 44 automated tests across 4 test files.
+Validation plan: JR-VP-AS-001. Validation report: JR-VR-AS-001.
 
 **Home page redesign (`web/index.html`, `web/style.css`)**
 

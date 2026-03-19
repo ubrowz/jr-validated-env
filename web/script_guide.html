@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Script Guide — JR Validated Environment</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -478,6 +478,47 @@ const SCRIPTS = [
     syntax: 'jrc_spc_c <data.csv>',
     example: 'jrc_spc_c ~/spc/defect_counts.csv',
     tags: ["SPC", "C-chart", "defects per unit", "Poisson", "attribute", "control chart", "Western Electric", "process control"]
+  },
+
+  /* ── AS — Acceptance Sampling ───────────────────────────────────────────── */
+  {
+    id: "jrc_as_attributes",
+    name: "jrc_as_attributes",
+    description: "Designs an attributes acceptance sampling plan (single and double sampling). Computes sample size n and acceptance number c for the single plan; n1, c1, c2 for the double plan. Uses hypergeometric or binomial distribution. Reports OC curve table and average sample number (ASN) comparison. Saves a dual-plan OC curve PNG.",
+    when_to_use: "Use when you need to decide whether to accept or reject a production lot based on pass/fail inspection of a sample. Covers single and double sampling plan design.",
+    syntax: 'jrc_as_attributes <lot_size> <aql> <rql> [--alpha 0.05] [--beta 0.10]',
+    example: 'jrc_as_attributes 500 0.01 0.10',
+    tags: ["acceptance sampling", "attributes", "single sampling", "double sampling", "AQL", "RQL", "OC curve", "ASN", "lot inspection"]
+  },
+
+  {
+    id: "jrc_as_variables",
+    name: "jrc_as_variables",
+    description: "Designs a variables acceptance sampling plan using the k-method with unknown process sigma. Accepts one-sided (--sides 1) or two-sided (--sides 2) specifications. Reports sample size n, acceptability constant k, achieved risks, and a comparison with the equivalent attributes plan. Saves an OC curve PNG.",
+    when_to_use: "Use when measurements (not just pass/fail) are available. Variables plans require fewer samples than attributes plans because they extract more information from each unit.",
+    syntax: 'jrc_as_variables <lot_size> <aql> <rql> [--alpha 0.05] [--beta 0.10] [--sides 1]',
+    example: 'jrc_as_variables 500 0.01 0.10',
+    tags: ["acceptance sampling", "variables", "k-method", "AQL", "RQL", "OC curve", "lot inspection", "measurement"]
+  },
+
+  {
+    id: "jrc_as_oc_curve",
+    name: "jrc_as_oc_curve",
+    description: "Plots the Operating Characteristic (OC) curve for any attributes sampling plan defined by (n, c). Accepts an optional lot size N for hypergeometric correction. Optional AQL and RQL markers are added to the plot. Prints a Pa table (p, Pa, 1−Pa) and saves a PNG.",
+    when_to_use: "Use to visualise the OC curve of a sampling plan you have already designed — either from jrc_as_attributes or from a standard (e.g. MIL-STD-1916, ANSI/ASQ Z1.4).",
+    syntax: 'jrc_as_oc_curve <n> <c> [--lot-size N] [--aql value] [--rql value]',
+    example: 'jrc_as_oc_curve 51 2 --lot-size 500 --aql 0.01 --rql 0.10',
+    tags: ["acceptance sampling", "OC curve", "operating characteristic", "attributes", "AQL", "RQL", "lot inspection"]
+  },
+
+  {
+    id: "jrc_as_evaluate",
+    name: "jrc_as_evaluate",
+    description: "Applies an acceptance sampling plan to a real inspection lot and produces an ACCEPT or REJECT verdict. Attributes mode: reads a 0/1 CSV, counts defectives, compares to acceptance number c. Variables mode: reads a measurement CSV, computes the Q-statistic vs acceptability constant k. Saves a verdict PNG.",
+    when_to_use: "Use after sampling from a production lot to record the formal lot disposition decision. Supports both attributes and variables plans. Output is a timestamped evidence file.",
+    syntax: 'jrc_as_evaluate <data.csv> --type <attributes|variables> [--c <c>] [--k <k>] [--lsl <value>] [--usl <value>] [--n <n>]',
+    example: 'jrc_as_evaluate ~/data/lot_results.csv --type attributes --n 51 --c 2',
+    tags: ["acceptance sampling", "evaluate", "lot disposition", "ACCEPT", "REJECT", "attributes", "variables", "k-method", "lot inspection"]
   }
 
 ];
@@ -537,6 +578,13 @@ const CATEGORIES = [
       "jrc_spc_imr", "jrc_spc_xbar_r", "jrc_spc_xbar_s",
       "jrc_spc_p", "jrc_spc_c"
     ]
+  },
+  {
+    label: "Acceptance Sampling (AS)",
+    ids: [
+      "jrc_as_attributes", "jrc_as_variables",
+      "jrc_as_oc_curve", "jrc_as_evaluate"
+    ]
   }
 ];
 
@@ -558,6 +606,7 @@ const TREE = {
       { label: "Analyse data I already have",                 next: "analyse" },
       { label: "Monitor a process (SPC control chart)",       next: "spc" },
       { label: "Qualify a measurement system (MSA)",          next: "msa" },
+      { label: "Acceptance sampling — inspect and accept or reject a lot", next: "as" },
       { label: "Generate synthetic test data",                next: "generate" },
       { label: "Prepare my data file",                        next: "prepare" }
     ]
@@ -691,6 +740,24 @@ const TREE = {
     choices: [
       { label: "Multi-column delimited file (CSV, TSV, space-separated, semicolons)", scripts: ["jrc_convert_csv"] },
       { label: "Single-column plain text file (one number per line)",                 scripts: ["jrc_convert_txt"] }
+    ]
+  },
+
+  /* ── Acceptance Sampling module ─────────────────────────────────────── */
+  as: {
+    question: "What do you need to do?",
+    choices: [
+      { label: "Design a sampling plan — I need n and c (or n and k)",  next: "as_design" },
+      { label: "Evaluate a lot — apply a plan and get ACCEPT / REJECT",  scripts: ["jrc_as_evaluate"] },
+      { label: "Plot the OC curve for a plan I already have",            scripts: ["jrc_as_oc_curve"] }
+    ]
+  },
+
+  as_design: {
+    question: "What type of inspection data will you collect?",
+    choices: [
+      { label: "Pass/fail counts — attributes plan (single or double sampling)",              scripts: ["jrc_as_attributes"] },
+      { label: "Measurements — variables plan (k-method, fewer samples needed)",             scripts: ["jrc_as_variables"] }
     ]
   },
 
@@ -2045,7 +2112,7 @@ render("root");
     <span class="footer-sep">·</span>
     <span>Apache 2.0</span>
     <span class="footer-sep">·</span>
-    <span>v1.8.0</span>
+    <span>v1.9.0</span>
   </div>
   <details class="footer-warranty">
     <summary>No Warranty</summary>

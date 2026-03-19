@@ -1,0 +1,83 @@
+
+What this script does:
+       This script designs an acceptance sampling plan for attributes inspection
+       (pass/fail or conforming/defective classification). It computes both a
+       single sampling plan and a double sampling plan that satisfy the producer's
+       risk (alpha) at the AQL and the consumer's risk (beta) at the RQL.
+
+       Acceptance sampling is a statistical quality-control technique used to
+       decide whether to accept or reject a lot of product based on inspection of
+       a sample. The Acceptance Quality Limit (AQL) is the worst tolerable process
+       average quality level — a plan must accept lots at the AQL with high
+       probability (1 - alpha). The Rejectable Quality Level (RQL, sometimes called
+       LTPD or LQL) is the fraction defective that should be rejected with high
+       probability (beta is the consumer's risk of accepting an RQL lot).
+
+       The script uses the hypergeometric distribution when the sample fraction
+       n/N exceeds 10% (finite population correction), and the binomial distribution
+       otherwise. This matches standard practice in ANSI/ASQ Z1.4 and ISO 2859.
+
+       A single sampling plan inspects n units and accepts the lot if defectives
+       d <= c (acceptance number). A double sampling plan inspects n1 units first:
+       if d1 <= c1, accept immediately; if d1 > c2, reject immediately; otherwise
+       inspect n2 = n1 more units and accept if d1+d2 <= c2. The double plan
+       typically reduces average sample size at AQL and RQL quality levels.
+
+       The OC (Operating Characteristic) curve shows the probability of accepting
+       lots at each fraction defective level. A well-designed plan has Pa near 1
+       at p = AQL and Pa near 0 at p = RQL. The script plots OC curves for both
+       single (solid) and double (dashed) plans on the same chart.
+
+Description: Design attributes acceptance sampling plans (single and double)
+             satisfying producer's and consumer's risk requirements. Outputs
+             plan parameters, achieved risks, OC curve table, and a PNG.
+
+Usage: jrc_as_attributes <lot_size> <aql> <rql> [--alpha value] [--beta value]
+
+Arguments:
+       lot_size        Lot size N (positive integer >= 2)
+       aql             Acceptance Quality Limit as a decimal fraction (e.g. 0.01 = 1%).
+                       Must be strictly between 0 and 1.
+       rql             Rejectable Quality Level as a decimal fraction.
+                       Must be strictly between 0 and 1, and greater than aql.
+       --alpha <val>   Producer's risk: probability of rejecting a lot at AQL.
+                       Default: 0.05 (5%).
+       --beta  <val>   Consumer's risk: probability of accepting a lot at RQL.
+                       Default: 0.10 (10%).
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Single sampling plan:
+         n     — sample size
+         c     — acceptance number
+         r     — rejection number (c + 1)
+         Achieved alpha and beta at the plan parameters
+
+       Double sampling plan:
+         n1    — first-stage sample size
+         c1    — first-stage acceptance number
+         c2    — final acceptance number (rejection number r1 = c2 + 1)
+         n2    — second-stage sample size (equal to n1 by ANSI convention)
+         Achieved alpha and beta
+         ASN at AQL and RQL compared to the single plan sample size
+
+       OC Curve table: fraction defective p vs. probability of acceptance Pa
+
+Output — PNG (~/Downloads/):
+       OC curve plot showing both single (solid, blue) and double (dashed, red)
+       plans on the same axes. Vertical dashed lines mark AQL and RQL.
+       Filename: <datetime>_jrc_as_attributes.png
+
+Interpretation guidance:
+       Achieved alpha <= target alpha means the plan does not over-reject good lots.
+       Achieved beta <= target beta means the plan does not over-accept bad lots.
+       The double plan's ASN should be less than the single plan's n at AQL quality,
+       meaning on average you inspect fewer units when the lot is good.
+       If no plan is found within n <= 500, tighten the risk targets or reduce
+       the ratio rql/aql to make the discrimination problem easier.
+
+Example:
+       jrc_as_attributes 500 0.01 0.10
+       jrc_as_attributes 200 0.025 0.10 --alpha 0.05 --beta 0.10
+       jrc_as_attributes 1000 0.005 0.05 --beta 0.05
+

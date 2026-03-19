@@ -1,0 +1,59 @@
+
+What this script does:
+       This script plots the Operating Characteristic (OC) curve for any attributes
+       acceptance sampling plan defined by a sample size n and acceptance number c.
+       Use it to visualise how a plan performs across the entire range of lot quality,
+       or to evaluate a plan that has been specified externally (e.g. from a standard
+       such as ANSI/ASQ Z1.4 or ISO 2859).
+
+       The OC curve shows the probability of accepting a lot (Pa) as a function of
+       the true fraction defective (p) in the lot. A steeply-sloping OC curve
+       indicates a plan that discriminates well between good and bad lots. A flat
+       curve indicates poor discrimination. At p = 0, Pa = 1.0 (every perfect lot
+       is accepted). As p increases, Pa decreases.
+
+       By default, the binomial distribution is used: each unit in the sample is
+       independent and has probability p of being defective. If the lot size N is
+       provided via --lot-size and n/N > 10%, the hypergeometric distribution is
+       used instead, which is more accurate for small lots. The hypergeometric
+       accounts for the fact that sampling without replacement from a finite lot
+       reduces the variability of the number of defectives found.
+
+       Optional --aql and --rql flags annotate the OC curve at those quality levels
+       with vertical lines and labels showing the exact Pa value.
+
+Description: Plot the OC curve for an attributes acceptance sampling plan (n, c).
+             Outputs a table of p vs. Pa and saves a PNG to ~/Downloads/.
+
+Usage: jrc_as_oc_curve <n> <c> [--lot-size N] [--aql value] [--rql value]
+
+Arguments:
+       n               Sample size (positive integer).
+       c               Acceptance number (non-negative integer, must be < n).
+       --lot-size N    Lot size. If provided and n/N > 0.10, uses the hypergeometric
+                       distribution; otherwise uses the binomial.
+       --aql <value>   Optional: mark AQL on the OC curve with a blue vertical line.
+       --rql <value>   Optional: mark RQL on the OC curve with a red vertical line.
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Table of fraction defective p vs. probability of acceptance Pa and 1-Pa.
+       Distribution used (binomial or hypergeometric) is stated in the header.
+
+Output — PNG (~/Downloads/):
+       OC curve plot. If --aql / --rql provided, vertical lines annotate the plan's
+       performance at those quality levels with exact Pa values.
+       Filename: <datetime>_jrc_as_oc_curve.png
+
+Interpretation guidance:
+       The Pa at AQL is the producer's confidence: 1 - Pa(AQL) is the producer's
+       risk — the probability of rejecting a conforming lot.
+       The Pa at RQL is the consumer's risk: probability of accepting a bad lot.
+       A well-designed plan targets Pa(AQL) >= 0.95 and Pa(RQL) <= 0.10.
+       Use jrc_as_attributes to design a plan satisfying specific risk targets.
+
+Example:
+       jrc_as_oc_curve 32 1
+       jrc_as_oc_curve 32 1 --aql 0.01 --rql 0.10
+       jrc_as_oc_curve 50 2 --lot-size 200 --aql 0.025 --rql 0.10
+

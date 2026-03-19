@@ -1,0 +1,80 @@
+
+What this script does:
+       This script designs a variables acceptance sampling plan using the k-method
+       with unknown sigma (standard deviation estimated from the sample). It is used
+       when measurements are continuous (e.g. dimensions, weights, electrical
+       parameters) rather than pass/fail classifications.
+
+       The k-method compares a standardised quality index Q to an acceptability
+       constant k. For a lower specification limit (LSL), Q_L = (x-bar - LSL) / s.
+       For an upper specification limit (USL), Q_U = (USL - x-bar) / s. The lot
+       is accepted if Q >= k. The key advantage over attributes sampling is sample
+       efficiency: by using the actual measured values rather than just conforming/
+       nonconforming counts, the variables plan typically requires a smaller sample
+       to achieve the same discrimination between AQL and RQL quality levels.
+
+       The OC function used is based on the noncentral t-distribution, which
+       correctly accounts for the uncertainty in the estimated standard deviation.
+       This implementation follows the approach in ISO 3951-1 / ANSI/ASQ Z1.9.
+
+       For --sides 1 (one-sided): specify either an LSL or a USL when evaluating
+       with jrc_as_evaluate. Accept if Q >= k.
+
+       For --sides 2 (two-sided): the plan applies k to both LSL and USL
+       simultaneously. The total fraction nonconforming p is split equally across
+       both tails (each tail gets p/2). When evaluating with jrc_as_evaluate,
+       supply both --lsl and --usl; the lot is accepted only if both Q_L >= k
+       and Q_U >= k.
+
+       This script also computes the equivalent attributes plan (same AQL, RQL,
+       alpha, beta) and reports the reduction in sample size.
+
+Description: Design a variables acceptance sampling plan using the k-method
+             (unknown sigma). Outputs the plan (n, k), achieved risks, comparison
+             with an equivalent attributes plan, and OC curve.
+
+Usage: jrc_as_variables <lot_size> <aql> <rql> [--alpha value] [--beta value] [--sides 1]
+
+Arguments:
+       lot_size        Lot size N (positive integer >= 2)
+       aql             AQL as decimal fraction (e.g. 0.01 = 1%). Between 0 and 1.
+       rql             RQL as decimal fraction. Between 0 and 1. Must exceed aql.
+       --alpha <val>   Producer's risk (default 0.05).
+       --beta  <val>   Consumer's risk (default 0.10).
+       --sides <val>   1 = one-sided plan (default), 2 = two-sided plan.
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Variables plan:
+         n     — sample size required
+         k     — acceptability constant
+         Achieved alpha and beta
+
+       Comparison with attributes plan:
+         Attributes plan n (same AQL, RQL, alpha, beta)
+         Sample reduction in units and percentage
+
+       OC Curve table: fraction nonconforming p vs. probability of acceptance Pa
+
+Output — PNG (~/Downloads/):
+       OC curve with AQL and RQL marked by vertical dashed lines.
+       Filename: <datetime>_jrc_as_variables.png
+
+Interpretation guidance:
+       To use the plan in practice: take a sample of n units, measure each,
+       compute x-bar and s. Compute Q_L = (x-bar - LSL)/s and/or
+       Q_U = (USL - x-bar)/s. Accept the lot if all applicable Q >= k.
+       Use jrc_as_evaluate with --type variables to perform this evaluation.
+
+       The variables plan assumes the measurement characteristic is approximately
+       normally distributed. Verify this assumption using a normality plot or test
+       before applying the plan in a regulated environment.
+
+       For two-sided plans (--sides 2): k is applied to BOTH limits. When
+       evaluating with jrc_as_evaluate, supply both --lsl and --usl.
+
+Example:
+       jrc_as_variables 500 0.01 0.10
+       jrc_as_variables 500 0.01 0.10 --sides 2
+       jrc_as_variables 200 0.025 0.10 --alpha 0.05 --beta 0.10 --sides 1
+
