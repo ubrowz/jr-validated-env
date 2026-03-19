@@ -89,6 +89,11 @@ else
           if [[ -f "$_repo_dir/$1" ]]; then TARGET_SCRIPT="$_repo_dir/$1"; break; fi
         done
       fi
+      if [[ -z "$TARGET_SCRIPT" ]]; then
+        echo "❌ Script not found: $1"
+        echo "   Searched: $PROJECT_ROOT/R/ and $PROJECT_ROOT/repos/*/R/"
+        exit 1
+      fi
       ;;
     *.py)
       if [[ -f "$PROJECT_ROOT/Python/$1" ]]; then
@@ -97,6 +102,11 @@ else
         for _repo_dir in "$PROJECT_ROOT/repos"/*/Python; do
           if [[ -f "$_repo_dir/$1" ]]; then TARGET_SCRIPT="$_repo_dir/$1"; break; fi
         done
+      fi
+      if [[ -z "$TARGET_SCRIPT" ]]; then
+        echo "❌ Script not found: $1"
+        echo "   Searched: $PROJECT_ROOT/Python/ and $PROJECT_ROOT/repos/*/Python/"
+        exit 1
       fi
       ;;
     *)    TARGET_SCRIPT="$CALL_DIR/$1" ;;
