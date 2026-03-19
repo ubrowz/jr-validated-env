@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 #
 # admin_spc_oq — Run the SPC module OQ test suite and produce a timestamped
 #                evidence file.
@@ -21,6 +21,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"   # = repos/spc/
 MODULE_ROOT="$SCRIPT_DIR"
 PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
+# --- Platform helpers
+# shellcheck source=../../bin/jr_platform.sh
+source "$PROJECT_ROOT/bin/jr_platform.sh"
 ADMIN_HOME="$PROJECT_ROOT/admin"
 OQ_DIR="$MODULE_ROOT/oq"
 CORE_OQ_DIR="$PROJECT_ROOT/oq"
@@ -77,7 +81,7 @@ if $NEED_REBUILD; then
   echo "🔄 Setting up OQ venv at: $OQ_VENV"
   rm -rf "$OQ_VENV"
   "$PYTHON_BIN" -m venv "$OQ_VENV"
-  "$OQ_VENV/bin/pip" install --quiet -r "$OQ_REQ"
+  "$(jr_venv_pip "$OQ_VENV")" install --quiet -r "$OQ_REQ"
   echo "$REQ_HASH" > "$HASH_FILE"
   echo "✅ OQ venv ready"
 fi
@@ -96,8 +100,8 @@ EVIDENCE_FILE="$EVIDENCE_DIR/spc_oq_execution_${TIMESTAMP}.txt"
 # ---------------------------------------------------------------------------
 
 R_VERSION="$(Rscript --vanilla -e 'cat(R.version$major, R.version$minor, sep=".")' 2>/dev/null || echo 'unknown')"
-PY_VERSION="$("$OQ_VENV/bin/python" --version 2>&1 | awk '{print $2}')"
-PYTEST_VERSION="$("$OQ_VENV/bin/pytest" --version 2>&1 | head -1)"
+PY_VERSION="$("$(jr_venv_python "$OQ_VENV")" --version 2>&1 | awk '{print $2}')"
+PYTEST_VERSION="$("$(jr_venv_pytest "$OQ_VENV")" --version 2>&1 | head -1)"
 HOSTNAME="$(hostname)"
 N_TESTS="$(grep -c 'def test_' "$OQ_DIR"/test_*.py 2>/dev/null || echo '?')"
 
@@ -144,8 +148,8 @@ fi
 
 cd "$OQ_DIR"
 
-"$OQ_VENV/bin/pytest" "${PYTEST_ARGS[@]}" | tee -a "$EVIDENCE_FILE"
-PYTEST_EXIT="${pipestatus[1]}"
+"$(jr_venv_pytest "$OQ_VENV")" "${PYTEST_ARGS[@]}" | tee -a "$EVIDENCE_FILE"
+PYTEST_EXIT="${PIPESTATUS[0]}"
 
 # ---------------------------------------------------------------------------
 # Write evidence footer
