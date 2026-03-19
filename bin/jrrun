@@ -168,6 +168,7 @@ if [[ "$LANG" == "R" ]]; then
 
   export RENV_HOME="$HOME/.renv/$PROJECT_ID"
   export RENV_PATHS_ROOT="$HOME/.renv/$PROJECT_ID"
+  export JR_R_PLATFORM_DIR="$(jr_r_platform_dir)"
   export LOCAL_REPO="$PROJECT_ROOT/R_repo/my-cran-repo"
   unset R_LIBS
   unset R_LIBS_USER
