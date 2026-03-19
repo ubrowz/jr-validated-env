@@ -14,6 +14,7 @@
     <nav class="site-nav">
       <a href="index.html" class="site-nav-link">Home</a>
       <a href="get-started.html" class="site-nav-link">Get Started</a>
+      <a href="modules.html" class="site-nav-link">Modules</a>
       <a href="script_guide.html" class="site-nav-link active">Script Guide</a>
       <a href="faq.html" class="site-nav-link">FAQ</a>
       <a href="downloads.html" class="site-nav-link">Downloads</a>
@@ -533,6 +534,7 @@ const SCRIPTS = [
 const CATEGORIES = [
   {
     label: "Sample Size — Planning",
+    slug: "ss",
     ids: [
       "jrc_ss_discrete", "jrc_ss_discrete_ci",
       "jrc_ss_attr", "jrc_ss_attr_ci", "jrc_ss_attr_check",
@@ -543,6 +545,7 @@ const CATEGORIES = [
   },
   {
     label: "Data Analysis",
+    slug: "data-analysis",
     ids: [
       "jrc_descriptive", "jrc_normality", "jrc_outliers",
       "jrc_verify_attr", "jrc_bland_altman",
@@ -551,6 +554,7 @@ const CATEGORIES = [
   },
   {
     label: "Generate Test Data",
+    slug: "datagen",
     ids: [
       "jrc_gen_normal", "jrc_gen_lognormal",
       "jrc_gen_boxcox", "jrc_gen_sqrt", "jrc_gen_uniform"
@@ -558,14 +562,17 @@ const CATEGORIES = [
   },
   {
     label: "Prepare Data",
+    slug: "prepare",
     ids: ["jrc_convert_csv", "jrc_convert_txt"]
   },
   {
     label: "Design of Experiments",
+    slug: "doe",
     ids: ["jrc_doe_design", "jrc_doe_analyse"]
   },
   {
     label: "Measurement System Analysis (MSA)",
+    slug: "msa",
     ids: [
       "jrc_msa_gauge_rr", "jrc_msa_nested_grr",
       "jrc_msa_type1", "jrc_msa_linearity_bias",
@@ -574,6 +581,7 @@ const CATEGORIES = [
   },
   {
     label: "Statistical Process Control (SPC)",
+    slug: "spc",
     ids: [
       "jrc_spc_imr", "jrc_spc_xbar_r", "jrc_spc_xbar_s",
       "jrc_spc_p", "jrc_spc_c"
@@ -581,6 +589,7 @@ const CATEGORIES = [
   },
   {
     label: "Acceptance Sampling (AS)",
+    slug: "as",
     ids: [
       "jrc_as_attributes", "jrc_as_variables",
       "jrc_as_oc_curve", "jrc_as_evaluate"
@@ -2081,6 +2090,7 @@ function renderAllScripts() {
     const section = document.createElement("div");
     section.className = "category-section";
     section.dataset.category = cat.label;
+    if (cat.slug) section.id = "cat-" + cat.slug;
 
     const heading = document.createElement("div");
     heading.className = "category-heading";
@@ -2192,6 +2202,24 @@ function restart() {
 }
 
 btnRestart.addEventListener("click", restart);
+
+// ── Deep-link from modules.html ───────────────────────────────────────────────
+// Supports: #doe (DoE tab), #cat-<slug> (All scripts tab, scrolled to section)
+(function () {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  if (hash === "doe") {
+    document.querySelector('.tab-btn[data-tab="doe"]').click();
+  } else if (hash === "all" || hash.startsWith("cat-")) {
+    document.querySelector('.tab-btn[data-tab="all"]').click();
+    if (hash.startsWith("cat-")) {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(hash);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
+})();
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
 render("root");

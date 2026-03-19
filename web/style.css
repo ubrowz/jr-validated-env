@@ -955,6 +955,92 @@ details.footer-warranty[open] summary::before { content: "▾  "; }
 }
 .footer-warranty-body p { margin-bottom: 6px; }
 
+/* ── Modules page ──────────────────────────────────────────────────────────── */
+.modules-intro {
+  font-size: 0.92rem;
+  color: #4a4a6e;
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+.modules-intro a { color: #2E5BBA; text-decoration: none; font-weight: 600; }
+.modules-intro a:hover { text-decoration: underline; }
+
+.module-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 44px;
+}
+
+.module-nav-card {
+  background: #fff;
+  border-radius: 8px;
+  border-top: 3px solid #2E5BBA;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  padding: 16px 12px 14px;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+.module-nav-card:hover { box-shadow: 0 4px 16px rgba(46,91,186,0.15); transform: translateY(-2px); }
+
+.module-nav-name { font-size: 0.95rem; font-weight: 700; color: #1A1A2E; margin-bottom: 4px; }
+.module-nav-count { font-size: 0.76rem; color: #6070A0; }
+
+.module-section { scroll-margin-top: 24px; }
+.module-section + .module-section { border-top: 2px solid #D0D8F0; margin-top: 44px; padding-top: 44px; }
+
+.module-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.module-title { font-size: 1.25rem; font-weight: 700; color: #1A1A2E; }
+
+.module-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #E0E8FF;
+  color: #2E5BBA;
+  border-radius: 12px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.module-desc { font-size: 0.92rem; color: #3a3a5e; line-height: 1.65; margin-bottom: 16px; }
+
+.module-groups { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+.module-group {
+  background: #F8F9FF;
+  border-radius: 6px;
+  border-left: 3px solid #2E5BBA;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  color: #3a3a5e;
+  line-height: 1.5;
+}
+.module-group strong { display: block; font-size: 0.82rem; font-weight: 700; color: #1A1A2E; margin-bottom: 3px; }
+
+.module-browse-link {
+  display: inline-block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #2E5BBA;
+  text-decoration: none;
+  border: 2px solid #2E5BBA;
+  border-radius: 6px;
+  padding: 8px 16px;
+  transition: background 0.15s, color 0.15s;
+}
+.module-browse-link:hover { background: #2E5BBA; color: #fff; }
+
+@media (max-width: 600px) { .module-nav-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 380px) { .module-nav-grid { grid-template-columns: repeat(2, 1fr); } }
+
 /* ── Downloads page ────────────────────────────────────────────────────────── */
 .download-card {
   background: #fff;

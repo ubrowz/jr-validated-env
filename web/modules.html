@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modules — JR Validated Environment</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+
+<header>
+  <div class="site-nav-wrap">
+    <nav class="site-nav">
+      <a href="index.html" class="site-nav-link">Home</a>
+      <a href="get-started.html" class="site-nav-link">Get Started</a>
+      <a href="modules.html" class="site-nav-link active">Modules</a>
+      <a href="script_guide.html" class="site-nav-link">Script Guide</a>
+      <a href="faq.html" class="site-nav-link">FAQ</a>
+      <a href="downloads.html" class="site-nav-link">Downloads</a>
+    </nav>
+  </div>
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>Modules</h1>
+      <p>An overview of the validated script modules in the JR environment</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <p class="modules-intro">The JR Validated Environment is organised into modules. Each module covers a distinct analytical discipline and ships with its own validated scripts, OQ test suite, and documentation. Use the cards below to jump to a module, or go directly to the <a href="script_guide.html">Script Guide</a> to find the right script for your analysis.</p>
+
+  <!-- Module nav grid -->
+  <div class="module-nav-grid">
+    <a href="#core" class="module-nav-card">
+      <div class="module-nav-name">Core</div>
+      <div class="module-nav-count">24 scripts</div>
+    </a>
+    <a href="#doe" class="module-nav-card">
+      <div class="module-nav-name">DoE</div>
+      <div class="module-nav-count">2 scripts</div>
+    </a>
+    <a href="#msa" class="module-nav-card">
+      <div class="module-nav-name">MSA</div>
+      <div class="module-nav-count">5 scripts</div>
+    </a>
+    <a href="#spc" class="module-nav-card">
+      <div class="module-nav-name">SPC</div>
+      <div class="module-nav-count">5 scripts</div>
+    </a>
+    <a href="#as" class="module-nav-card">
+      <div class="module-nav-name">AS</div>
+      <div class="module-nav-count">4 scripts</div>
+    </a>
+  </div>
+
+  <!-- ── Core ──────────────────────────────────────────────────────────────── -->
+  <div class="module-section" id="core">
+    <div class="module-title-row">
+      <h2 class="module-title">Core</h2>
+      <span class="module-badge">24 scripts</span>
+    </div>
+    <p class="module-desc">The foundation of the JR Validated Environment. 24 scripts covering the full analytical workflow — from planning a study and simulating test data, through statistical analysis and process capability reporting. Core scripts use only base R; no additional packages are required beyond what ships with the validated environment.</p>
+    <div class="module-groups">
+      <div class="module-group">
+        <strong>Sample Size Planning — 10 scripts</strong>
+        Determine how many samples you need before you collect data. Covers continuous measurements, pass/fail attributes, equivalence testing, paired comparisons, fatigue and reliability studies, and measurement system qualification.
+      </div>
+      <div class="module-group">
+        <strong>Data Analysis — 7 scripts</strong>
+        Analyse measurement datasets: descriptive statistics, normality testing, outlier detection, process capability indices (Cp, Cpk), Weibull survival analysis, Bland-Altman agreement, and attribute pass/fail verification.
+      </div>
+      <div class="module-group">
+        <strong>Generate Test Data — 5 scripts</strong>
+        Simulate datasets with specified distributions for test planning, validation, and training. Supports normal, lognormal, Box-Cox, square-root-transformed, and uniform distributions.
+      </div>
+      <div class="module-group">
+        <strong>Prepare Data — 2 scripts</strong>
+        Convert non-standard input files (tab-delimited text, legacy formats) to the two-column CSV format required by all JR scripts.
+      </div>
+    </div>
+    <a href="script_guide.html#cat-ss" class="module-browse-link">Browse Core scripts in Script Guide →</a>
+  </div>
+
+  <!-- ── DoE ───────────────────────────────────────────────────────────────── -->
+  <div class="module-section" id="doe">
+    <div class="module-title-row">
+      <h2 class="module-title">DoE — Design of Experiments</h2>
+      <span class="module-badge">2 scripts</span>
+    </div>
+    <p class="module-desc">Plan and analyse factorial experiments to understand which process factors drive your response — with far fewer runs than one-factor-at-a-time testing. The DoE module consists of two scripts that work in sequence: one to generate the run matrix, one to analyse the results.</p>
+    <div class="module-groups">
+      <div class="module-group">
+        <strong>jrc_doe_design — Design generation</strong>
+        Generates a randomised run matrix for full-factorial and fractional-factorial designs, output as a printable lab sheet and a companion data CSV ready for results entry.
+      </div>
+      <div class="module-group">
+        <strong>jrc_doe_analyse — Results analysis</strong>
+        Reads the completed results CSV and produces an ANOVA table, main effect and interaction plots, and a factor significance summary identifying which factors and interactions explain meaningful variation.
+      </div>
+    </div>
+    <a href="script_guide.html#doe" class="module-browse-link">Browse DoE scripts in Script Guide →</a>
+  </div>
+
+  <!-- ── MSA ───────────────────────────────────────────────────────────────── -->
+  <div class="module-section" id="msa">
+    <div class="module-title-row">
+      <h2 class="module-title">MSA — Measurement System Analysis</h2>
+      <span class="module-badge">5 scripts</span>
+    </div>
+    <p class="module-desc">Qualify your measurement systems before you rely on data. A measurement system that contributes significant variation to results will mask real process signals and undermine any downstream analysis. The five MSA scripts cover the full range of AIAG MSA Fourth Edition study types.</p>
+    <div class="module-groups">
+      <div class="module-group">
+        <strong>jrc_msa_gauge_rr — Crossed Gauge R&amp;R</strong>
+        ANOVA-based Gauge R&amp;R for the standard crossed design where every operator measures every part. Decomposes variation into repeatability, reproducibility, operator, and part-to-part components.
+      </div>
+      <div class="module-group">
+        <strong>jrc_msa_nested_grr — Nested Gauge R&amp;R</strong>
+        Gauge R&amp;R for destructive tests where parts cannot be re-measured by multiple operators. Uses a nested (hierarchical) ANOVA model.
+      </div>
+      <div class="module-group">
+        <strong>jrc_msa_type1 — Type 1 Repeatability Study</strong>
+        Single-operator, single-part study to assess instrument repeatability before a full Gauge R&amp;R. Reports Cg and Cgk against the tolerance.
+      </div>
+      <div class="module-group">
+        <strong>jrc_msa_linearity_bias — Linearity &amp; Bias</strong>
+        Evaluates whether measurement error varies across the measurement range and whether there is a systematic offset relative to a reference standard.
+      </div>
+      <div class="module-group">
+        <strong>jrc_msa_attribute — Attribute Agreement Analysis</strong>
+        Assesses the consistency of go/no-go gauges, visual inspection, or any categorical measurement system. Reports within-appraiser, between-appraiser, and appraiser-vs-reference agreement with Kappa statistics.
+      </div>
+    </div>
+    <a href="script_guide.html#cat-msa" class="module-browse-link">Browse MSA scripts in Script Guide →</a>
+  </div>
+
+  <!-- ── SPC ───────────────────────────────────────────────────────────────── -->
+  <div class="module-section" id="spc">
+    <div class="module-title-row">
+      <h2 class="module-title">SPC — Statistical Process Control</h2>
+      <span class="module-badge">5 scripts</span>
+    </div>
+    <p class="module-desc">Monitor production processes with control charts and detect assignable causes of variation before they produce nonconforming product. All SPC scripts apply Western Electric rules for out-of-control detection and produce annotated charts flagging any violations.</p>
+    <div class="module-groups">
+      <div class="module-group">
+        <strong>jrc_spc_imr — Individuals &amp; Moving Range chart</strong>
+        For individual measurements taken one at a time. The most common chart for low-volume production or slow processes where subgrouping is not practical.
+      </div>
+      <div class="module-group">
+        <strong>jrc_spc_xbar_r — Xbar-R chart</strong>
+        For subgroup averages and ranges. Standard choice for subgroup sizes of 2–8 where the range is a stable estimator of within-subgroup spread.
+      </div>
+      <div class="module-group">
+        <strong>jrc_spc_xbar_s — Xbar-S chart</strong>
+        For subgroup averages and standard deviations. Preferred for larger subgroup sizes (≥9) where the standard deviation is more efficient than the range.
+      </div>
+      <div class="module-group">
+        <strong>jrc_spc_p — p-chart</strong>
+        For the proportion of nonconforming units in a subgroup. Handles variable subgroup sizes and adjusts control limits accordingly.
+      </div>
+      <div class="module-group">
+        <strong>jrc_spc_c — c-chart</strong>
+        For counts of nonconformities (defects) per constant inspection unit.
+      </div>
+    </div>
+    <a href="script_guide.html#cat-spc" class="module-browse-link">Browse SPC scripts in Script Guide →</a>
+  </div>
+
+  <!-- ── AS ────────────────────────────────────────────────────────────────── -->
+  <div class="module-section" id="as">
+    <div class="module-title-row">
+      <h2 class="module-title">AS — Acceptance Sampling</h2>
+      <span class="module-badge">4 scripts</span>
+    </div>
+    <p class="module-desc">Design and evaluate statistical sampling plans for lot inspection decisions. The AS module supports both attribute sampling (count of defectives) and variables sampling (measurements against a specification limit), aligned with ISO 2859 and ISO 3951.</p>
+    <div class="module-groups">
+      <div class="module-group">
+        <strong>jrc_as_attributes — Attribute sampling plan design</strong>
+        Designs single and double attribute sampling plans to meet specified AQL and RQL (LTPD) requirements. Reports sample sizes, acceptance numbers, ASN, and a full OC curve table.
+      </div>
+      <div class="module-group">
+        <strong>jrc_as_variables — Variables sampling plan design</strong>
+        Designs a variables sampling plan for normally distributed measurements using the k-method. Typically achieves the same protection as an attribute plan with a substantially smaller sample size.
+      </div>
+      <div class="module-group">
+        <strong>jrc_as_oc_curve — OC curve analysis</strong>
+        Generates an Operating Characteristic curve for any attribute plan (n, c) across a user-specified range of lot fraction defective. Identifies the AQL and RQL operating points.
+      </div>
+      <div class="module-group">
+        <strong>jrc_as_evaluate — Lot evaluation</strong>
+        Evaluates a sampled lot against an existing plan — in attributes mode (count of defectives vs. acceptance number) or variables mode (sample mean and standard deviation vs. k-value). Returns a clear ACCEPT or REJECT decision.
+      </div>
+    </div>
+    <a href="script_guide.html#cat-as" class="module-browse-link">Browse AS scripts in Script Guide →</a>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>JR Validated Environment</span>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/ubrowz/jr-validated-env" class="footer-link">GitHub</a>
+    <span class="footer-sep">·</span>
+    <span>Apache 2.0</span>
+    <span class="footer-sep">·</span>
+    <span>v1.9.0</span>
+  </div>
+  <details class="footer-warranty">
+    <summary>No Warranty</summary>
+    <div class="footer-warranty-body">
+      <h4>No Warranty Statement</h4>
+      <p>JR Validated Environment is provided &#8220;as is&#8221;, without warranty of any kind, express or implied, including without limitation the implied warranties of merchantability, fitness for a particular purpose, and non-infringement. The authors and contributors make no representations or warranties regarding the accuracy, completeness, reliability, or fitness of this software for any particular purpose, including use in regulated industries or medical device development. Use of this software is entirely at the user&#8217;s own risk.</p>
+      <p>This software is intended as a starting point for building a validated statistical computing environment. Responsibility for qualification, validation, and regulatory compliance in any specific deployment rests entirely with the user organisation. The authors accept no liability for decisions made on the basis of outputs produced by this software, for any failure to obtain the approval of any regulatory or governmental agency, for any liability arising from products manufactured or distributed by any organisation using this software, nor for any direct, indirect, incidental, or consequential damages arising from its use.</p>
+      <p>Use in regulated contexts &#8212; including but not limited to FDA submissions, CE marking, or ISO&#160;13485 compliance &#8212; requires independent verification and validation activities appropriate to the intended use and risk classification. The OQ test suite and validation documents included in this repository document the authors&#8217; own validation activities and are provided as examples only. They do not constitute a validated state for any other organisation&#8217;s deployment.</p>
+      <p>This software is released under the Apache 2.0 License. See LICENSE for details.</p>
+    </div>
+  </details>
+</footer>
+
+</body>
+</html>
