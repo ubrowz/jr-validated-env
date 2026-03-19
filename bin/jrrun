@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 set -e
 #
 # jrrun
@@ -15,6 +15,10 @@ CALL_DIR="$PWD"
 # --- Directories
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"   # = bin/
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"        # = project root
+
+# --- Platform helpers
+# shellcheck source=bin/jr_platform.sh
+source "$SCRIPT_DIR/jr_platform.sh"
 cd "$PROJECT_ROOT" || exit 1
 ADMIN_HOME="$PROJECT_ROOT/admin"
 
@@ -273,7 +277,7 @@ if [[ "$LANG" == "python" ]]; then
     echo "🔄 (Re)creating Python environment..."
     rm -rf "$VENV_PATH"
     "$PYTHON_BIN" -m venv "$VENV_PATH"
-    "$VENV_PATH/bin/pip" install \
+    "$(jr_venv_pip "$VENV_PATH")" install \
       --no-index \
       --find-links "$LOCAL_REPO" \
       -r "$ADMIN_HOME/python_requirements.txt"
@@ -285,7 +289,7 @@ if [[ "$LANG" == "python" ]]; then
   mkdir -p "$(dirname "$LOG_FILE")"
 
   # --- Run Python script
-  "$VENV_PATH/bin/python" "$TARGET_SCRIPT" "$@"
+  "$(jr_venv_python "$VENV_PATH")" "$TARGET_SCRIPT" "$@"
   EXIT_CODE=$?
   printf '%s\t%s\t%s\t%s\n' \
     "$(date '+%Y-%m-%dT%H:%M:%S')" \
