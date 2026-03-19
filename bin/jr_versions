@@ -109,21 +109,18 @@ for (nm in names(pkgs)) cat(nm, pkgs[nm], "\n")
 REOF
   )
 
-  # Parse R output into associative array
-  declare -A R_INSTALLED
-  if [[ "$R_PKG_OUTPUT" != "LIB_NOT_FOUND" ]]; then
-    while IFS=' ' read -r pkg ver; do
-      [[ -n "$pkg" ]] && R_INSTALLED[$pkg]="$ver"
-    done <<< "$R_PKG_OUTPUT"
-  fi
-
-  # Compare pinned vs installed
+  # Compare pinned vs installed — use awk lookup to avoid bash 3/4 array compat issues
   while IFS= read -r line; do
     line=$(echo "$line" | tr -d '[:space:]')
     [[ -z "$line" || "$line" == \#* ]] && continue
     pkg="${line%%==*}"
     pinned="${line##*==}"
-    installed="${R_INSTALLED[$pkg]:-NOT INSTALLED}"
+    if [[ "$R_PKG_OUTPUT" == "LIB_NOT_FOUND" ]]; then
+      installed="NOT INSTALLED"
+    else
+      installed=$(echo "$R_PKG_OUTPUT" | awk -v p="$pkg" '$1 == p {print $2}')
+      [[ -z "$installed" ]] && installed="NOT INSTALLED"
+    fi
     # Normalise hyphens for comparison (7.3-65 vs 7.3.65)
     pinned_norm="${pinned//-/.}"
     installed_norm="${installed//-/.}"
