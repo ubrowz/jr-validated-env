@@ -54,10 +54,10 @@ class TestCoreIQ:
         result = subprocess.run(
             BASH_PREFIX + [os.path.join(PROJECT_ROOT, "admin", "admin_validate")],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             cwd=PROJECT_ROOT,
         )
-        out = result.stdout + result.stderr
+        out = (result.stdout or "") + (result.stderr or "")
         assert result.returncode == 0, f"admin_validate failed:\n{out}"
         assert "PASSED" in out, \
             f"'PASSED' not found in admin_validate output:\n{out}"
@@ -105,11 +105,11 @@ class TestCoreOQ:
             result = subprocess.run(
                 BASH_PREFIX + [JRRUN, "jrc_py_hello.py", "Validation"],
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
                 timeout=15,
                 cwd=DATA_DIR,
             )
-            out = result.stdout + result.stderr
+            out = (result.stdout or "") + (result.stderr or "")
             assert result.returncode == 0, f"jrc_py_hello.py failed:\n{out}"
             assert "Validation" in out
         except subprocess.TimeoutExpired as exc:
@@ -158,13 +158,13 @@ class TestCoreOQ:
         result = subprocess.run(
             ["Rscript", script, "Validation"],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             env=env,
             cwd=PROJECT_ROOT,
         )
         assert result.returncode != 0, \
             "Expected non-zero exit when R script called directly without RENV_PATHS_ROOT"
-        out = result.stdout + result.stderr
+        out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
 
@@ -188,7 +188,7 @@ class TestCoreOQ:
         result = subprocess.run(
             [PYTHON_BIN, script, "Validation"],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             env=env,
             cwd=PROJECT_ROOT,
         )

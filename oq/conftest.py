@@ -49,14 +49,14 @@ def run(script, *args, cwd=None):
     return subprocess.run(
         cmd,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         cwd=cwd or DATA_DIR,
     )
 
 
 def combined(result):
     """Return stdout + stderr as a single string for pattern matching."""
-    return result.stdout + result.stderr
+    return (result.stdout or "") + (result.stderr or "")
 
 
 def extract_n_at_f(result, f=0):
