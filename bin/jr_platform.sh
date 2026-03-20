@@ -79,7 +79,7 @@ jr_sed_inplace() {
 # Returns the file that setup_jr_path.sh should append to.
 jr_shell_rc() {
   if [[ "$(jr_os)" == "windows" ]]; then
-    echo "$HOME/.bashrc"
+    echo "$HOME/.bash_profile"
   else
     echo "$HOME/.zprofile"
   fi
