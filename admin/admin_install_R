@@ -164,6 +164,14 @@ echo ""
 ADMIN_LOG_FILE="$HOME/.jrscript/$PROJECT_ID/admin.log"
 mkdir -p "$(dirname "$ADMIN_LOG_FILE")"
 
+# Convert paths for R on Windows: Git Bash Unix paths (/c/Users/...) are not
+# resolved by R.exe (a Windows native binary). Convert to Windows-native paths
+# (C:/Users/...) before the env vars are read by admin_R_install.R.
+if [[ "$(jr_os)" == "windows" ]]; then
+  export RENV_PATHS_ROOT="$(cygpath -w "$RENV_HOME" | tr '\\' '/')"
+  export LOCAL_REPO="$(cygpath -w "$LOCAL_REPO" | tr '\\' '/')"
+fi
+
 # --- Run R install script
 Rscript --vanilla "$SCRIPT_DIR/R/admin_R_install.R"
 EXIT_CODE=$?

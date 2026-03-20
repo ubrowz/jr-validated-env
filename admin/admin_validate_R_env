@@ -28,14 +28,6 @@ unset R_LIBS
 unset R_LIBS_USER
 unset R_LIBS_SITE
 
-# On Windows convert Git Bash path to Windows-native path so R can resolve it.
-# Also use --vanilla to prevent renv's .Rprofile/.Renviron overriding our paths.
-if [[ "$(jr_os)" == "windows" ]]; then
-  export RENV_PATHS_ROOT="$(cygpath -w "$RENV_HOME" | tr '\\' '/')"
-else
-  export RENV_PATHS_ROOT="$RENV_HOME"
-fi
-
 # --- Ensure Rscript is on PATH (Windows: auto-detect if missing)
 if ! command -v Rscript >/dev/null 2>&1; then
   if [[ "$(jr_os)" == "windows" ]]; then
@@ -61,4 +53,19 @@ if [[ ! -f "$SCRIPT_DIR/R/validate_R_env.R" ]]; then
   exit 1
 fi
 
-Rscript --vanilla "$SCRIPT_DIR/R/validate_R_env.R"
+# On Windows convert Git Bash path to Windows-native path so R can resolve it.
+# Inject paths directly via Sys.setenv in a heredoc (same technique as jrrun)
+# to prevent renv or any R startup code from overriding the env var.
+if [[ "$(jr_os)" == "windows" ]]; then
+  R_RENV_HOME="$(cygpath -w "$RENV_HOME" | tr '\\' '/')"
+  R_VALIDATE_SCRIPT="$(cygpath -w "$SCRIPT_DIR/R/validate_R_env.R" | tr '\\' '/')"
+else
+  R_RENV_HOME="$RENV_HOME"
+  R_VALIDATE_SCRIPT="$SCRIPT_DIR/R/validate_R_env.R"
+fi
+
+Rscript --vanilla - <<EOF
+Sys.setenv(RENV_PATHS_ROOT   = "$R_RENV_HOME")
+Sys.setenv(JR_R_PLATFORM_DIR = "$JR_R_PLATFORM_DIR")
+source("$R_VALIDATE_SCRIPT")
+EOF

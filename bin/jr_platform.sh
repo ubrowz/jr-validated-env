@@ -11,11 +11,17 @@
 
 # --- Detect OS
 # Returns: "macos" | "windows" | "linux"
+# Checks $OSTYPE first; falls back to uname -s for Git Bash environments
+# where $OSTYPE may be empty or not set.
 jr_os() {
   case "$OSTYPE" in
-    darwin*)                     echo "macos"   ;;
-    msys*|cygwin*|win32*)        echo "windows" ;;
-    *)                           echo "linux"   ;;
+    darwin*)              echo "macos"   ; return ;;
+    msys*|cygwin*|win32*) echo "windows" ; return ;;
+  esac
+  case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    Darwin*)              echo "macos"   ;;
+    *)                    echo "linux"   ;;
   esac
 }
 
