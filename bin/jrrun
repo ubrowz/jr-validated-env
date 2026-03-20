@@ -255,6 +255,7 @@ if [[ "$LANG" == "python" ]]; then
 
   export VENV_PATH="$HOME/.venvs/$PROJECT_ID"
   export LOCAL_REPO="$PROJECT_ROOT/Python_repo/my-repo"
+  export PYTHONUTF8=1
   unset PYTHONPATH
   unset PYTHONHOME
 

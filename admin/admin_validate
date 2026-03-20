@@ -41,6 +41,10 @@ unset R_LIBS_SITE
 # --- Python environment path
 export VENV_PATH="$HOME/.venvs/$PROJECT_ID"
 
+# --- Force UTF-8 I/O for Python (required on Windows where the default
+#     console encoding cannot handle the emoji characters used in output)
+export PYTHONUTF8=1
+
 # --- Admin log setup
 ADMIN_LOG_FILE="$HOME/.jrscript/$PROJECT_ID/admin.log"
 mkdir -p "$(dirname "$ADMIN_LOG_FILE")"
