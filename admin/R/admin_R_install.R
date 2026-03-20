@@ -301,10 +301,17 @@ if (MODE == "ADD") {
   }
 
   # Rebuild PACKAGES index
-  tools::write_PACKAGES(
-    file.path(LOCAL_REPO, "bin/macosx", MACOS_PLATFORM, "contrib", r_minor),
-    type = "mac.binary"
-  )
+  if (MACOS_PLATFORM == "windows") {
+    tools::write_PACKAGES(
+      file.path(LOCAL_REPO, "bin/windows", "contrib", r_minor),
+      type = "win.binary"
+    )
+  } else {
+    tools::write_PACKAGES(
+      file.path(LOCAL_REPO, "bin/macosx", MACOS_PLATFORM, "contrib", r_minor),
+      type = "mac.binary"
+    )
+  }
   cat("📋 PACKAGES index rebuilt.\n\n")
 
   # Update R_requirements.txt — target package first, then new implicit deps
@@ -406,15 +413,31 @@ if (MODE == "BUILD") {
     install.packages("renv", repos = CRAN_MIRROR)
   }
   renv_version <- as.character(packageVersion("renv"))
-  renv_binary  <- sprintf("renv_%s.tgz", renv_version)
-  renv_url     <- sprintf(
-    "https://cran.r-project.org/bin/macosx/%s/contrib/%s/%s",
-    MACOS_PLATFORM, r_minor, renv_binary
-  )
-  renv_dest <- file.path(LOCAL_REPO,
-                         "bin/macosx", MACOS_PLATFORM, "contrib", r_minor,
-                         renv_binary)
+  if (MACOS_PLATFORM == "windows") {
+    renv_binary   <- sprintf("renv_%s.zip", renv_version)
+    renv_url      <- sprintf(
+      "https://cran.r-project.org/bin/windows/contrib/%s/%s",
+      r_minor, renv_binary
+    )
+    renv_dest     <- file.path(LOCAL_REPO, "bin/windows", "contrib", r_minor,
+                               renv_binary)
+    pkg_index_dir <- file.path(LOCAL_REPO, "bin/windows", "contrib", r_minor)
+    pkg_index_type <- "win.binary"
+  } else {
+    renv_binary   <- sprintf("renv_%s.tgz", renv_version)
+    renv_url      <- sprintf(
+      "https://cran.r-project.org/bin/macosx/%s/contrib/%s/%s",
+      MACOS_PLATFORM, r_minor, renv_binary
+    )
+    renv_dest     <- file.path(LOCAL_REPO,
+                               "bin/macosx", MACOS_PLATFORM, "contrib", r_minor,
+                               renv_binary)
+    pkg_index_dir  <- file.path(LOCAL_REPO, "bin/macosx", MACOS_PLATFORM,
+                                "contrib", r_minor)
+    pkg_index_type <- "mac.binary"
+  }
 
+  dir.create(dirname(renv_dest), recursive = TRUE, showWarnings = FALSE)
   if (!file.exists(renv_dest)) {
     cat(sprintf("📦 Downloading renv %s into local repo...\n", renv_version))
     tryCatch(
@@ -427,10 +450,7 @@ if (MODE == "BUILD") {
   }
 
   # Rebuild PACKAGES index
-  tools::write_PACKAGES(
-    file.path(LOCAL_REPO, "bin/macosx", MACOS_PLATFORM, "contrib", r_minor),
-    type = "mac.binary"
-  )
+  tools::write_PACKAGES(pkg_index_dir, type = pkg_index_type)
   cat("📋 PACKAGES index updated.\n\n")
 
   # Write VERSIONS.txt
@@ -542,10 +562,11 @@ cat(sprintf("📋 renv.lock written to: %s\n\n", normalizePath(lock_path)))
 # Restore renv library from lock  (all modes)
 # ---------------------------------------------------------------------------
 
-r_ver    <- paste0("R-", R.version$major, ".",
-                   sub("\\..*", "", R.version$minor))
-platform <- R.version$platform
-lib_path <- file.path(RENV_HOME, "renv", "library", "macos", r_ver, platform)
+r_ver        <- paste0("R-", R.version$major, ".",
+                       sub("\\..*", "", R.version$minor))
+platform     <- R.version$platform
+platform_dir <- Sys.getenv("JR_R_PLATFORM_DIR", unset = "macos")
+lib_path     <- file.path(RENV_HOME, "renv", "library", platform_dir, r_ver, platform)
 dir.create(lib_path, recursive = TRUE, showWarnings = FALSE)
 
 cat("📦 Installing packages into validated library...\n")
