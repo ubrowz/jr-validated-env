@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 #
 # jr_versions
 # Shows R and Python environment versions and package status.
@@ -11,6 +11,10 @@
 # --- Script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"        # = project root
+
+# --- Platform helpers
+# shellcheck source=bin/jr_platform.sh
+source "$SCRIPT_DIR/jr_platform.sh"
 cd "$PROJECT_ROOT" || exit 1
 ADMIN_HOME="$PROJECT_ROOT/admin"
 
@@ -94,10 +98,10 @@ else
   echo "  $(printf '%-20s  %-12s  %-12s  %s' '-------' '------' '---------' '------')"
 
   # Query all installed versions in one Rscript call for efficiency
-  R_PKG_OUTPUT=$(RENV_PATHS_ROOT="$RENV_PATHS_ROOT" Rscript --vanilla - <<'REOF' 2>/dev/null
+  R_PKG_OUTPUT=$(RENV_PATHS_ROOT="$RENV_PATHS_ROOT" JR_R_PLATFORM_DIR="$(jr_r_platform_dir)" Rscript --vanilla - <<'REOF' 2>/dev/null
 r_ver    <- paste0("R-", R.version$major, ".", sub("\\..*", "", R.version$minor))
 platform <- R.version$platform
-lib_path <- file.path(Sys.getenv("RENV_PATHS_ROOT"), "renv", "library", "macos", r_ver, platform)
+lib_path <- file.path(Sys.getenv("RENV_PATHS_ROOT"), "renv", "library", Sys.getenv("JR_R_PLATFORM_DIR"), r_ver, platform)
 if (!dir.exists(lib_path)) { cat("LIB_NOT_FOUND\n"); quit() }
 .libPaths(c(lib_path, .libPaths()))
 pkgs <- installed.packages(lib.loc = lib_path)[, "Version"]
@@ -105,21 +109,18 @@ for (nm in names(pkgs)) cat(nm, pkgs[nm], "\n")
 REOF
   )
 
-  # Parse R output into associative array
-  typeset -A R_INSTALLED
-  if [[ "$R_PKG_OUTPUT" != "LIB_NOT_FOUND" ]]; then
-    while IFS=' ' read -r pkg ver; do
-      [[ -n "$pkg" ]] && R_INSTALLED[$pkg]="$ver"
-    done <<< "$R_PKG_OUTPUT"
-  fi
-
-  # Compare pinned vs installed
+  # Compare pinned vs installed — use awk lookup to avoid bash 3/4 array compat issues
   while IFS= read -r line; do
     line=$(echo "$line" | tr -d '[:space:]')
     [[ -z "$line" || "$line" == \#* ]] && continue
     pkg="${line%%==*}"
     pinned="${line##*==}"
-    installed="${R_INSTALLED[$pkg]:-NOT INSTALLED}"
+    if [[ "$R_PKG_OUTPUT" == "LIB_NOT_FOUND" ]]; then
+      installed="NOT INSTALLED"
+    else
+      installed=$(echo "$R_PKG_OUTPUT" | awk -v p="$pkg" '$1 == p {print $2}')
+      [[ -z "$installed" ]] && installed="NOT INSTALLED"
+    fi
     # Normalise hyphens for comparison (7.3-65 vs 7.3.65)
     pinned_norm="${pinned//-/.}"
     installed_norm="${installed//-/.}"
@@ -149,7 +150,7 @@ else
   REQ_PYTHON="(python_version.txt not found)"
 fi
 
-PYTHON_BIN="$VENV_PATH/bin/python"
+PYTHON_BIN="$(jr_venv_python "$VENV_PATH")"
 if [[ -f "$PYTHON_BIN" ]]; then
   PY_VER=$("$PYTHON_BIN" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')" 2>/dev/null)
   if [[ "$PY_VER" == "$REQ_PYTHON" ]]; then

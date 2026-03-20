@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 #
 # generate_validate_R.zsh
 # Generates validate_R_env.R from R_requirements.txt
@@ -68,7 +68,8 @@ if (renv_root == "") {
 r_ver    <- paste0("R-", R.version$major, ".",
                    sub("\\..*", "", R.version$minor))
 platform <- R.version$platform
-lib_path <- file.path(renv_root, "renv", "library", "macos", r_ver, platform)
+platform_dir <- Sys.getenv("JR_R_PLATFORM_DIR", unset = "macos")
+lib_path <- file.path(renv_root, "renv", "library", platform_dir, r_ver, platform)
 if (!dir.exists(lib_path)) {
   stop(paste("❌ renv library not found at:", lib_path))
 }

@@ -146,7 +146,7 @@ class TestNestedGRR:
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
             ["Rscript", script, data("nested_grr_good.csv")],
-            capture_output=True, text=True, env=env, cwd=PROJECT_ROOT,
+            capture_output=True, encoding="utf-8", env=env, cwd=PROJECT_ROOT,
         )
         assert result.returncode != 0
-        assert "RENV_PATHS_ROOT" in result.stdout + result.stderr
+        assert "RENV_PATHS_ROOT" in (result.stdout or "") + (result.stderr or "")

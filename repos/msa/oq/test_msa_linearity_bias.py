@@ -168,11 +168,11 @@ class TestLinearityBias:
         result = subprocess.run(
             ["Rscript", script, data("linearity_bias_good.csv")],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             env=env,
             cwd=PROJECT_ROOT,
         )
         assert result.returncode != 0, \
             "Expected non-zero exit when called without RENV_PATHS_ROOT"
-        assert "RENV_PATHS_ROOT" in result.stdout + result.stderr, \
-            f"Expected 'RENV_PATHS_ROOT' in error:\n{result.stdout + result.stderr}"
+        assert "RENV_PATHS_ROOT" in (result.stdout or "") + (result.stderr or ""), \
+            f"Expected 'RENV_PATHS_ROOT' in error:\n{(result.stdout or "") + (result.stderr or "")}"

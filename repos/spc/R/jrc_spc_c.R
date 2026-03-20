@@ -29,7 +29,7 @@ if (renv_lib == "") {
 }
 r_ver    <- paste0("R-", R.version$major, ".", sub("\\..*", "", R.version$minor))
 platform <- R.version$platform
-lib_path <- file.path(renv_lib, "renv", "library", "macos", r_ver, platform)
+lib_path <- file.path(renv_lib, "renv", "library", Sys.getenv("JR_R_PLATFORM_DIR", unset = "macos"), r_ver, platform)
 if (!dir.exists(lib_path)) {
   stop(paste("\u274c renv library not found at:", lib_path))
 }

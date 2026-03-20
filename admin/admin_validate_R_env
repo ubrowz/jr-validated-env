@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 #
 # validate_R_env
 # Runs the generated R validation script.
@@ -7,6 +7,12 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# --- Platform helpers
+# shellcheck source=../bin/jr_platform.sh
+source "$PROJECT_ROOT/bin/jr_platform.sh"
+export JR_R_PLATFORM_DIR="$(jr_r_platform_dir)"
 
 # --- Project identity — read from project_id.txt (one line change per fork)
 PROJECT_ID_FILE="$SCRIPT_DIR/project_id.txt"

@@ -156,12 +156,12 @@ class TestAttributes:
         result = subprocess.run(
             ["Rscript", script, "500", "0.01", "0.10"],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             env=env,
             cwd=PROJECT_ROOT,
         )
         assert result.returncode != 0, \
             "Expected non-zero exit when called without RENV_PATHS_ROOT"
-        out = result.stdout + result.stderr
+        out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"

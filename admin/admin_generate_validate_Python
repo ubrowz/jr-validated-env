@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 #
 # generate_validate_Python.zsh
 # Generates validate_Python_env.py from python_requirements.txt
@@ -78,7 +78,10 @@ if not venv_path:
     sys.exit("❌ VENV_PATH is not set. Run this script from the provided zsh wrapper.")
 
 venv = Path(venv_path)
-site_packages = venv / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
+if sys.platform == "win32":
+    site_packages = venv / "Lib" / "site-packages"
+else:
+    site_packages = venv / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
 
 if not site_packages.exists():
     sys.exit(f"❌ venv site-packages not found at: {site_packages}")
@@ -107,7 +110,7 @@ PYEOF
 # ---------------------------------------------------------------------------
 # Append one check per base package
 # ---------------------------------------------------------------------------
-for ((i = 1; i <= ${#BASE_PKGS[@]}; i++)); do
+for ((i = 0; i < ${#BASE_PKGS[@]}; i++)); do
   pkg="${BASE_PKGS[$i]}"
   cat >> "$OUT_FILE" << EOF
 
@@ -133,7 +136,7 @@ PYEOF
 # ---------------------------------------------------------------------------
 # Append one check per user package
 # ---------------------------------------------------------------------------
-for ((i = 1; i <= ${#USER_PKGS[@]}; i++)); do
+for ((i = 0; i < ${#USER_PKGS[@]}; i++)); do
   pkg="${USER_PKGS[$i]}"
   ver="${USER_VERS[$i]}"
   cat >> "$OUT_FILE" << EOF

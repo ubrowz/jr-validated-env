@@ -7,6 +7,7 @@ All test modules import helpers from this file.
 import os
 import re
 import subprocess
+import sys
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -16,6 +17,19 @@ OQ_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(OQ_DIR)
 JRRUN = os.path.join(PROJECT_ROOT, "bin", "jrrun")
 DATA_DIR = os.path.join(OQ_DIR, "data")
+
+# ---------------------------------------------------------------------------
+# Platform constants
+# ---------------------------------------------------------------------------
+
+# On Windows, shell scripts must be invoked via bash explicitly.
+BASH_PREFIX  = ["bash"] if sys.platform == "win32" else []
+# Python executable name differs between platforms.
+PYTHON_BIN   = "python" if sys.platform == "win32" else "python3"
+# venv executables live in Scripts/ on Windows, bin/ on Unix.
+VENV_BIN_DIR = "Scripts" if sys.platform == "win32" else "bin"
+# PATH separator.
+PATH_SEP     = ";" if sys.platform == "win32" else ":"
 
 
 # ---------------------------------------------------------------------------
@@ -31,18 +45,18 @@ def run(script, *args, cwd=None):
     scripts write to stderr via message() and Python scripts write
     to stdout via print().
     """
-    cmd = [JRRUN, script] + [str(a) for a in args]
+    cmd = BASH_PREFIX + [JRRUN, script] + [str(a) for a in args]
     return subprocess.run(
         cmd,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         cwd=cwd or DATA_DIR,
     )
 
 
 def combined(result):
     """Return stdout + stderr as a single string for pattern matching."""
-    return result.stdout + result.stderr
+    return (result.stdout or "") + (result.stderr or "")
 
 
 def extract_n_at_f(result, f=0):
