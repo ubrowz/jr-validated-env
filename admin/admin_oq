@@ -68,7 +68,11 @@ fi
 if $NEED_REBUILD; then
   echo "🔄 Setting up OQ venv at: $OQ_VENV"
   rm -rf "$OQ_VENV"
-  python3 -m venv "$OQ_VENV"
+  if [[ "$(jr_os)" == "windows" ]]; then
+    python -m venv "$OQ_VENV"
+  else
+    python3 -m venv "$OQ_VENV"
+  fi
   "$(jr_venv_pip "$OQ_VENV")" install --quiet -r "$OQ_REQ"
   echo "$REQ_HASH" > "$HASH_FILE"
   echo "✅ OQ venv ready"
