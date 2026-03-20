@@ -30,6 +30,14 @@ PYTHON_BIN   = "python" if sys.platform == "win32" else "python3"
 VENV_BIN_DIR = "Scripts" if sys.platform == "win32" else "bin"
 # PATH separator.
 PATH_SEP     = ";" if sys.platform == "win32" else ":"
+# Rscript binary — on Windows Python subprocess does not inherit Git Bash PATH,
+# so locate Rscript.exe directly under Program Files.
+if sys.platform == "win32":
+    import glob as _glob
+    _candidates = sorted(_glob.glob(r"C:\Program Files\R\R-*\bin\Rscript.exe"))
+    RSCRIPT_BIN = _candidates[-1] if _candidates else "Rscript"
+else:
+    RSCRIPT_BIN = "Rscript"
 
 
 # ---------------------------------------------------------------------------

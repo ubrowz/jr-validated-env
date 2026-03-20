@@ -24,7 +24,8 @@ import subprocess
 import time
 
 from conftest import (DATA_DIR, JRRUN, PROJECT_ROOT, BASH_PREFIX,
-                      PYTHON_BIN, VENV_BIN_DIR, PATH_SEP, combined, run)
+                      PYTHON_BIN, VENV_BIN_DIR, PATH_SEP, RSCRIPT_BIN,
+                      combined, run)
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +157,7 @@ class TestCoreOQ:
         script = os.path.join(PROJECT_ROOT, "R", "jrc_R_hello.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, "Validation"],
+            [RSCRIPT_BIN, script, "Validation"],
             capture_output=True,
             encoding="utf-8",
             env=env,
