@@ -52,32 +52,40 @@ BINARY_TYPE <- paste0("mac.binary.", MACOS_PLATFORM)
 r_minor     <- paste(R.version$major,
                      sub("\\..*", "", R.version$minor), sep = ".")
 
-# miniCRAN 0.3.x does not recognise "mac.binary.big-sur-x86_64" (Intel macOS).
-# When that type is absent from miniCRAN's repoPrefix switch we fall back to
-# downloading source via miniCRAN and fetching binaries manually.
-MINICRAN_BINARY_TYPES <- c("win.binary", "mac.binary",
+# miniCRAN does not reliably download Windows binaries (win.binary) or
+# Intel macOS binaries (mac.binary.big-sur-x86_64). For these platforms we
+# fall back to downloading source via miniCRAN and fetching binaries manually.
+MINICRAN_BINARY_TYPES <- c("mac.binary",
                             "mac.binary.el-capitan",
                             "mac.binary.big-sur-arm64")
 USE_MINICRAN_BINARY <- BINARY_TYPE %in% MINICRAN_BINARY_TYPES
 
 if (!USE_MINICRAN_BINARY) {
   cat(sprintf(
-    "ℹ️  miniCRAN does not support binary type '%s' (Intel macOS).\n",
+    "ℹ️  Binaries for '%s' will be downloaded directly from CRAN.\n",
     BINARY_TYPE))
-  cat("    Source packages will be fetched via miniCRAN.\n")
-  cat("    Binary packages will be downloaded directly from CRAN.\n\n")
+  cat("    Source packages will be fetched via miniCRAN.\n\n")
 }
 
 # ---------------------------------------------------------------------------
-# Helper — download binary packages directly for platforms miniCRAN ignores
+# Helper — download binary packages directly (Windows and Intel macOS)
 # ---------------------------------------------------------------------------
 
 download_binaries_manually <- function(pkgs, local_repo, cran_mirror,
                                        platform, r_ver) {
-  bin_dir <- file.path(local_repo, "bin/macosx", platform, "contrib", r_ver)
+  if (platform == "windows") {
+    bin_dir    <- file.path(local_repo, "bin/windows", "contrib", r_ver)
+    contriburl <- sprintf("%s/bin/windows/contrib/%s", cran_mirror, r_ver)
+    ext        <- ".zip"
+    idx_type   <- "win.binary"
+  } else {
+    bin_dir    <- file.path(local_repo, "bin/macosx", platform, "contrib", r_ver)
+    contriburl <- sprintf("%s/bin/macosx/%s/contrib/%s", cran_mirror, platform, r_ver)
+    ext        <- ".tgz"
+    idx_type   <- "mac.binary"
+  }
   dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 
-  contriburl <- sprintf("%s/bin/macosx/%s/contrib/%s", cran_mirror, platform, r_ver)
   avail <- tryCatch(
     available.packages(contriburl = contriburl),
     error = function(e) {
@@ -93,7 +101,7 @@ download_binaries_manually <- function(pkgs, local_repo, cran_mirror,
   for (pkg in pkgs) {
     if (!pkg %in% rownames(avail)) next
     ver   <- avail[pkg, "Version"]
-    fname <- sprintf("%s_%s.tgz", pkg, ver)
+    fname <- sprintf("%s_%s%s", pkg, ver, ext)
     dest  <- file.path(bin_dir, fname)
     if (!file.exists(dest)) {
       url <- sprintf("%s/%s", contriburl, fname)
@@ -110,7 +118,7 @@ download_binaries_manually <- function(pkgs, local_repo, cran_mirror,
     }
   }
 
-  tools::write_PACKAGES(bin_dir, type = "mac.binary")
+  tools::write_PACKAGES(bin_dir, type = idx_type)
   cat("📋 Binary PACKAGES index written.\n\n")
 }
 
