@@ -29,6 +29,25 @@ unset R_LIBS
 unset R_LIBS_USER
 unset R_LIBS_SITE
 
+# --- Ensure Rscript is on PATH (Windows: auto-detect if missing)
+if ! command -v Rscript >/dev/null 2>&1; then
+  if [[ "$(jr_os)" == "windows" ]]; then
+    R_BIN_DIR=""
+    for r_dir in "/c/Program Files/R"/R-*/; do
+      [[ -f "${r_dir}bin/Rscript.exe" ]] && R_BIN_DIR="${r_dir}bin"
+    done
+    if [[ -n "$R_BIN_DIR" ]]; then
+      export PATH="$R_BIN_DIR:$PATH"
+    else
+      echo "❌ Rscript not found. Install R and ensure it is on your PATH."
+      exit 1
+    fi
+  else
+    echo "❌ Rscript not found."
+    exit 1
+  fi
+fi
+
 if [[ ! -f "$SCRIPT_DIR/R/validate_R_env.R" ]]; then
   echo "❌ validate_R_env.R not found."
   echo "   Run generate_validate_R.zsh first."
