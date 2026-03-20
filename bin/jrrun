@@ -251,7 +251,11 @@ local_repo <- "$R_LOCAL_REPO_URL"
 options(repos    = c(LOCAL = local_repo),
         pkgType  = "binary",
         install.packages.compile.from.source = "never")
-install.packages("renv", repos = local_repo)
+# Install renv into the user renv home, not the system R library.
+# On Windows the system library requires admin rights and is not writable.
+dir.create("$R_RENV_HOME", recursive = TRUE, showWarnings = FALSE)
+install.packages("renv", repos = local_repo, lib = "$R_RENV_HOME")
+.libPaths(c("$R_RENV_HOME", .libPaths()))
 Sys.setenv(RENV_PATHS_ROOT = "$R_RENV_HOME")
 renv::init(project  = "$R_RENV_HOME",
            bare     = TRUE,

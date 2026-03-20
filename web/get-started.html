@@ -42,11 +42,12 @@
   <div class="req-card">
     <h2>Requirements</h2>
     <ul class="req-list">
-      <li>macOS (Apple Silicon or Intel)</li>
+      <li>macOS (Apple Silicon or Intel) <strong>or</strong> Windows 10/11</li>
       <li>R — version specified in <code>admin/r_version.txt</code></li>
       <li>Python — version specified in <code>admin/python_version.txt</code></li>
       <li>Dropbox — for sharing the local package repository across the team</li>
-      <li id="req-xcode" class="hidden">Xcode Command Line Tools — run <code>xcode-select --install</code> in Terminal if not already installed</li>
+      <li id="req-xcode" class="hidden">Xcode Command Line Tools <em>(macOS admins only)</em> — run <code>xcode-select --install</code> in Terminal if not already installed</li>
+      <li>Git for Windows (Git Bash) <em>(Windows only)</em> — <a href="https://git-scm.com/download/win" class="github-link">git-scm.com/download/win</a></li>
     </ul>
     <p class="req-note">Package versions are pinned in requirements files. The environment installs from a local Dropbox repository — no internet access required once the admin has built the repo.</p>
   </div>
@@ -54,7 +55,7 @@
   <!-- ── End Users tab ─────────────────────────────────────────────────────── -->
   <div id="tab-users">
 
-    <div class="section-heading">Quick start — End users</div>
+    <div class="section-heading">Quick start — End users (macOS)</div>
     <div class="card">
       <div class="gs-step">
         <div class="gs-step-num">1</div>
@@ -71,7 +72,7 @@
       <div class="gs-step">
         <div class="gs-step-num">3</div>
         <div class="gs-step-body">
-          <p>Find <code>setup_jr_path.zsh</code> in the JR project folder in Finder. <strong>Drag it into the Terminal window</strong> and press Enter.</p>
+          <p>Find <code>setup_jr_path.sh</code> in the JR project folder in Finder. <strong>Drag it into the Terminal window</strong> and press Enter.</p>
         </div>
       </div>
       <div class="gs-step">
@@ -93,7 +94,51 @@
           <p>Type the name of any JR script and press Enter. On first run the environment builds automatically — this may take a minute. All subsequent runs are fast.</p>
         </div>
       </div>
-      <div class="callout">You only need to run <code>setup_jr_path.zsh</code> once per machine. Use the <a href="script_guide.html" class="github-link">Script Guide</a> to find the right script for your analysis.</div>
+      <div class="callout">You only need to run <code>setup_jr_path.sh</code> once per machine. Use the <a href="script_guide.html" class="github-link">Script Guide</a> to find the right script for your analysis.</div>
+    </div>
+
+    <div class="section-heading">Quick start — End users (Windows)</div>
+    <div class="card">
+      <div class="gs-step">
+        <div class="gs-step-num">1</div>
+        <div class="gs-step-body">
+          <p>Make sure <strong>Dropbox is installed and fully synced</strong> on your PC before continuing.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">2</div>
+        <div class="gs-step-body">
+          <p>Open <strong>Git Bash</strong>: press <kbd>Win</kbd>, type <code>Git Bash</code>, press Enter.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">3</div>
+        <div class="gs-step-body">
+          <p>Navigate to the JR project folder and run <code>setup_jr_path.sh</code>:</p>
+          <div class="cmd-block">cd "/c/Users/YourName/Dropbox/jr-validated-env"
+bash setup_jr_path.sh</div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">4</div>
+        <div class="gs-step-body">
+          <p>You will see:</p>
+          <div class="cmd-block">✅ PATH updated successfully.</div>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">5</div>
+        <div class="gs-step-body">
+          <p>Close and reopen <strong>Git Bash</strong>. You are ready.</p>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">6</div>
+        <div class="gs-step-body">
+          <p>Type the name of any JR script and press Enter. On first run the environment builds automatically — this may take a minute. All subsequent runs are fast.</p>
+        </div>
+      </div>
+      <div class="callout">You only need to run <code>setup_jr_path.sh</code> once per machine. Use the <a href="script_guide.html" class="github-link">Script Guide</a> to find the right script for your analysis.</div>
     </div>
 
     <div class="section-heading">Utility commands</div>
@@ -199,8 +244,8 @@ cd jr-validated-env</div>
 
     <div class="section-heading">Adding new team members</div>
     <div class="card">
-      <p style="font-size:0.92rem;color:#3a3a5e">Share the JR project folder via Dropbox (already synced for existing members). The new team member runs <code>setup_jr_path.zsh</code> once on their machine — the environment is built automatically on first script run.</p>
-      <p style="font-size:0.88rem;color:#7080A0;margin-top:10px">For teams with a mix of Apple Silicon and Intel Macs, see the multi-architecture section in <code>docs/admin_manual.pdf</code>.</p>
+      <p style="font-size:0.92rem;color:#3a3a5e">Share the JR project folder via Dropbox (already synced for existing members). The new team member runs <code>setup_jr_path.sh</code> once on their machine — the environment is built automatically on first script run.</p>
+      <p style="font-size:0.88rem;color:#7080A0;margin-top:10px">macOS users run <code>setup_jr_path.sh</code> from Terminal. Windows users run it from Git Bash. For teams with a mix of macOS and Windows machines, see <code>docs/admin_manual.pdf</code>.</p>
     </div>
 
     <div class="section-heading">OQ validation</div>
@@ -247,7 +292,7 @@ cd jr-validated-env</div>
         <li>Add R and Python scripts to the <code>R/</code> and <code>Python/</code> subfolders following the Admin Manual</li>
         <li>Run <code>./admin/admin_create_hash</code> then <code>./admin/admin_validate</code> to generate validation artefacts</li>
       </ol>
-      <p>Team members then run <code>setup_jr_path.zsh</code> once on their machine. The environment is ready.</p>
+      <p>Team members then run <code>setup_jr_path.sh</code> once on their machine. The environment is ready.</p>
     </div>
 
     <div class="adapt-option">

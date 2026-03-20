@@ -176,6 +176,13 @@ fi
 # --- Run R install script
 Rscript --vanilla "$SCRIPT_DIR/R/admin_R_install.R"
 EXIT_CODE=$?
+
+# Write the lock hash that jrrun checks so it does not trigger a rebuild
+# immediately after admin_install_R has already set up the environment.
+if [[ $EXIT_CODE -eq 0 ]] && [[ -f "$SCRIPT_DIR/renv.lock" ]]; then
+  REQ_HASH=$(shasum "$SCRIPT_DIR/renv.lock" | cut -d' ' -f1)
+  echo "$REQ_HASH" > "$RENV_HOME/.renv_lock_hash"
+fi
 printf '%s\t%s\t%s\t%s\n' \
   "$(date '+%Y-%m-%dT%H:%M:%S')" \
   "$(basename "$0")" \

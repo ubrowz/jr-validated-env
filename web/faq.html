@@ -85,7 +85,7 @@
       <div class="faq-answer">
         <p>The most common issues are covered in <code>docs/TROUBLESHOOTING.md</code>, which is included in the project folder. The first things to check:</p>
         <p>1. Is Dropbox running and fully synced?<br>
-           2. Did you open a new Terminal window after running <code>setup_jr_path.zsh</code>?<br>
+           2. Did you open a new Terminal/Git Bash window after running <code>setup_jr_path.sh</code>?<br>
            3. Is the error an integrity check failure? If so, a project file has changed since the hash was generated — contact your administrator.<br>
            4. Run <code>jr_versions</code> to confirm R, Python, and all packages are installed correctly.</p>
         <p>A run log at <code>~/.jrscript/&lt;PROJECT_ID&gt;/run.log</code> records every execution with timestamp, arguments, and exit code — useful for tracing exactly what ran and when.</p>
@@ -178,7 +178,8 @@ readable folder path before relying on it in a regulated context.</p>
     <details class="faq-item">
       <summary>Can I use this on Windows or Linux?</summary>
       <div class="faq-answer">
-        <p>No — macOS only (Apple Silicon and Intel are both supported). The environment relies on macOS-specific paths and zsh shell behaviour. The package repository may also contain platform-specific binaries. If your team uses Windows machines, the JR Validated Environment is not currently an option.</p>
+        <p><strong>Windows 10/11 — yes.</strong> From v2.0.0 the environment runs on Windows via Git Bash. All shell scripts have been ported from zsh to bash, and the admin and jrrun scripts handle Windows-native paths automatically. Install Git for Windows, then follow the Windows steps on the <a href="get-started.html" class="github-link">Get Started</a> page.</p>
+        <p><strong>Linux — not currently supported.</strong> The package repository contains platform-specific binaries for macOS and Windows. Linux support is not planned at this time.</p>
       </div>
     </details>
 
@@ -188,9 +189,9 @@ readable folder path before relying on it in a regulated context.</p>
         <p>Share the JR project folder via Dropbox — if it is already in a shared Dropbox folder, simply invite the new member to that folder. They then:</p>
         <p>1. Install the correct R and Python versions (installers are in the Dropbox repository).<br>
            2. Wait for Dropbox to finish syncing.<br>
-           3. Run <code>setup_jr_path.zsh</code> once from the project folder to add the environment to their PATH.<br>
-           4. Open a new Terminal window — the environment is ready. It will build automatically on their first script run.</p>
-        <p>No further admin action is required for each new user. For teams with a mix of Apple Silicon and Intel Macs, see the multi-architecture section in <code>docs/admin_manual.pdf</code>.</p>
+           3. Run <code>setup_jr_path.sh</code> once from the project folder to add the environment to their PATH (Terminal on macOS, Git Bash on Windows).<br>
+           4. Open a new Terminal/Git Bash window — the environment is ready. It will build automatically on their first script run.</p>
+        <p>No further admin action is required for each new user. For teams with a mix of macOS and Windows machines, see <code>docs/admin_manual.pdf</code>.</p>
       </div>
     </details>
 
