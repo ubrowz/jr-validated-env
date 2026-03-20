@@ -78,7 +78,10 @@ if not venv_path:
     sys.exit("❌ VENV_PATH is not set. Run this script from the provided zsh wrapper.")
 
 venv = Path(venv_path)
-site_packages = venv / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
+if sys.platform == "win32":
+    site_packages = venv / "Lib" / "site-packages"
+else:
+    site_packages = venv / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
 
 if not site_packages.exists():
     sys.exit(f"❌ venv site-packages not found at: {site_packages}")
