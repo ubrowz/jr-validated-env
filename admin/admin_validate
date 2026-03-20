@@ -28,6 +28,9 @@ if [[ ! -f "$PROJECT_ID_FILE" ]]; then
 fi
 PROJECT_ID="$(tr -d '[:space:]' < "$PROJECT_ID_FILE")"
 
+# --- Platform directory for renv library
+export JR_R_PLATFORM_DIR="$(jr_r_platform_dir)"
+
 # --- R environment paths
 export RENV_HOME="$HOME/.renv/$PROJECT_ID"
 export RENV_PATHS_ROOT="$HOME/.renv/$PROJECT_ID"
