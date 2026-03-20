@@ -23,7 +23,8 @@ import os
 import subprocess
 import time
 
-from conftest import DATA_DIR, JRRUN, PROJECT_ROOT, combined, run
+from conftest import (DATA_DIR, JRRUN, PROJECT_ROOT, BASH_PREFIX,
+                      PYTHON_BIN, VENV_BIN_DIR, PATH_SEP, combined, run)
 
 
 # ---------------------------------------------------------------------------
@@ -51,7 +52,7 @@ class TestCoreIQ:
         """
         t_start = time.time()
         result = subprocess.run(
-            [os.path.join(PROJECT_ROOT, "admin", "admin_validate")],
+            BASH_PREFIX + [os.path.join(PROJECT_ROOT, "admin", "admin_validate")],
             capture_output=True,
             text=True,
             cwd=PROJECT_ROOT,
@@ -102,7 +103,7 @@ class TestCoreOQ:
         """
         try:
             result = subprocess.run(
-                [JRRUN, "jrc_py_hello.py", "Validation"],
+                BASH_PREFIX + [JRRUN, "jrc_py_hello.py", "Validation"],
                 capture_output=True,
                 text=True,
                 timeout=15,
@@ -181,11 +182,11 @@ class TestCoreOQ:
         """
         script = os.path.join(PROJECT_ROOT, "Python", "jrc_py_hello.py")
         project_id = _project_id()
-        venv_bin = os.path.expanduser(f"~/.venvs/{project_id}/bin")
-        path_dirs = [p for p in os.environ.get("PATH", "").split(":") if p != venv_bin]
-        env = {**os.environ, "PATH": ":".join(path_dirs)}
+        venv_bin = os.path.expanduser(f"~/.venvs/{project_id}/{VENV_BIN_DIR}")
+        path_dirs = [p for p in os.environ.get("PATH", "").split(PATH_SEP) if p != venv_bin]
+        env = {**os.environ, "PATH": PATH_SEP.join(path_dirs)}
         result = subprocess.run(
-            ["python3", script, "Validation"],
+            [PYTHON_BIN, script, "Validation"],
             capture_output=True,
             text=True,
             env=env,

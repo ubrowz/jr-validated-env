@@ -6,6 +6,7 @@ All AS test modules import helpers from this file.
 
 import os
 import subprocess
+import sys
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -22,12 +23,15 @@ DATA_DIR     = os.path.join(OQ_DIR, "data")
 # Helpers
 # ---------------------------------------------------------------------------
 
+BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
+
+
 def run(script, *args, cwd=None):
     """
     Invoke a script via jrrun and return subprocess.CompletedProcess.
     stdout and stderr are both captured as text.
     """
-    cmd = [JRRUN, script] + [str(a) for a in args]
+    cmd = BASH_PREFIX + [JRRUN, script] + [str(a) for a in args]
     return subprocess.run(
         cmd,
         capture_output=True,
