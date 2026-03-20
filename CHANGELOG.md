@@ -10,6 +10,49 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [2.0.0] — 2026-03-20
+
+### Added
+
+- **Windows support** — full cross-platform compatibility with Windows 10/11
+  via Git Bash. All shell scripts ported from zsh to bash. Tested end-to-end
+  on Windows: `admin_install_R --rebuild`, `admin_install_Python`,
+  `admin_validate`, `jrrun`, and the complete 142-test OQ suite.
+- `bin/jr_platform.sh` — shared OS/path helper library sourced by all scripts.
+  Provides `jr_os()`, `jr_r_platform_dir()`, `jr_venv_python/pip/pytest()`,
+  `jr_shell_rc()`, `jr_sed_inplace()`, `jr_os_version()`.
+- `setup_jr_path.sh` — replaces `setup_jr_path.zsh`; writes PATH block to
+  `~/.zprofile` (macOS) or `~/.bash_profile` (Windows Git Bash).
+- **References page** — `web/references.html` listing ASTM/ISO/ANSI/AIAG
+  standards and literature per module (Core, DoE, MSA, SPC, AS). Reachable
+  from a button next to each module's browse button and from the site nav.
+
+### Changed
+
+- All 49 wrapper scripts and all scripts in `bin/` and `admin/` converted from
+  zsh to bash (shebang `#!/bin/bash`).
+- `bin/jrrun` — exports `JR_R_PLATFORM_DIR`; converts Git Bash paths to
+  Windows-native paths via `cygpath -w` before passing to R; exports
+  `PYTHONUTF8=1` in Python branch.
+- `admin/admin_validate` and `admin/admin_validate_R_env` — export
+  `JR_R_PLATFORM_DIR`; `admin_validate_R_env` now sources `jr_platform.sh`.
+- `admin/admin_generate_validate_R` and `admin/admin_scaffold_R` — emit
+  `Sys.getenv("JR_R_PLATFORM_DIR", unset = "macos")` instead of hardcoded
+  `"macos"` in renv library path.
+- All OQ `conftest.py` files — `BASH_PREFIX = ["bash"]` on Windows; all
+  `subprocess.run()` calls use `encoding="utf-8"` instead of `text=True`.
+
+### Fixed
+
+- Windows R install: renv download URL, `file:///` URL construction, Windows
+  binary package download via `download_binaries_manually()`.
+- Windows Python: venv `Scripts/` vs `bin/` path, `Lib/site-packages` path,
+  `python` vs `python3.11` executable name.
+- `jr_shell_rc()` returns `~/.bash_profile` on Windows (Git Bash login shell).
+- `bin/jr_versions` — `declare -A` replaced with awk lookup for bash 3.2
+  compatibility on macOS.
+- Clear error message when script name not found in `jrrun` search paths.
+
 ## [1.9.0] — 2026-03-19
 
 ### Added
