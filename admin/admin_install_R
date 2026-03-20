@@ -61,11 +61,30 @@ if [[ ! -f "$SCRIPT_DIR/R_requirements.txt" ]]; then
   exit 1
 fi
 
-# --- Check R is installed
+# --- Check R is installed; on Windows auto-detect and add to PATH if missing
 if ! command -v Rscript >/dev/null 2>&1; then
-  echo "❌ Rscript not found."
-  echo "   Install R from: $PROJECT_ROOT/R_repo/"
-  exit 1
+  if [[ "$(jr_os)" == "windows" ]]; then
+    R_BIN_DIR=""
+    for r_dir in "/c/Program Files/R"/R-*/; do
+      [[ -f "${r_dir}bin/Rscript.exe" ]] && R_BIN_DIR="${r_dir}bin"
+    done
+    if [[ -n "$R_BIN_DIR" ]]; then
+      echo "📍 Rscript not on PATH — found R at: $R_BIN_DIR"
+      echo "   Adding to ~/.bash_profile and current session..."
+      echo "export PATH=\"$R_BIN_DIR:\$PATH\"" >> "$HOME/.bash_profile"
+      export PATH="$R_BIN_DIR:$PATH"
+      echo "✅ R added to PATH."
+      echo ""
+    else
+      echo "❌ Rscript not found and R not detected in /c/Program Files/R/."
+      echo "   Install R and re-run this script."
+      exit 1
+    fi
+  else
+    echo "❌ Rscript not found."
+    echo "   Install R from: $PROJECT_ROOT/R_repo/"
+    exit 1
+  fi
 fi
 
 # --- Check R version matches requirement
