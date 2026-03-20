@@ -44,6 +44,7 @@ elif [[ "$(uname -m)" == "arm64" ]]; then
 else
   export R_MACOS_PLATFORM="big-sur-x86_64"
 fi
+export JR_R_PLATFORM_DIR="$(jr_r_platform_dir)"
 
 # --- Clear R library overrides
 unset R_LIBS
