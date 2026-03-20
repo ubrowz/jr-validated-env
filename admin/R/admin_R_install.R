@@ -514,7 +514,11 @@ if (MODE == "BUILD") {
 # Set local repo as sole package source  (all modes)
 # ---------------------------------------------------------------------------
 
-local_repo_url <- paste0("file://", normalizePath(LOCAL_REPO))
+if (.Platform$OS.type == "windows") {
+  local_repo_url <- paste0("file:///", gsub("\\\\", "/", normalizePath(LOCAL_REPO)))
+} else {
+  local_repo_url <- paste0("file://", normalizePath(LOCAL_REPO))
+}
 
 options(
   repos                                = c(LOCAL = local_repo_url),
