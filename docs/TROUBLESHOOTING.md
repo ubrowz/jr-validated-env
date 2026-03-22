@@ -166,14 +166,14 @@ zsh: command not found: jr_versions
 
 **Cause**
 
-`setup_jr_path.zsh` has not been run, or the Terminal window was not
+`setup_jr_path.sh` has not been run, or the Terminal window was not
 reopened after running it.
 
 **Resolution**
 
 1. Run the path setup script from the project root:
 ```zsh
-./setup_jr_path.zsh
+./setup_jr_path.sh
 ```
 2. Open a **new Terminal window** — PATH changes do not apply to the current
    window.

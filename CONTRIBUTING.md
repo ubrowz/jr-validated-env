@@ -172,9 +172,9 @@ git remote add upstream https://github.com/yourorg/jr-validated-environment.git
 ./admin/admin_install_Python --rebuild
 ```
 
-5. Run `setup_jr_path.zsh` to add the project to your PATH:
+5. Run `setup_jr_path.sh` to add the project to your PATH:
 ```zsh
-./setup_jr_path.zsh
+./setup_jr_path.sh
 ```
    Then open a new Terminal window.
 

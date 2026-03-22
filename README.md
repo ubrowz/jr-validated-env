@@ -168,7 +168,6 @@ jr-anchored/
 ├── SECURITY.md
 ├── PLATFORMS.md
 ├── setup_jr_path.sh                 ← run once per machine to add bin/ and wrapper/ to PATH
-├── setup_jr_path.zsh                ← macOS zsh variant
 │
 ├── bin/
 │   ├── jrrun                        ← run any R or Python script in the environment
@@ -285,6 +284,12 @@ Contributions are welcome. Please open an issue before submitting a pull request
 Copyright 2026 dwylup
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full licence text.
+
+---
+
+## Acknowledgements
+
+JR Anchored was designed and built with the assistance of [Claude Code](https://claude.ai/code) by Anthropic.
 
 ---
 
