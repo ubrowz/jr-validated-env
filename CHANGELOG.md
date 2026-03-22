@@ -10,6 +10,33 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [2.1.0] — 2026-03-21
+
+### Added
+
+- **Corr module** (`repos/corr/`) — four new R scripts for correlation and
+  method comparison analysis:
+  - `jrc_corr_pearson` — Pearson product-moment correlation with Fisher
+    z-transformed CI and two-sided hypothesis test.
+  - `jrc_corr_spearman` — Spearman rank correlation; distribution-free,
+    valid for non-normal data and ordinal measurements.
+  - `jrc_corr_regression` — OLS simple linear regression with R², adjusted
+    R², F-statistic, residual SE, coefficient CIs, and a two-panel residuals
+    diagnostic plot.
+  - `jrc_corr_passing_bablok` — Passing-Bablok method comparison regression
+    (native implementation, no `mcr` package required). Tests slope = 1 and
+    intercept = 0; Cusum linearity test included.
+- OQ test suite: 45 automated test cases (TC-CORR-P-001..011,
+  TC-CORR-S-001..011, TC-CORR-R-001..011, TC-CORR-PB-001..012) — 45/45 PASS.
+- Validation plan JR-VP-CORR-001 v1.0 (18 URs, 45 TCs, RTM).
+- Validation report JR-VR-CORR-001 v1.0 (45/45 PASS, 0 deviations).
+- User manual `corr_user_manual.pdf` — routing table, per-script reference,
+  interpretation guidance for r/ρ/R²/P-B, recommended workflows, glossary.
+- Web: Corr module added to `modules.html`, `references.html`,
+  `script_guide.html` (SCRIPTS, CATEGORIES, TREE), and `downloads.html`.
+
+---
+
 ## [2.0.1] — 2026-03-20
 
 ### Fixed

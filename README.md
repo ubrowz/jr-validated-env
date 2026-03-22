@@ -1,14 +1,16 @@
-# JR Validated Environment
+# JR Anchored
 
 A framework for running validated R and Python scripts in a controlled,
 reproducible environment — designed for medical device development teams
 working under FDA and ISO 13485 requirements.
 
+**Website & documentation:** [www.dwylup.com](https://www.dwylup.com)
+
 ---
 
 ## What is this?
 
-The JR Validated Environment provides a structured way to:
+JR Anchored provides a structured way to:
 
 - Run R and Python analysis scripts with **pinned, auditable package versions**
 - Ensure every team member uses **exactly the same packages** regardless of their machine setup
@@ -16,50 +18,71 @@ The JR Validated Environment provides a structured way to:
 - Verify **project integrity** before every script run
 - Generate **validation evidence** for auditors with a single command
 
-It is designed for small to medium medical device development teams on macOS who need a pragmatic, FDA-friendly approach to software validation without the overhead of a full enterprise solution.
+It is designed for small to medium medical device development teams on macOS and Windows who need a pragmatic, FDA-friendly approach to software validation without the overhead of a full enterprise solution.
 
 ---
 
 ## Requirements
 
-- macOS (Apple Silicon or Intel)
+**macOS (Apple Silicon or Intel)**
 - [R](https://cran.r-project.org/bin/macosx/) — version specified in `admin/r_version.txt`
 - [Python](https://www.python.org/downloads/macos/) — version specified in `admin/python_version.txt`
-- [Dropbox](https://www.dropbox.com) — for sharing the local package repository across the team
 - Xcode Command Line Tools — install by running `xcode-select --install` in Terminal
+
+**Windows 10/11**
+- [R for Windows](https://cran.r-project.org/bin/windows/base/) — version specified in `admin/r_version.txt`
+- [Python for Windows](https://www.python.org/downloads/windows/) — version specified in `admin/python_version.txt`
+- [Git for Windows](https://git-scm.com/download/win) — provides Git Bash (the terminal used to run all JR commands)
+
+**File sharing (choose one)**
+- **SMB network share** (recommended, zero cost) — any shared folder on your company network
+- **Dropbox** — convenient for distributed teams; free tier (2 GB) is typically sufficient
 
 ---
 
 ## Quick Start for End Users
 
-> If you are a team member who has been given access to the JR environment by your administrator, follow these steps.
+> If you are a team member who has been given access to JR Anchored by your administrator, follow these steps.
 
-**Step 1** — Make sure Dropbox is installed and fully synced on your Mac.
+**macOS**
 
-**Step 2** — Open Terminal. Press `Command + Space`, type `Terminal`, press `Enter`.
+**Step 1** — Open Terminal. Press `Command + Space`, type `Terminal`, press `Enter`.
 
-**Step 3** — Find the file `setup_jr_path.zsh` in the JR project folder in Finder. Drag it into the Terminal window and press `Enter`.
+**Step 2** — Find the file `setup_jr_path.sh` in the JR project folder in Finder. Drag it into the Terminal window and press `Enter`.
 
-**Step 4** — You will see:
+**Step 3** — You will see:
 ```
 ✅ PATH updated successfully.
 ```
 
-**Step 5** — Open a new Terminal window (`Command + N`). You are ready.
+**Step 4** — Open a new Terminal window (`Command + N`). You are ready.
 
-**Step 6** — Type the name of any JR script and press `Enter`. On first run the environment will be set up automatically — this may take a minute. All subsequent runs are fast.
+**Windows**
 
-> You only need to run `setup_jr_path.zsh` once per machine.
+**Step 1** — Open Git Bash (search for "Git Bash" in the Start menu).
+
+**Step 2** — Navigate to the JR project folder and run:
+```bash
+bash setup_jr_path.sh
+```
+
+**Step 3** — Close and reopen Git Bash. You are ready.
+
+---
+
+**Step 5 (both platforms)** — Type the name of any JR script and press `Enter`. On first run the environment will be set up automatically — this may take a minute. All subsequent runs are fast.
+
+> You only need to run `setup_jr_path.sh` once per machine.
 
 ---
 
 ## Quick Start for Administrators
 
-> See the [Admin Manual](docs/admin_manual.docx) for full instructions. This is a summary.
+> See the [Admin Manual](docs/admin_manual.pdf) for full instructions. This is a summary.
 
 **First-time setup** (requires internet):
 
-```zsh
+```bash
 # 1. Clone the repository
 git clone https://github.com/ubrowz/jr-validated-env.git
 cd jr-validated-env
@@ -69,9 +92,12 @@ cd jr-validated-env
 ./admin/admin_install_Python --rebuild
 ```
 
+> **Windows:** Open Git Bash as Administrator before running admin commands
+> (right-click Git Bash → Run as administrator).
+
 **Subsequent setups** (no internet needed):
 
-```zsh
+```bash
 ./admin/admin_install_R
 ./admin/admin_install_Python
 ```
@@ -84,20 +110,20 @@ cd jr-validated-env
 ┌─────────────────────────────────────────────────────────────┐
 │                     Admin (once)                            │
 │                                                             │
-│  R_requirements.txt ──► admin_install_R ──► Dropbox repo    │
+│  R_requirements.txt ──► admin_install_R ──► shared repo     │
 │  python_requirements.txt ► admin_install_Python             │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              ▼ (Dropbox sync)
+                              ▼ (Dropbox sync or SMB share)
 ┌─────────────────────────────────────────────────────────────┐
 │                  Each User (automatic)                      │
 │                                                             │
-│  zsh wrapper ──► integrity check ──► rebuild if needed      │
+│  bash wrapper ──► integrity check ──► rebuild if needed     │
 │               ──► run R or Python script                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Package versions are pinned in `R_requirements.txt` and `python_requirements.txt`. Packages are downloaded once into a local Dropbox repository and never fetched from the internet again. Each user's environment is built automatically from this local repository on first run.
+Package versions are pinned in `R_requirements.txt` and `python_requirements.txt`. Packages are downloaded once into a local repository and never fetched from the internet again. Each user's environment is built automatically from this local repository on first run.
 
 ---
 
@@ -106,38 +132,35 @@ Package versions are pinned in `R_requirements.txt` and `python_requirements.txt
 Docker is a legitimate alternative for running scripts in a controlled environment,
 and the right choice depends on your team. Here is a concise comparison:
 
-| | JR Validated Environment | Docker |
+| | JR Anchored | Docker |
 |---|---|---|
 | Learning curve | Low — basic Terminal only | High — images, registries, Dockerfile |
 | Audit transparency | High — plain text requirements files | Moderate — binary image requires tooling |
-| macOS GUI output | Native, no configuration | Requires X11 or volume mapping |
+| macOS/Windows GUI output | Native, no configuration | Requires X11 or volume mapping |
 | Resource usage | Minimal — no background processes | Heavy — Linux VM always running |
-| Distribution | Dropbox sync | Registry + Docker Desktop install |
+| Distribution | Dropbox or SMB share | Registry + Docker Desktop install |
 | Package updates | Edit one file, auto-propagated | Rebuild and redistribute entire image |
 | Offline use | Yes | Requires local registry |
-| Cross-platform | macOS only | macOS, Windows, Linux |
+| Cross-platform | macOS and Windows | macOS, Windows, Linux |
 | System dependencies | R and Python packages only | Full OS-level control |
 
-**Choose the JR Validated Environment if** your team is macOS-based, consists of
-researchers or analysts rather than software engineers, and you want validation
-evidence in plain text files that a Quality Manager can read directly without
-additional tooling.
+**Choose JR Anchored if** your team consists of researchers or analysts rather than
+software engineers, and you want validation evidence in plain text files that a
+Quality Manager can read directly without additional tooling.
 
-**Choose Docker instead if** your team includes Windows or Linux users, your scripts
-depend on system-level libraries, or you are already working in a DevOps environment
-with Docker expertise in the team.
+**Choose Docker instead if** your scripts depend on system-level libraries, or you
+are already working in a DevOps environment with Docker expertise in the team.
 
 The two approaches can also be combined — the `R_requirements.txt` and
 `python_requirements.txt` files can serve as the source of truth for both the JR
 local repository and a Dockerfile.
 
-> For a detailed discussion of reproducibility, offline use, and regulatory considerations, the comparison table above covers the key decision points.
-
+---
 
 ## Repository Structure
 
 ```
-jr-validated-environment/
+jr-validated-env/
 │
 ├── README.md                        ← this file
 ├── LICENSE
@@ -145,42 +168,38 @@ jr-validated-environment/
 ├── CONTRIBUTING.md
 ├── SECURITY.md
 ├── PLATFORMS.md
-├── setup_jr_path.zsh                ← run once per machine to add bin/ and wrapper/ to PATH
+├── setup_jr_path.sh                 ← run once per machine to add bin/ and wrapper/ to PATH
+├── setup_jr_path.zsh                ← macOS zsh variant
 │
 ├── bin/
-│   ├── jrrun                        ← users: run any R or Python script in the environment
-│   ├── jr_versions                  ← users: show installed R, Python, and package versions
-│   └── jr_uninstall                 ← users: remove local environment components
+│   ├── jrrun                        ← run any R or Python script in the environment
+│   ├── jr_versions                  ← show installed R, Python, and package versions
+│   └── jr_uninstall                 ← remove local environment components
 │
-├── wrapper/
-│   ├── jr_animate                   ← example wrapper calling jrrun jrhello.py
-│   └── jr_static                    ← example wrapper calling jrrun jrhello.R
-│
-├── help/                            ← per-script help text files (same base name as script)
+├── wrapper/                         ← per-script wrappers (no editing needed)
+├── help/                            ← per-script help text files
 │
 ├── R/                               ← R analysis scripts
 ├── Python/                          ← Python analysis scripts
 │
+├── repos/                           ← validated module scripts (MSA, SPC, AS, Corr, …)
+│
 ├── admin/
 │   ├── R_requirements.txt           ← pinned R package versions
-│   ├── R_base_requirements.txt      ← base R packages (verified, not installed)
 │   ├── python_requirements.txt      ← pinned Python package versions
-│   ├── python_base_requirements.txt ← standard library modules (verified)
 │   ├── renv.lock                    ← R package lockfile (auto-generated)
-│   ├── r_version.txt                ← required R version e.g. 4.5
-│   ├── python_version.txt           ← required Python version e.g. 3.11.9
+│   ├── r_version.txt                ← required R version
+│   ├── python_version.txt           ← required Python version
 │   ├── project_id.txt               ← unique project identifier
-│   ├── admin_install_R              ← admin: set up R environment
-│   ├── admin_install_Python         ← admin: set up Python environment
-│   ├── admin_create_hash            ← admin: regenerate integrity file
-│   ├── admin_validate               ← admin: generate validation scripts and IQ evidence
-│   └── admin_uninstall              ← admin: remove entire environment from this machine
+│   ├── admin_install_R              ← set up R environment
+│   ├── admin_install_Python         ← set up Python environment
+│   ├── admin_create_hash            ← regenerate integrity file
+│   ├── admin_validate               ← generate validation scripts and IQ evidence
+│   └── admin_uninstall              ← remove entire environment from this machine
 │
 └── docs/
-    ├── admin_manual.docx            ← full administrator manual
-    └── templates/
-        ├── validation_plan_template.docx
-        └── jr_validation_report_template.docx
+    ├── admin_manual.pdf             ← full administrator manual (macOS + Windows)
+    └── user_manual.pdf              ← end-user manual
 ```
 
 ---
@@ -189,7 +208,7 @@ jr-validated-environment/
 
 To generate validation scripts and a timestamped IQ evidence file suitable for an audit, run:
 
-```zsh
+```bash
 ./admin/admin_validate
 ```
 
@@ -197,7 +216,7 @@ This generates the R and Python validation scripts from the requirements files, 
 
 To check currently installed versions at any time:
 
-```zsh
+```bash
 jr_versions
 ```
 
@@ -205,13 +224,13 @@ jr_versions
 
 ## Important Note on Validation Scope
 
-The validation evidence included in docs/ covers the specific R version, Python version, and package versions listed in the requirements files at the time of release. If you install the JR environment with different versions — because newer R or Python installers are available, or because you add or update packages — the included validation evidence no longer applies to your installation. You must perform your own revalidation using the provided Validation Plan and Validation Report templates in docs/templates/ before using the environment in a regulated context.
+The validation evidence included in `docs/` covers the specific R version, Python version, and package versions listed in the requirements files at the time of release. If you install JR Anchored with different versions, the included validation evidence no longer applies to your installation. You must perform your own revalidation using the provided Validation Plan and Validation Report templates before using the environment in a regulated context.
 
 ---
 
 ## Adapting for Your Project
 
-There are two ways to use the JR Validated Environment depending on your needs.
+There are two ways to use JR Anchored depending on your needs.
 
 ---
 
@@ -221,19 +240,15 @@ Download the `.pkg` installer from the [Releases](https://github.com/ubrowz/jr-v
 page and follow the Admin Manual. After installation the admin performs these steps to configure
 the environment for your project:
 
-1. Edit `admin/R_requirements.txt` and `admin/python_requirements.txt` with the packages
-   your scripts require.
-2. Edit `admin/r_version.txt` and `admin/python_version.txt` with the R and Python versions
-   you want to pin.
-3. Run `./admin/admin_install_R --rebuild` and `./admin/admin_install_Python --rebuild` to build your own
-   local package repository in Dropbox.
-4. Add your R and Python scripts to the `R/` and `Python/` subfolders following the
-   Admin Manual.
+1. Edit `admin/R_requirements.txt` and `admin/python_requirements.txt` with the packages your scripts require.
+2. Edit `admin/r_version.txt` and `admin/python_version.txt` with the R and Python versions you want to pin.
+3. Run `./admin/admin_install_R --rebuild` and `./admin/admin_install_Python --rebuild` to build your own local package repository.
+4. Add your R and Python scripts to the `R/` and `Python/` subfolders following the Admin Manual.
 5. Optionally add per-script help files to `help/` and named wrappers to `wrapper/`.
 6. Run `./admin/admin_create_hash` to generate the project integrity file.
 7. Run `./admin/admin_validate` to generate the validation scripts and confirm the environment is working.
 
-Team members then run `setup_jr_path.zsh` once on their machine and the environment is ready.
+Team members then run `setup_jr_path.sh` once on their machine and the environment is ready.
 
 ---
 
@@ -268,7 +283,7 @@ Contributions are welcome. Please open an issue before submitting a pull request
 
 ## Licence
 
-Copyright 2026 JR Scripts
+Copyright 2026 dwylup
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full licence text.
 
@@ -276,4 +291,4 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the f
 
 ## Support
 
-For questions about adapting this framework for your project, open a GitHub issue.
+For questions about adapting this framework for your project, open a GitHub issue or visit [www.dwylup.com](https://www.dwylup.com).
