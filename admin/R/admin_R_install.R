@@ -416,10 +416,10 @@ if (MODE == "BUILD") {
   }
 
   # Ensure renv is in the local repo
-  # Install renv from CRAN first if not present (BUILD mode has internet access)
-  if (!requireNamespace("renv", quietly = TRUE)) {
-    install.packages("renv", repos = CRAN_MIRROR)
-  }
+  # In BUILD mode always update renv to the latest CRAN version so the binary
+  # that gets downloaded matches what is actually available on CRAN.
+  cat("📦 Updating renv to latest CRAN version...\n")
+  install.packages("renv", repos = CRAN_MIRROR)
   renv_version <- as.character(packageVersion("renv"))
   if (MACOS_PLATFORM == "windows") {
     renv_binary   <- sprintf("renv_%s.zip", renv_version)
