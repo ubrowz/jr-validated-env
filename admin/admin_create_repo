@@ -436,6 +436,291 @@ chmod +x "$MODULE_DIR/admin_${MODULE}_oq"
 echo "   ✅ repos/$MODULE/admin_${MODULE}_oq  (executable)"
 
 # ---------------------------------------------------------------------------
+# admin_<module>_scaffold_R — add an R script to this module
+# ---------------------------------------------------------------------------
+
+cat > "$MODULE_DIR/admin_${MODULE}_scaffold_R" << 'SCAFFOLDR_OUTER'
+#!/bin/bash
+#
+# admin_MODULE_scaffold_R — scaffold an R script inside this module
+#
+# Usage: admin_MODULE_scaffold_R <script_basename>
+#
+# Creates:
+#   repos/MODULE/R/<script_basename>.R       — R script template
+#   repos/MODULE/wrapper/<script_basename>   — jrrun wrapper (executable)
+#   repos/MODULE/help/<script_basename>.txt  — help file template
+#
+# Example:
+#   repos/MODULE/admin_MODULE_scaffold_R jrc_MODULE_myanalysis
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"   # = repos/MODULE/
+MODULE_ROOT="$SCRIPT_DIR"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
+source "$PROJECT_ROOT/bin/jr_platform.sh"
+
+if [[ $# -lt 1 ]]; then
+  echo "❌ Usage: admin_MODULE_scaffold_R <script_basename>"
+  exit 1
+fi
+
+BASENAME="$1"
+
+if [[ -z "$BASENAME" || "$BASENAME" =~ [/\\\ ] ]]; then
+  echo "❌ Invalid script basename: $BASENAME"
+  exit 1
+fi
+
+R_FILE="$MODULE_ROOT/R/${BASENAME}.R"
+WRAPPER_FILE="$MODULE_ROOT/wrapper/${BASENAME}"
+HELP_FILE="$MODULE_ROOT/help/${BASENAME}.txt"
+
+for target in "$R_FILE" "$WRAPPER_FILE" "$HELP_FILE"; do
+  if [[ -f "$target" ]]; then
+    echo "❌ File already exists: $target"
+    echo "   Remove it first or choose a different basename."
+    exit 1
+  fi
+done
+
+# --- R script
+cat > "$R_FILE" << RSCRIPT
+#!/usr/bin/env Rscript
+#
+# use as: Rscript ${BASENAME}.R <arg1> <arg2> ...
+#
+# TODO: document arguments here
+#
+# Needs the following libraries: TODO  (or: Needs only base R)
+#
+# TODO: describe what this script does
+#
+# Author:
+# Version: 1.0
+
+# ---------------------------------------------------------------------------
+# Load from validated renv library
+# ---------------------------------------------------------------------------
+
+renv_lib <- Sys.getenv("RENV_PATHS_ROOT")
+if (renv_lib == "") {
+  stop("\u274c RENV_PATHS_ROOT is not set. Run this script from the provided wrapper.")
+}
+r_ver    <- paste0("R-", R.version\$major, ".",
+                   sub("\\..*", "", R.version\$minor))
+platform <- R.version\$platform
+platform_dir <- Sys.getenv("JR_R_PLATFORM_DIR", unset = "macos")
+lib_path <- file.path(renv_lib, "renv", "library", platform_dir, r_ver, platform)
+if (!dir.exists(lib_path)) {
+  stop(paste("\u274c renv library not found at:", lib_path))
+}
+.libPaths(c(lib_path, .libPaths()))
+
+suppressPackageStartupMessages({
+  # TODO: add required libraries here (remove block if base R only)
+  # library(tolerance)
+})
+
+# ---------------------------------------------------------------------------
+# Input validation
+# ---------------------------------------------------------------------------
+
+args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) < 1) {
+  stop(paste(
+    "Not enough arguments. Usage:",
+    "  Rscript ${BASENAME}.R <arg1>",
+    sep = "\\n"
+  ))
+}
+
+# ---------------------------------------------------------------------------
+# Main output
+# ---------------------------------------------------------------------------
+
+message(" ")
+message("✅ TODO: script title")
+message("   version: 1.0")
+message("   ======================================================")
+
+# TODO: add main logic here
+
+message(" ")
+RSCRIPT
+
+# --- wrapper
+printf '#!/bin/bash\nexec "$(dirname "$0")/../../../bin/jrrun" '"${BASENAME}"'.R "$@"\n' > "$WRAPPER_FILE"
+chmod +x "$WRAPPER_FILE"
+
+# --- help file
+cat > "$HELP_FILE" << HELPFILE
+
+Description: TODO: one or two sentence description of what this script does.
+
+Usage: ${BASENAME} "arg1" "arg2" ...
+
+Arguments:
+	arg1        TODO: describe arg1
+	arg2        TODO: describe arg2
+	-h| --help  Show this help message
+
+Example:
+       ${BASENAME} "value1" "value2"
+HELPFILE
+
+echo ""
+echo "✅ Scaffold created for: ${BASENAME}"
+echo ""
+echo "   R/${BASENAME}.R"
+echo "   wrapper/${BASENAME}  (executable)"
+echo "   help/${BASENAME}.txt"
+echo ""
+echo "   Next steps:"
+echo "   1. Fill in R/${BASENAME}.R with the script logic"
+echo "   2. Update help/${BASENAME}.txt with usage and arguments"
+echo "   3. Add required packages to admin/R_requirements.txt if needed"
+echo "   4. Add an OQ test file to oq/ and run admin_$(basename "$MODULE_ROOT")_oq"
+echo "   5. Run: admin/admin_create_hash"
+echo ""
+SCAFFOLDR_OUTER
+
+# Patch the MODULE placeholder in the generated script
+MODULE_NAME="$(basename "$MODULE_DIR")"
+sed -i.bak "s/MODULE/${MODULE_NAME}/g" "$MODULE_DIR/admin_${MODULE}_scaffold_R" && \
+  rm -f "$MODULE_DIR/admin_${MODULE}_scaffold_R.bak"
+chmod +x "$MODULE_DIR/admin_${MODULE}_scaffold_R"
+
+echo "   ✅ repos/$MODULE/admin_${MODULE}_scaffold_R  (executable)"
+
+# ---------------------------------------------------------------------------
+# admin_<module>_scaffold_Python — add a Python script to this module
+# ---------------------------------------------------------------------------
+
+cat > "$MODULE_DIR/admin_${MODULE}_scaffold_Python" << 'SCAFFOLDPY_OUTER'
+#!/bin/bash
+#
+# admin_MODULE_scaffold_Python — scaffold a Python script inside this module
+#
+# Usage: admin_MODULE_scaffold_Python <script_basename>
+#
+# Creates:
+#   repos/MODULE/Python/<script_basename>.py  — Python script template
+#   repos/MODULE/wrapper/<script_basename>    — jrrun wrapper (executable)
+#   repos/MODULE/help/<script_basename>.txt   — help file template
+#
+# Example:
+#   repos/MODULE/admin_MODULE_scaffold_Python jrc_MODULE_myanalysis
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"   # = repos/MODULE/
+MODULE_ROOT="$SCRIPT_DIR"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
+source "$PROJECT_ROOT/bin/jr_platform.sh"
+
+if [[ $# -lt 1 ]]; then
+  echo "❌ Usage: admin_MODULE_scaffold_Python <script_basename>"
+  exit 1
+fi
+
+BASENAME="$1"
+
+if [[ -z "$BASENAME" || "$BASENAME" =~ [/\\\ ] ]]; then
+  echo "❌ Invalid script basename: $BASENAME"
+  exit 1
+fi
+
+mkdir -p "$MODULE_ROOT/Python"
+
+PY_FILE="$MODULE_ROOT/Python/${BASENAME}.py"
+WRAPPER_FILE="$MODULE_ROOT/wrapper/${BASENAME}"
+HELP_FILE="$MODULE_ROOT/help/${BASENAME}.txt"
+
+for target in "$PY_FILE" "$WRAPPER_FILE" "$HELP_FILE"; do
+  if [[ -f "$target" ]]; then
+    echo "❌ File already exists: $target"
+    echo "   Remove it first or choose a different basename."
+    exit 1
+  fi
+done
+
+# --- Python script
+cat > "$PY_FILE" << PYSCRIPT
+#!/usr/bin/env python3
+"""
+${BASENAME} — TODO: one-line description
+
+Usage: ${BASENAME} <arg1> <arg2>
+
+TODO: full argument description
+"""
+
+import sys
+
+# ---------------------------------------------------------------------------
+# Input validation
+# ---------------------------------------------------------------------------
+
+if len(sys.argv) < 2:
+    print("Usage: " + sys.argv[0] + " <arg1>", file=sys.stderr)
+    sys.exit(1)
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+# TODO: add main logic here
+PYSCRIPT
+
+# --- wrapper
+printf '#!/bin/bash\nexec "$(dirname "$0")/../../../bin/jrrun" '"${BASENAME}"'.py "$@"\n' > "$WRAPPER_FILE"
+chmod +x "$WRAPPER_FILE"
+
+# --- help file
+cat > "$HELP_FILE" << HELPFILE
+
+Description: TODO: one or two sentence description of what this script does.
+
+Usage: ${BASENAME} "arg1" "arg2" ...
+
+Arguments:
+	arg1        TODO: describe arg1
+	arg2        TODO: describe arg2
+	-h| --help  Show this help message
+
+Example:
+       ${BASENAME} "value1" "value2"
+HELPFILE
+
+echo ""
+echo "✅ Scaffold created for: ${BASENAME}"
+echo ""
+echo "   Python/${BASENAME}.py"
+echo "   wrapper/${BASENAME}  (executable)"
+echo "   help/${BASENAME}.txt"
+echo ""
+echo "   Next steps:"
+echo "   1. Fill in Python/${BASENAME}.py with the script logic"
+echo "   2. Update help/${BASENAME}.txt with usage and arguments"
+echo "   3. Add required packages to admin/python_requirements.txt if needed"
+echo "   4. Add an OQ test file to oq/ and run admin_$(basename "$MODULE_ROOT")_oq"
+echo "   5. Run: admin/admin_create_hash"
+echo ""
+SCAFFOLDPY_OUTER
+
+# Patch the MODULE placeholder in the generated script
+sed -i.bak "s/MODULE/${MODULE_NAME}/g" "$MODULE_DIR/admin_${MODULE}_scaffold_Python" && \
+  rm -f "$MODULE_DIR/admin_${MODULE}_scaffold_Python.bak"
+chmod +x "$MODULE_DIR/admin_${MODULE}_scaffold_Python"
+
+echo "   ✅ repos/$MODULE/admin_${MODULE}_scaffold_Python  (executable)"
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 
@@ -443,23 +728,23 @@ echo ""
 echo "✅ Module scaffold created: repos/$MODULE/"
 echo ""
 echo "   repos/$MODULE/"
-echo "   ├── R/                          ← add R scripts here"
-echo "   ├── wrapper/                    ← wrappers (auto-added to PATH)"
-echo "   ├── help/                       ← help text files"
-echo "   ├── sample_data/                ← example data"
-echo "   ├── docs/                       ← validation documents"
+echo "   ├── R/                               ← R scripts (added by admin_${MODULE}_scaffold_R)"
+echo "   ├── wrapper/                         ← wrappers (auto-added to PATH)"
+echo "   ├── help/                            ← help text files"
+echo "   ├── sample_data/                     ← example data"
+echo "   ├── docs/                            ← validation documents"
 echo "   ├── oq/"
-echo "   │   ├── conftest.py             ← OQ helpers (ready to use)"
+echo "   │   ├── conftest.py                  ← OQ helpers (ready to use)"
 echo "   │   ├── requirements.txt"
 echo "   │   ├── python_version.txt"
-echo "   │   ├── data/                   ← test data CSVs"
-echo "   │   └── test_${MODULE}_example.py  ← example test to adapt"
-echo "   └── admin_${MODULE}_oq          ← run OQ suite for this module"
+echo "   │   ├── data/                        ← test data CSVs"
+echo "   │   └── test_${MODULE}_example.py    ← example test to adapt"
+echo "   ├── admin_${MODULE}_scaffold_R       ← add R scripts to this module"
+echo "   ├── admin_${MODULE}_scaffold_Python  ← add Python scripts to this module"
+echo "   └── admin_${MODULE}_oq              ← run OQ suite for this module"
 echo ""
 echo "   Next steps:"
-echo "   1. Add scripts to this repo:"
-echo "      ./admin/admin_scaffold_R jrc_${MODULE}_<scriptname>"
-echo "      Then move the generated files into repos/$MODULE/R/ and repos/$MODULE/wrapper/"
+echo "   1. Add an R script:  repos/$MODULE/admin_${MODULE}_scaffold_R jrc_${MODULE}_<name>"
 echo "   2. Add test data to repos/$MODULE/oq/data/"
 echo "   3. Replace repos/$MODULE/oq/test_${MODULE}_example.py with real tests"
 echo "      (see repos/corr/oq/ for worked examples)"
