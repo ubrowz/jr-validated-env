@@ -1,0 +1,468 @@
+#!/bin/bash
+#
+# admin_create_repo — scaffold a new module repository under repos/<module>/
+#
+# Usage: admin_create_repo <module_name>
+#
+# Creates the full directory structure and boilerplate for a new module:
+#
+#   repos/<module>/
+#   ├── R/                          ← R scripts (empty)
+#   ├── wrapper/                    ← per-script wrappers (empty)
+#   ├── help/                       ← help text files (empty)
+#   ├── sample_data/                ← example data files (empty)
+#   ├── docs/                       ← validation documents (empty)
+#   ├── oq/
+#   │   ├── conftest.py             ← shared OQ helpers (ready to use)
+#   │   ├── requirements.txt        ← pytest pin (copied from oq/)
+#   │   ├── python_version.txt      ← Python version (copied from oq/)
+#   │   ├── data/                   ← test data files (empty)
+#   │   └── test_<module>_example.py ← annotated example test (ready to adapt)
+#   └── admin_<module>_oq           ← module OQ runner (executable, ready to run)
+#
+# The module's wrapper/ folder is automatically added to PATH by
+# setup_jr_path.sh — no further PATH setup is needed.
+#
+# After running this script:
+#   1. Add R scripts:  ./admin/admin_scaffold_R jrc_<module>_<name>
+#      (use --repo <module> to place files in repos/<module>/ instead of R/)
+#   2. Add test data to repos/<module>/oq/data/
+#   3. Fill in repos/<module>/oq/test_<module>_example.py
+#   4. Run: repos/<module>/admin_<module>_oq
+#   5. Run: ./admin/admin_create_hash
+#
+# Example:
+#   ./admin/admin_create_repo capability
+#
+# Author: Joep Rous
+# Version: 1.0
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolve project root
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# --- Platform helpers
+# shellcheck source=../bin/jr_platform.sh
+source "$PROJECT_ROOT/bin/jr_platform.sh"
+
+# ---------------------------------------------------------------------------
+# Input validation
+# ---------------------------------------------------------------------------
+
+if [[ $# -lt 1 ]]; then
+  echo "❌ Usage: admin_create_repo <module_name>"
+  echo "   Example: admin_create_repo capability"
+  exit 1
+fi
+
+MODULE="$1"
+
+if [[ -z "$MODULE" ]]; then
+  echo "❌ Module name must not be empty."
+  exit 1
+fi
+
+if [[ "$MODULE" =~ [/\\\ ] ]]; then
+  echo "❌ Module name must not contain spaces or path separators. Got: $MODULE"
+  exit 1
+fi
+
+MODULE_DIR="$PROJECT_ROOT/repos/$MODULE"
+
+if [[ -d "$MODULE_DIR" ]]; then
+  echo "❌ Module directory already exists: $MODULE_DIR"
+  echo "   Choose a different name or remove the existing directory first."
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Locate OQ version pins (copy from core oq/)
+# ---------------------------------------------------------------------------
+
+CORE_OQ_DIR="$PROJECT_ROOT/oq"
+OQ_REQUIREMENTS="$CORE_OQ_DIR/requirements.txt"
+OQ_PYTHON_VERSION="$CORE_OQ_DIR/python_version.txt"
+
+if [[ ! -f "$OQ_REQUIREMENTS" ]]; then
+  echo "❌ Core oq/requirements.txt not found at: $OQ_REQUIREMENTS"
+  echo "   Ensure the project is complete before running admin_create_repo."
+  exit 1
+fi
+
+if [[ ! -f "$OQ_PYTHON_VERSION" ]]; then
+  echo "❌ Core oq/python_version.txt not found at: $OQ_PYTHON_VERSION"
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Derived name forms (bash 3.2 compatible — no ${VAR^} syntax)
+# ---------------------------------------------------------------------------
+
+MODULE_CAP="$(echo "$MODULE" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
+
+# ---------------------------------------------------------------------------
+# Create directory structure
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "📁 Creating module directory: repos/$MODULE/"
+echo ""
+
+mkdir -p "$MODULE_DIR/R"
+mkdir -p "$MODULE_DIR/wrapper"
+mkdir -p "$MODULE_DIR/help"
+mkdir -p "$MODULE_DIR/sample_data"
+mkdir -p "$MODULE_DIR/docs"
+mkdir -p "$MODULE_DIR/oq/data"
+
+# ---------------------------------------------------------------------------
+# oq/requirements.txt and oq/python_version.txt
+# ---------------------------------------------------------------------------
+
+cp "$OQ_REQUIREMENTS"    "$MODULE_DIR/oq/requirements.txt"
+cp "$OQ_PYTHON_VERSION"  "$MODULE_DIR/oq/python_version.txt"
+
+echo "   ✅ repos/$MODULE/oq/requirements.txt"
+echo "   ✅ repos/$MODULE/oq/python_version.txt"
+
+# ---------------------------------------------------------------------------
+# oq/conftest.py
+# ---------------------------------------------------------------------------
+
+cat > "$MODULE_DIR/oq/conftest.py" << CONFTEST
+"""
+${MODULE} module OQ test suite — shared configuration and helpers.
+
+All ${MODULE} test modules import helpers from this file.
+"""
+
+import os
+import subprocess
+import sys
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+OQ_DIR       = os.path.dirname(os.path.abspath(__file__))
+MODULE_ROOT  = os.path.dirname(OQ_DIR)                        # repos/${MODULE}/
+PROJECT_ROOT = os.path.dirname(os.path.dirname(MODULE_ROOT))  # project root
+JRRUN        = os.path.join(PROJECT_ROOT, "bin", "jrrun")
+DATA_DIR     = os.path.join(OQ_DIR, "data")
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
+
+
+def run(script, *args, cwd=None):
+    """
+    Invoke a script via jrrun and return subprocess.CompletedProcess.
+    stdout and stderr are both captured as text.
+    """
+    cmd = BASH_PREFIX + [JRRUN, script] + [str(a) for a in args]
+    return subprocess.run(
+        cmd,
+        capture_output=True,
+        encoding="utf-8",
+        cwd=cwd or DATA_DIR,
+    )
+
+
+def combined(result):
+    """Return stdout + stderr as a single string for pattern matching."""
+    return (result.stdout or "") + (result.stderr or "")
+
+
+def data(name):
+    """Return full path to a file in the OQ data directory."""
+    return os.path.join(DATA_DIR, name)
+CONFTEST
+
+echo "   ✅ repos/$MODULE/oq/conftest.py"
+
+# ---------------------------------------------------------------------------
+# oq/test_<module>_example.py  — annotated example to adapt
+# ---------------------------------------------------------------------------
+
+# Use uppercase module name for TC prefix (e.g. capability -> CAP)
+MODULE_UPPER="$(echo "$MODULE" | tr '[:lower:]' '[:upper:]' | cut -c1-4)"
+
+cat > "$MODULE_DIR/oq/test_${MODULE}_example.py" << TESTFILE
+"""
+OQ test suite — ${MODULE} module: jrc_${MODULE}_example
+
+Replace this file with your actual test files. Each file covers one script.
+
+Test case ID convention:
+  TC-${MODULE_UPPER}-X-NNN  where X is a letter identifying the script
+                             and NNN is a zero-padded sequence number.
+
+Example test case mapping:
+  TC-${MODULE_UPPER}-A-001  Valid input -> exit 0, expected output present
+  TC-${MODULE_UPPER}-A-002  No arguments -> non-zero exit, usage in output
+  TC-${MODULE_UPPER}-A-003  File not found -> non-zero exit
+  TC-${MODULE_UPPER}-A-004  Direct Rscript call without RENV_PATHS_ROOT -> non-zero exit
+
+See repos/corr/oq/test_corr_pearson.py for a complete worked example.
+"""
+
+from conftest import run, combined, data
+
+
+class Test${MODULE_CAP}Example:
+
+    def test_tc_${MODULE_UPPER}_a_001_happy_path_exits_zero(self):
+        """TC-${MODULE_UPPER}-A-001: valid input -> exit 0."""
+        # Replace jrc_${MODULE}_example and sample.csv with your script and data file.
+        result = run("jrc_${MODULE}_example", data("sample.csv"))
+        assert result.returncode == 0, combined(result)
+
+    def test_tc_${MODULE_UPPER}_a_002_no_args_exits_nonzero(self):
+        """TC-${MODULE_UPPER}-A-002: no arguments -> non-zero exit, usage shown."""
+        result = run("jrc_${MODULE}_example")
+        assert result.returncode != 0
+        assert "Usage" in combined(result) or "usage" in combined(result)
+
+    def test_tc_${MODULE_UPPER}_a_003_missing_file_exits_nonzero(self):
+        """TC-${MODULE_UPPER}-A-003: missing data file -> non-zero exit."""
+        result = run("jrc_${MODULE}_example", "nonexistent_file.csv")
+        assert result.returncode != 0
+
+    # Add further test cases here following the same pattern.
+    # Run the suite with:  repos/${MODULE}/admin_${MODULE}_oq
+TESTFILE
+
+echo "   ✅ repos/$MODULE/oq/test_${MODULE}_example.py"
+
+# ---------------------------------------------------------------------------
+# admin_<module>_oq — module OQ runner
+# ---------------------------------------------------------------------------
+
+cat > "$MODULE_DIR/admin_${MODULE}_oq" << OQRUNNER
+#!/bin/bash
+#
+# admin_${MODULE}_oq — Run the ${MODULE} module OQ test suite and produce a
+#                      timestamped evidence file.
+#
+# Usage: admin_${MODULE}_oq [pytest_options...]
+#
+# Reuses the shared OQ venv at ~/.venvs/<PROJECT_ID>_oq/ (created by
+# admin_oq). If the venv does not yet exist, it is created here using
+# oq/requirements.txt and oq/python_version.txt from the core OQ folder.
+#
+# Evidence output:
+#   ~/.jrscript/<PROJECT_ID>/validation/${MODULE}_oq_execution_<timestamp>.txt
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolve paths
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"   # = repos/${MODULE}/
+MODULE_ROOT="\$SCRIPT_DIR"
+PROJECT_ROOT="\$(dirname "\$(dirname "\$SCRIPT_DIR")")"
+
+# --- Platform helpers
+# shellcheck source=../../bin/jr_platform.sh
+source "\$PROJECT_ROOT/bin/jr_platform.sh"
+ADMIN_HOME="\$PROJECT_ROOT/admin"
+OQ_DIR="\$MODULE_ROOT/oq"
+CORE_OQ_DIR="\$PROJECT_ROOT/oq"
+
+# ---------------------------------------------------------------------------
+# Project identity
+# ---------------------------------------------------------------------------
+
+PROJECT_ID_FILE="\$ADMIN_HOME/project_id.txt"
+if [[ ! -f "\$PROJECT_ID_FILE" ]]; then
+  echo "❌ project_id.txt not found. Contact your administrator."
+  exit 1
+fi
+PROJECT_ID="\$(tr -d '[:space:]' < "\$PROJECT_ID_FILE")"
+
+OQ_VENV="\$HOME/.venvs/\${PROJECT_ID}_oq"
+OQ_REQ="\$CORE_OQ_DIR/requirements.txt"
+
+# ---------------------------------------------------------------------------
+# Set up shared OQ venv if needed (same venv as admin_oq)
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "\$OQ_REQ" ]]; then
+  echo "❌ Core oq/requirements.txt not found at: \$OQ_REQ"
+  echo "   Run admin_oq at least once first, or check your installation."
+  exit 1
+fi
+
+REQ_HASH="\$(shasum "\$OQ_REQ" | cut -d' ' -f1)"
+HASH_FILE="\$OQ_VENV/.oq_req_hash"
+NEED_REBUILD=false
+
+if [[ ! -d "\$OQ_VENV" ]]; then
+  NEED_REBUILD=true
+elif [[ ! -f "\$HASH_FILE" ]]; then
+  NEED_REBUILD=true
+elif [[ "\$(cat "\$HASH_FILE")" != "\$REQ_HASH" ]]; then
+  NEED_REBUILD=true
+fi
+
+if \$NEED_REBUILD; then
+  PY_VER_FILE="\$CORE_OQ_DIR/python_version.txt"
+  if [[ ! -f "\$PY_VER_FILE" ]]; then
+    echo "❌ oq/python_version.txt not found at: \$PY_VER_FILE"
+    exit 1
+  fi
+  REQ_PYTHON="\$(tr -d '[:space:]' < "\$PY_VER_FILE")"
+  REQ_MAJOR_MINOR="\$(echo "\$REQ_PYTHON" | awk -F. '{print \$1 "." \$2}')"
+  if [[ "\$(jr_os)" == "windows" ]]; then
+    PYTHON_BIN="python"
+  else
+    PYTHON_BIN="python\$REQ_MAJOR_MINOR"
+  fi
+  if ! command -v "\$PYTHON_BIN" >/dev/null 2>&1; then
+    echo "❌ \$PYTHON_BIN not found. Contact admin."
+    exit 1
+  fi
+  echo "🔄 Setting up OQ venv at: \$OQ_VENV"
+  rm -rf "\$OQ_VENV"
+  "\$PYTHON_BIN" -m venv "\$OQ_VENV"
+  "\$(jr_venv_pip "\$OQ_VENV")" install --quiet -r "\$OQ_REQ"
+  echo "\$REQ_HASH" > "\$HASH_FILE"
+  echo "✅ OQ venv ready"
+fi
+
+# ---------------------------------------------------------------------------
+# Prepare evidence output
+# ---------------------------------------------------------------------------
+
+TIMESTAMP="\$(date '+%Y%m%dT%H%M%S')"
+EVIDENCE_DIR="\$HOME/.jrscript/\$PROJECT_ID/validation"
+mkdir -p "\$EVIDENCE_DIR"
+EVIDENCE_FILE="\$EVIDENCE_DIR/${MODULE}_oq_execution_\${TIMESTAMP}.txt"
+
+# ---------------------------------------------------------------------------
+# Collect environment info
+# ---------------------------------------------------------------------------
+
+R_VERSION="\$(Rscript --vanilla -e 'cat(R.version\$major, R.version\$minor, sep=".")' 2>/dev/null || echo 'unknown')"
+PY_VERSION="\$("\$(jr_venv_python "\$OQ_VENV")" --version 2>&1 | awk '{print \$2}')"
+PYTEST_VERSION="\$("\$(jr_venv_pytest "\$OQ_VENV")" --version 2>&1 | head -1)"
+HOSTNAME="\$(hostname)"
+N_TESTS="\$(grep -c 'def test_' "\$OQ_DIR"/test_*.py 2>/dev/null || echo '?')"
+
+# ---------------------------------------------------------------------------
+# Write evidence header
+# ---------------------------------------------------------------------------
+
+{
+  echo "JR Validated Environment — \$MODULE_CAP Module OQ Execution Evidence"
+  echo "============================================================"
+  echo "Document:        \$MODULE_CAP OQ Execution Report"
+  echo "Module:          \$MODULE_CAP (repos/${MODULE}/)"
+  echo "Project ID:      \$PROJECT_ID"
+  echo "Timestamp:       \$(date '+%Y-%m-%dT%H:%M:%S')"
+  echo "Host:            \$HOSTNAME"
+  echo "R version:       \$R_VERSION"
+  echo "Python version:  \$PY_VERSION"
+  echo "pytest version:  \$PYTEST_VERSION"
+  echo "Test directory:  \$OQ_DIR"
+  echo "Tests found:     \$N_TESTS"
+  echo "Evidence file:   \$EVIDENCE_FILE"
+  echo ""
+  echo "------------------------------------------------------------"
+  echo "pytest output:"
+  echo "------------------------------------------------------------"
+  echo ""
+} > "\$EVIDENCE_FILE"
+
+# ---------------------------------------------------------------------------
+# Run pytest against repos/${MODULE}/oq/
+# ---------------------------------------------------------------------------
+
+echo " "
+echo "✅ Running \$MODULE_CAP OQ test suite..."
+echo "   Evidence file: \$EVIDENCE_FILE"
+echo " "
+
+PYTEST_ARGS=("\$@")
+if [[ \${#PYTEST_ARGS[@]} -eq 0 ]]; then
+  PYTEST_ARGS=("-v" "--tb=short")
+fi
+
+cd "\$OQ_DIR"
+
+"\$(jr_venv_pytest "\$OQ_VENV")" "\${PYTEST_ARGS[@]}" | tee -a "\$EVIDENCE_FILE"
+PYTEST_EXIT="\${PIPESTATUS[0]}"
+
+# ---------------------------------------------------------------------------
+# Write evidence footer
+# ---------------------------------------------------------------------------
+
+{
+  echo ""
+  echo "------------------------------------------------------------"
+  if [[ "\$PYTEST_EXIT" -eq 0 ]]; then
+    echo "\$MODULE_CAP OQ RESULT: PASS — all tests passed."
+  else
+    echo "\$MODULE_CAP OQ RESULT: FAIL — one or more tests failed. See above."
+  fi
+  echo "Completed: \$(date '+%Y-%m-%dT%H:%M:%S')"
+  echo "------------------------------------------------------------"
+} >> "\$EVIDENCE_FILE"
+
+echo " "
+if [[ "\$PYTEST_EXIT" -eq 0 ]]; then
+  echo "✅ \$MODULE_CAP OQ suite PASSED. Evidence written to:"
+else
+  echo "❌ \$MODULE_CAP OQ suite FAILED. Evidence written to:"
+fi
+echo "   \$EVIDENCE_FILE"
+echo " "
+
+exit "\$PYTEST_EXIT"
+OQRUNNER
+
+chmod +x "$MODULE_DIR/admin_${MODULE}_oq"
+
+echo "   ✅ repos/$MODULE/admin_${MODULE}_oq  (executable)"
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "✅ Module scaffold created: repos/$MODULE/"
+echo ""
+echo "   repos/$MODULE/"
+echo "   ├── R/                          ← add R scripts here"
+echo "   ├── wrapper/                    ← wrappers (auto-added to PATH)"
+echo "   ├── help/                       ← help text files"
+echo "   ├── sample_data/                ← example data"
+echo "   ├── docs/                       ← validation documents"
+echo "   ├── oq/"
+echo "   │   ├── conftest.py             ← OQ helpers (ready to use)"
+echo "   │   ├── requirements.txt"
+echo "   │   ├── python_version.txt"
+echo "   │   ├── data/                   ← test data CSVs"
+echo "   │   └── test_${MODULE}_example.py  ← example test to adapt"
+echo "   └── admin_${MODULE}_oq          ← run OQ suite for this module"
+echo ""
+echo "   Next steps:"
+echo "   1. Add scripts to this repo:"
+echo "      ./admin/admin_scaffold_R jrc_${MODULE}_<scriptname>"
+echo "      Then move the generated files into repos/$MODULE/R/ and repos/$MODULE/wrapper/"
+echo "   2. Add test data to repos/$MODULE/oq/data/"
+echo "   3. Replace repos/$MODULE/oq/test_${MODULE}_example.py with real tests"
+echo "      (see repos/corr/oq/ for worked examples)"
+echo "   4. Run the OQ suite:  repos/$MODULE/admin_${MODULE}_oq"
+echo "   5. Regenerate the integrity file:  ./admin/admin_create_hash"
+echo ""
