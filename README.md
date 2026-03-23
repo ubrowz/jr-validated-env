@@ -33,9 +33,8 @@ It is designed for small to medium medical device development teams on macOS and
 - [Python for Windows](https://www.python.org/downloads/windows/) — version specified in `admin/python_version.txt`
 - [Git for Windows](https://git-scm.com/download/win) — provides Git Bash (the terminal used to run all JR commands)
 
-**File sharing (choose one)**
-- **SMB network share** (recommended, zero cost) — any shared folder on your company network
-- **Dropbox** — convenient for distributed teams; free tier (2 GB) is typically sufficient
+**File sharing**
+- **SMB network share** — any shared folder on your company network (recommended, zero cost)
 
 ---
 
@@ -47,7 +46,7 @@ It is designed for small to medium medical device development teams on macOS and
 
 **Step 1** — Open Terminal. Press `Command + Space`, type `Terminal`, press `Enter`.
 
-**Step 2** — Find the file `setup_jr_path.sh` in the JR project folder in Finder. Drag it into the Terminal window and press `Enter`.
+**Step 2** — Find `setup_jr_path.sh` in the JR project folder in Finder. Type `bash ` (with a space) in Terminal, drag the file in, and press `Enter`.
 
 **Step 3** — You will see:
 ```
@@ -60,8 +59,9 @@ It is designed for small to medium medical device development teams on macOS and
 
 **Step 1** — Open Git Bash (search for "Git Bash" in the Start menu).
 
-**Step 2** — Navigate to the JR project folder and run:
+**Step 2** — Navigate to the JR project folder and run `setup_jr_path.sh`. In Git Bash, Windows paths use `/c/` for the C: drive — replace `YourName` with your Windows username:
 ```bash
+cd "/c/Users/YourName/jr-anchored"
 bash setup_jr_path.sh
 ```
 
@@ -69,7 +69,12 @@ bash setup_jr_path.sh
 
 ---
 
-**Step 5 (both platforms)** — Type the name of any JR script and press `Enter`. On first run the environment will be set up automatically — this may take a minute. All subsequent runs are fast.
+**Step 5 (both platforms)** — Type the name of any JR script and press `Enter`. On first run the environment builds automatically — **this can take 1–3 minutes, do not interrupt**. All subsequent runs are fast.
+
+To test your installation:
+```bash
+jrc_ss_discrete --help
+```
 
 > You only need to run `setup_jr_path.sh` once per machine.
 
@@ -89,6 +94,12 @@ cd jr-anchored
 # 2. Build the local package repositories and install the environments
 ./admin/admin_install_R --rebuild
 ./admin/admin_install_Python --rebuild
+
+# 3. Generate the project integrity file
+./admin/admin_create_hash
+
+# 4. Generate validation scripts and confirm the environment is working
+./admin/admin_validate
 ```
 
 > **Windows:** Open Git Bash as Administrator before running admin commands
@@ -113,7 +124,7 @@ cd jr-anchored
 │  python_requirements.txt ► admin_install_Python             │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              ▼ (Dropbox sync or SMB share)
+                              ▼ (SMB network share)
 ┌─────────────────────────────────────────────────────────────┐
 │                  Each User (automatic)                      │
 │                                                             │
@@ -137,7 +148,7 @@ and the right choice depends on your team. Here is a concise comparison:
 | Audit transparency | High — plain text requirements files | Moderate — binary image requires tooling |
 | macOS/Windows GUI output | Native, no configuration | Requires X11 or volume mapping |
 | Resource usage | Minimal — no background processes | Heavy — Linux VM always running |
-| Distribution | Dropbox or SMB share | Registry + Docker Desktop install |
+| Distribution | SMB network share | Registry + Docker Desktop install |
 | Package updates | Edit one file, auto-propagated | Rebuild and redistribute entire image |
 | Offline use | Yes | Requires local registry |
 | Cross-platform | macOS and Windows | macOS, Windows, Linux |
@@ -193,11 +204,19 @@ jr-anchored/
 │   ├── admin_install_Python         ← set up Python environment
 │   ├── admin_create_hash            ← regenerate integrity file
 │   ├── admin_validate               ← generate validation scripts and IQ evidence
+│   ├── admin_oq                     ← run the full OQ test suite
+│   ├── admin_oq_validate            ← pre-flight check before running OQ
+│   ├── admin_scaffold_R             ← scaffold a new community R script
+│   ├── admin_scaffold_Python        ← scaffold a new community Python script
+│   ├── admin_create_repo            ← scaffold a new module repository
 │   └── admin_uninstall              ← remove entire environment from this machine
 │
 └── docs/
+    ├── TROUBLESHOOTING.md           ← common issues and resolutions
+    ├── CREATING_MODULES.md          ← guide for adding new module repositories
     ├── admin_manual.pdf             ← full administrator manual (macOS + Windows)
-    └── user_manual.pdf              ← end-user manual
+    ├── user_manual.pdf              ← end-user manual
+    └── templates/                   ← validation plan and report templates
 ```
 
 ---
@@ -232,19 +251,17 @@ There are two ways to use JR Anchored depending on your needs.
 
 ---
 
-**Usage 1 — Install and configure for your project (recommended for most teams)**
+**Usage 1 — Clone and configure for your project (recommended for most teams)**
 
-Download the `.pkg` installer from the [Releases](https://github.com/ubrowz/jr-anchored/releases)
-page and follow the Admin Manual. After installation the admin performs these steps to configure
-the environment for your project:
+Clone the repository and follow the Admin Manual. The admin then configures
+the environment for the project:
 
 1. Edit `admin/R_requirements.txt` and `admin/python_requirements.txt` with the packages your scripts require.
 2. Edit `admin/r_version.txt` and `admin/python_version.txt` with the R and Python versions you want to pin.
 3. Run `./admin/admin_install_R --rebuild` and `./admin/admin_install_Python --rebuild` to build your own local package repository.
-4. Add your R and Python scripts to the `R/` and `Python/` subfolders following the Admin Manual.
-5. Optionally add per-script help files to `help/` and named wrappers to `wrapper/`.
-6. Run `./admin/admin_create_hash` to generate the project integrity file.
-7. Run `./admin/admin_validate` to generate the validation scripts and confirm the environment is working.
+4. Add community scripts using `./admin/admin_scaffold_R` or `./admin/admin_scaffold_Python`, or create a new module with `./admin/admin_create_repo`.
+5. Run `./admin/admin_create_hash` to generate the project integrity file.
+6. Run `./admin/admin_validate` to generate the validation scripts and confirm the environment is working.
 
 Team members then run `setup_jr_path.sh` once on their machine and the environment is ready.
 
@@ -263,7 +280,7 @@ the Contributing section before submitting.
 
 This framework is designed to support compliance with:
 
-- **FDA 21 CFR Part 11** — electronic records and signatures
+- **FDA 21 CFR 820.70(i)** — automated data processing in manufacturing
 - **ISO 13485:2016** — quality management systems for medical devices
 - **GAMP 5** — good automated manufacturing practice
 
@@ -276,6 +293,8 @@ The combination of pinned package versions, a controlled local repository, SHA25
 ## Contributing
 
 Contributions are welcome. Please open an issue before submitting a pull request so the proposed change can be discussed. All contributions must maintain compatibility with the validation framework — changes that weaken integrity checking or bypass the controlled package repository will not be accepted.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full process, including the three levels of contribution (personal use, team scripts, and public contributions).
 
 ---
 

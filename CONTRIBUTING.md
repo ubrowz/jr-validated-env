@@ -1,4 +1,4 @@
-# Contributing to JR Validated Environment
+# Contributing to JR Anchored
 
 Thank you for your interest in contributing. There are three levels of
 contribution depending on how widely you want to share your work.
@@ -13,7 +13,7 @@ contribution depending on how widely you want to share your work.
 4. [Setting Up a Development Environment](#setting-up-a-development-environment)
 5. [Branch Naming Conventions](#branch-naming-conventions)
 6. [Commit Message Format](#commit-message-format)
-7. [Linting zsh Scripts](#linting-zsh-scripts)
+7. [Linting Shell Scripts](#linting-shell-scripts)
 8. [Pull Request Process](#pull-request-process)
 9. [What We Will and Will Not Accept](#what-we-will-and-will-not-accept)
 
@@ -26,7 +26,7 @@ contribution depending on how widely you want to share your work.
 If you have written an R or Python script for your own analysis, you can
 run it immediately in the validated environment using `jrrun`:
 
-```zsh
+```bash
 jrrun ./myscript.R mydata.csv
 jrrun ./myanalysis.py mydata.csv
 ```
@@ -53,7 +53,7 @@ official community script, ask your administrator to add it.
    to create the script template, wrapper, and help file.
 2. Copies your script content in and fills in the help file.
 3. If new packages are required, adds them:
-   ```zsh
+   ```bash
    ./admin/admin_install_R --add packagename==1.2.3
    ```
 4. Regenerates the integrity file and runs the OQ suite to confirm all
@@ -84,6 +84,12 @@ Community scripts are the R and Python analysis scripts in `R/` and
 `Python/`. If you have a validated analysis script that is statistically
 sound and broadly applicable to design verification workflows, here is
 how to contribute it.
+
+If your contribution is a **group of related scripts** (for example a
+new analysis domain like capability analysis or DoE), consider contributing
+it as a **module** under `repos/<module>/` rather than as individual
+community scripts. See [CREATING_MODULES.md](docs/CREATING_MODULES.md)
+for the full module structure and workflow.
 
 ### Step 1 — Open a GitHub issue
 
@@ -141,45 +147,52 @@ submit a pull request directly without an issue.
 ## Setting Up a Development Environment
 
 **Requirements:**
-- macOS 12 Ventura or later (Apple Silicon or Intel)
-- Xcode Command Line Tools: `xcode-select --install`
+
+macOS (Apple Silicon or Intel):
 - R — version specified in `admin/r_version.txt`
 - Python — version specified in `admin/python_version.txt`
-- Dropbox — for the local package repository
-- shellcheck — for linting zsh scripts: `brew install shellcheck`
+- shellcheck — for linting shell scripts: `brew install shellcheck`
 - Git
+
+Windows 10/11:
+- R for Windows — version specified in `admin/r_version.txt`
+- Python for Windows — version specified in `admin/python_version.txt`
+- Git for Windows (Git Bash)
+
+Both platforms:
+- An SMB network share for the local package repository
 
 **Steps:**
 
 1. Fork the repository on GitHub.
 
 2. Clone your fork:
-```zsh
-git clone https://github.com/<your-username>/jr-validated-environment.git
-cd jr-validated-environment
+```bash
+git clone https://github.com/<your-username>/jr-anchored.git
+cd jr-anchored
 ```
 
 3. Add the upstream remote so you can pull future changes:
-```zsh
-git remote add upstream https://github.com/yourorg/jr-validated-environment.git
+```bash
+git remote add upstream https://github.com/ubrowz/jr-anchored.git
 ```
 
 4. Set up your local package repository. Since `R_repo/` and `Python_repo/`
    are excluded from Git, you need to build them from scratch or obtain them
    from a team member:
-```zsh
+```bash
 ./admin/admin_install_R --rebuild
 ./admin/admin_install_Python --rebuild
 ```
 
 5. Run `setup_jr_path.sh` to add the project to your PATH:
-```zsh
+```bash
 ./setup_jr_path.sh
 ```
    Then open a new Terminal window.
 
 6. Verify everything is working:
-```zsh
+```bash
 ./admin/admin_validate
 ```
 
@@ -246,23 +259,18 @@ reasoning behind the change if it is not obvious from the summary.
 
 ---
 
-## Linting zsh Scripts
+## Linting Shell Scripts
 
-All zsh scripts must pass `shellcheck` before submission. Run it on any
+All shell scripts must pass `shellcheck` before submission. Run it on any
 script you have modified:
 
-```zsh
+```bash
 shellcheck -s bash myscript
 ```
 
-Note: shellcheck does not have a native zsh mode — using `-s bash` catches
-the vast majority of issues that apply to zsh as well. Be aware that a small
-number of zsh-specific constructs (such as 1-based array indexing) may not
-be flagged correctly, so review these manually.
-
 To lint all scripts in the project at once:
 
-```zsh
+```bash
 find . -maxdepth 2 -type f -perm -111 ! -name "*.R" ! -name "*.py" \
   | xargs shellcheck -s bash
 ```
@@ -276,7 +284,7 @@ them before merging.
 
 1. Make sure your branch is up to date with upstream main before opening
    a pull request:
-```zsh
+```bash
 git fetch upstream
 git rebase upstream/main
 ```
@@ -285,17 +293,15 @@ git rebase upstream/main
 
 3. If you modified any requirements files, re-run `admin_validate` to
    regenerate the validation scripts and confirm the environment is consistent:
-```zsh
+```bash
 ./admin/admin_validate
 ```
 
 4. If you added or modified any scripts or wrappers, re-generate the
    integrity file:
-```zsh
+```bash
 ./admin/admin_create_hash
 ```
-   Note: `admin/project_integrity.sha256` is excluded from Git — do not
-   commit it. It is listed in `.gitignore` for this reason.
 
 5. Open a pull request against the `main` branch with a clear description
    of what the change does and why. Reference the related issue number
@@ -318,8 +324,7 @@ git rebase upstream/main
   clear audit trail
 - Documentation improvements — clearer wording, missing steps, new
   troubleshooting entries
-- Support for additional platforms (Windows, Linux) provided the macOS
-  behaviour is not degraded
+- Support for Linux, provided macOS and Windows behaviour is not degraded
 - Performance improvements to the admin or rebuild scripts
 - New example R or Python scripts that demonstrate validated environment usage
 - Community scripts submitted with a complete validation package (see
@@ -335,7 +340,7 @@ git rebase upstream/main
   for a Quality Manager to review
 - Breaking changes to the wrapper interface without a deprecation path
 - Changes that introduce dependencies on tools not available via
-  standard macOS + Xcode CLT + Homebrew
+  standard macOS (Homebrew) or Windows (Git for Windows) tooling
 
 If you are unsure whether a proposed change falls into one of these
 categories, open an issue and ask before investing time in the
