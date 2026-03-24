@@ -1,0 +1,67 @@
+jrc_cap_sixpack — Process Capability Sixpack
+
+WHAT IT DOES
+  Produces a six-panel process capability report in a single PNG — the
+  standard deliverable for a process validation package:
+
+    Panel 1 (top-left):     Individuals (X) chart with UCL/LCL and zone lines.
+                            Spec limits overlaid as dotted lines for context.
+    Panel 2 (top-right):    Moving Range (MR) chart with UCL.
+    Panel 3 (middle-left):  Capability histogram — bar chart with normal curve
+                            overlay and spec limit lines.
+    Panel 4 (middle-right): Normal probability plot (Q-Q plot) with reference
+                            line; Shapiro-Wilk p-value in title.
+    Panel 5 (bottom-left):  Numerical summary table — n, X-bar, sigma_w, s,
+                            Cp, Cpk, Cpm, Pp, Ppk, sigma level, est. PPM.
+    Panel 6 (bottom-right): Capability verdict with colour background:
+                            green (Cpk >= 1.33), amber (1.00 <= Cpk < 1.33),
+                            red (Cpk < 1.00).
+
+  All six panels share the same dataset and parameters, providing a complete
+  picture of both process stability (control charts) and process capability
+  (histogram + indices) in a single figure.
+
+DESCRIPTION
+  Six-panel capability report combining I-MR chart, histogram, Q-Q plot,
+  and numerical summary.
+
+USAGE
+  jrc_cap_sixpack <data.csv> <col> <lsl> <usl>
+
+ARGUMENTS
+  data.csv    Two-column CSV with headers (id, value). The <col> argument
+              selects which column contains the measurements.
+
+  col         Name of the numeric measurement column (e.g. "value").
+
+  lsl         Lower Specification Limit (numeric), or "-" to omit.
+              At least one of lsl or usl must be a number.
+
+  usl         Upper Specification Limit (numeric), or "-" to omit.
+
+  Requires n >= 5 observations.
+
+OUTPUT — TERMINAL
+  All computed values: descriptives, I-MR control limits, OOC count,
+  Cp, Cpk, Cpm, Pp, Ppk, sigma level, est. PPM, Shapiro-Wilk,
+  SPC verdict and capability verdict.
+
+OUTPUT — PNG
+  Saved to ~/Downloads/<YYYYMMDD_HHMMSS>_jrc_cap_sixpack.png
+  3600 x 2400 px at 180 dpi — suitable for inclusion in a validation report.
+  Blue header strip with key statistics. Six panels as described above.
+
+INTERPRETATION
+  Use this script as the primary capability evidence figure in an OQ/PQ
+  process validation package. It demonstrates both:
+    - Process stability (control charts not signalling special causes)
+    - Process capability (Cpk and histogram within specification)
+
+  A capable and in-control process shows: no OOC signals on I-MR chart,
+  histogram well within spec limits, Q-Q plot close to the reference line,
+  and Cpk >= 1.33 on the verdict panel.
+
+EXAMPLES
+  jrc_cap_sixpack data.csv value 9.0 11.0
+  jrc_cap_sixpack data.csv diameter 4.95 5.05
+  jrc_cap_sixpack data.csv result - 10.0       # one-sided USL only

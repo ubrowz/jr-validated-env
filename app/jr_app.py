@@ -30,6 +30,7 @@ SPC_DATA  = os.path.join(PROJECT_ROOT, "repos", "spc",  "oq", "data")
 MSA_DATA  = os.path.join(PROJECT_ROOT, "repos", "msa",  "oq", "data")
 AS_DATA   = os.path.join(PROJECT_ROOT, "repos", "as",   "oq", "data")
 CORR_DATA = os.path.join(PROJECT_ROOT, "repos", "corr", "oq", "data")
+CAP_DATA  = os.path.join(PROJECT_ROOT, "repos", "cap",  "oq", "data")
 COMM_DATA = os.path.join(PROJECT_ROOT, "oq", "data")
 
 BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
@@ -43,6 +44,53 @@ BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
 # png_from_output → parse "saved to: <path>" from terminal output instead.
 
 CATALOGUE = {
+
+    # -----------------------------------------------------------------------
+    "Process Capability": {
+        "Capability Analysis (Normal)": {
+            "script": "jrc_cap_normal.R",
+            "description": (
+                "Process capability analysis for normally distributed data. "
+                "Computes **Cp**, **Cpk**, **Pp**, **Ppk**, and **Cpm** (Taguchi) using "
+                "within-subgroup (MR-based) and overall sigma estimates. Reports sigma level, "
+                "estimated PPM out-of-spec, and saves a histogram with normal curve and "
+                "spec limits to `~/Downloads/`."
+            ),
+            "param_type": "capability",
+            "sample_data_dir": CAP_DATA,
+            "sample_prefix": "cap_normal_",
+            "png_pattern": "*_jrc_cap_normal.png",
+        },
+        "Capability Analysis (Non-Normal)": {
+            "script": "jrc_cap_nonnormal.R",
+            "description": (
+                "Process capability analysis for non-normally distributed data using the "
+                "**percentile method** (ISO 22514-2 / AIAG). Estimates process spread from "
+                "the 0.135th and 99.865th sample percentiles — equivalent to ±3σ boundaries "
+                "without assuming normality. Reports **Pp** and **Ppk**, observed non-conformance, "
+                "and Shapiro-Wilk advisory. Saves a histogram with KDE to `~/Downloads/`."
+            ),
+            "param_type": "capability",
+            "sample_data_dir": CAP_DATA,
+            "sample_prefix": "cap_nonnormal_",
+            "png_pattern": "*_jrc_cap_nonnormal.png",
+        },
+        "Capability Sixpack": {
+            "script": "jrc_cap_sixpack.R",
+            "description": (
+                "Six-panel capability report — the standard deliverable for a process "
+                "validation package. Combines: **I-MR control chart** (with spec limits), "
+                "**Moving Range chart**, **capability histogram** with normal curve, "
+                "**normal probability plot** (Q-Q), **numerical summary** (Cp, Cpk, Cpm, Pp, Ppk, "
+                "sigma level, PPM), and a colour-coded **verdict panel**. "
+                "Saves a 3600×2400 px PNG to `~/Downloads/`."
+            ),
+            "param_type": "capability",
+            "sample_data_dir": CAP_DATA,
+            "sample_prefix": "cap_normal_",
+            "png_pattern": "*_jrc_cap_sixpack.png",
+        },
+    },
 
     # -----------------------------------------------------------------------
     "Correlation": {

@@ -10,6 +10,41 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [2.2.0] — 2026-03-24
+
+### Added
+
+- **Process Capability module** (`repos/cap/`) — three new R scripts for
+  process capability and performance analysis:
+  - `jrc_cap_normal` — Cp, Cpk, Pp, Ppk, Cpm (Taguchi) for normally
+    distributed data. Within-subgroup sigma estimated via moving range
+    (MR-bar / d2). Reports sigma level and estimated PPM out-of-specification.
+    Saves a histogram with normal curve overlay and spec limit lines to
+    `~/Downloads/`.
+  - `jrc_cap_nonnormal` — Pp and Ppk for non-normally distributed data
+    using the percentile method (ISO 22514-2 / AIAG SPC manual). Process
+    spread estimated from P0.135 and P99.865 sample quantiles — no
+    distributional assumption. Shapiro-Wilk advisory if data appears normal.
+    Saves a histogram with KDE overlay to `~/Downloads/`.
+  - `jrc_cap_sixpack` — Six-panel process capability report: Individuals
+    chart (with spec limits overlaid), Moving Range chart, capability
+    histogram with normal curve, normal probability plot (Q-Q), numerical
+    summary (Cp, Cpk, Cpm, Pp, Ppk, sigma level, PPM), and a colour-coded
+    verdict panel (green / amber / red). Saves a 3600×2400 px PNG to
+    `~/Downloads/` — suitable for direct inclusion in a validation report.
+- **OQ** — 40 automated tests across 3 test files, all passing
+  (JR-VP-CAP-001 v1.0). OQ runner: `repos/cap/admin_cap_oq`.
+- **GUI** — Process Capability section added to `app/jr_app.py` using the
+  existing `capability` param_type.
+
+### Changed
+
+- `web/index.html` — updated stat counters to 45 validated scripts and
+  379 automated OQ tests.
+- `SCRIPT_IDEAS.md` — Process Capability section added.
+
+---
+
 ## [2.1.1] — 2026-03-23
 
 ### Fixed

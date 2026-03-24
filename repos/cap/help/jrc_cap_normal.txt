@@ -1,0 +1,79 @@
+jrc_cap_normal — Process Capability Analysis (Normal Distribution)
+
+WHAT IT DOES
+  Computes standard process capability and performance indices for normally
+  distributed measurement data. Uses two estimates of process spread:
+
+    Within-subgroup sigma (sigma_w) — estimated from the average moving
+    range (MR-bar / d2), reflecting short-term, common-cause variation only.
+    This is the basis for Cp and Cpk.
+
+    Overall sigma (s) — the sample standard deviation across all observations,
+    including any long-term drift or shift. This is the basis for Pp and Ppk.
+
+  Indices computed:
+    Cp   = (USL - LSL) / (6 * sigma_w)                 [requires both limits]
+    Cpk  = min((USL - X-bar) / (3 * sigma_w),
+               (X-bar - LSL) / (3 * sigma_w))
+    Pp   = (USL - LSL) / (6 * s)                        [requires both limits]
+    Ppk  = min((USL - X-bar) / (3 * s),
+               (X-bar - LSL) / (3 * s))
+    Cpm  = (USL - LSL) / (6 * sqrt(s^2 + (X-bar - T)^2))
+           where T = midpoint of (LSL, USL)              [requires both limits]
+
+  Also estimates sigma level (Cpk * 3) and expected PPM out-of-specification
+  under normality assumption.
+
+  Outputs a histogram with normal curve overlay and specification limit lines
+  to ~/Downloads/.
+
+DESCRIPTION
+  Process Capability Analysis for normally distributed individual measurements.
+
+USAGE
+  jrc_cap_normal <data.csv> <col> <lsl> <usl>
+
+ARGUMENTS
+  data.csv    Two-column CSV with headers. The <col> argument selects which
+              column contains the measurement values; the other column is
+              ignored (typically 'id').
+
+  col         Name of the numeric measurement column (e.g. "value").
+
+  lsl         Lower Specification Limit (numeric), or "-" to omit.
+              At least one of lsl or usl must be a number.
+
+  usl         Upper Specification Limit (numeric), or "-" to omit.
+
+  Requires n >= 5 observations.
+
+OUTPUT — TERMINAL
+  Mean (X-bar), overall SD (s), within sigma (MR/d2), min, max
+  Cp, Cpk, Cpm (where applicable)
+  Pp, Ppk
+  Sigma level and estimated PPM out-of-specification
+  Verdict: EXCELLENT / CAPABLE / MARGINAL / NOT CAPABLE
+
+OUTPUT — PNG
+  Saved to ~/Downloads/<YYYYMMDD_HHMMSS>_jrc_cap_normal.png
+  Shows: histogram of values, normal curve overlay (overall sigma),
+         spec limit lines (red dashed), process mean (dark line).
+
+INTERPRETATION
+  Cpk >= 1.67  → Excellent — world-class process
+  Cpk >= 1.33  → Capable   — typical FDA / ISO 13485 requirement for
+                             process validation. Corresponds to ~63 PPM.
+  Cpk >= 1.00  → Marginal  — process meets spec but has little margin.
+                             Corresponds to ~2700 PPM.
+  Cpk <  1.00  → Not capable — process routinely produces non-conformances.
+
+  Cp vs Cpk: if Cp is much larger than Cpk, the process spread is adequate
+  but the mean is shifted away from the target.
+
+  Pp vs Ppk: long-term performance. If Ppk << Cpk, long-term drift or
+  between-batch variation is adding to overall spread.
+
+EXAMPLES
+  jrc_cap_normal data.csv value 9.0 11.0
+  jrc_cap_normal data.csv measurement 4.5 5.5
+  jrc_cap_normal data.csv diameter - 10.0        # one-sided USL only

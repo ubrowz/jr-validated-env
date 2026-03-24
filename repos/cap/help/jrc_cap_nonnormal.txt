@@ -1,0 +1,74 @@
+jrc_cap_nonnormal — Process Capability Analysis (Non-Normal, Percentile Method)
+
+WHAT IT DOES
+  Computes process performance indices for data that do not follow a normal
+  distribution, using the percentile method (ISO 22514-2, AIAG SPC manual).
+
+  Instead of estimating process spread from the standard deviation, this
+  method uses sample quantiles that correspond to the ±3-sigma tail
+  probabilities of the normal distribution:
+
+    P0.135   = 0.135th percentile  (equivalent to -3σ boundary)
+    P99.865  = 99.865th percentile (equivalent to +3σ boundary)
+
+  Indices:
+    Pp  = (USL - LSL) / (P99.865 - P0.135)          [requires both limits]
+    Ppk = min((USL - P50) / (P99.865 - P50),
+              (P50 - LSL) / (P50 - P0.135))
+
+  Also performs a Shapiro-Wilk normality test and advises if data appear
+  approximately normal (p >= 0.05), in which case jrc_cap_normal may be
+  more appropriate.
+
+  Outputs a histogram with KDE overlay, spec limits, and P0.135/P99.865
+  markers to ~/Downloads/.
+
+DESCRIPTION
+  Process Capability Analysis for non-normally distributed data using the
+  percentile method.
+
+USAGE
+  jrc_cap_nonnormal <data.csv> <col> <lsl> <usl>
+
+ARGUMENTS
+  data.csv    Two-column CSV with headers. The <col> argument selects which
+              column contains the measurement values; the other column is
+              ignored (typically 'id').
+
+  col         Name of the numeric measurement column (e.g. "value").
+
+  lsl         Lower Specification Limit (numeric), or "-" to omit.
+              At least one of lsl or usl must be a number.
+
+  usl         Upper Specification Limit (numeric), or "-" to omit.
+
+  Requires n >= 5 observations.
+
+OUTPUT — TERMINAL
+  Mean, median, SD, min, max
+  P0.135, P50, P99.865 and estimated spread (P99.865 - P0.135)
+  Pp and Ppk (percentile method)
+  Observed non-conformance (% below LSL, % above USL)
+  Shapiro-Wilk W and p-value
+  Verdict: EXCELLENT / CAPABLE / MARGINAL / NOT CAPABLE
+
+OUTPUT — PNG
+  Saved to ~/Downloads/<YYYYMMDD_HHMMSS>_jrc_cap_nonnormal.png
+  Shows: histogram with KDE overlay (orange), spec limit lines (red dashed),
+         P0.135 and P99.865 markers (blue dotted), mean (dark line).
+
+INTERPRETATION
+  Ppk >= 1.33 is the common acceptance criterion for non-normal process
+  validation under ISO 22514-2 and the AIAG SPC manual.
+
+  The percentile method makes no distributional assumption and is robust to
+  outliers. However, it requires sufficient data to estimate extreme quantiles
+  reliably — n >= 30 is recommended for production use.
+
+  If Shapiro-Wilk p >= 0.05, consider using jrc_cap_normal for a within-sigma
+  Cpk analysis, which provides additional information (Cp vs Cpk ratio).
+
+EXAMPLES
+  jrc_cap_nonnormal data.csv value 0.0 10.0
+  jrc_cap_nonnormal data.csv result - 5.0      # one-sided USL only
+  jrc_cap_nonnormal data.csv torque 4.5 5.5
