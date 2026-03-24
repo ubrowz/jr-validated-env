@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# jr_kill_app — Stop the JR Anchored graphical interface
+#
+# Finds and kills the Streamlit process running on port 8501.
+# Use this when you closed the browser tab without pressing Stop.
+#
+# Usage: jr_kill_app
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=jr_platform.sh
+source "$SCRIPT_DIR/jr_platform.sh"
+
+PORT=8501
+
+echo ""
+
+if [[ "$(jr_os)" == "windows" ]]; then
+  # Windows: find PID via netstat then taskkill
+  PID=$(netstat -ano 2>/dev/null \
+    | grep "LISTENING" \
+    | grep ":${PORT}" \
+    | awk '{print $NF}' \
+    | head -1)
+
+  if [[ -z "$PID" ]]; then
+    echo "ℹ️  No JR Anchored app found running on port $PORT."
+    echo ""
+    exit 0
+  fi
+
+  if taskkill /PID "$PID" /F >/dev/null 2>&1; then
+    echo "✅ JR Anchored app stopped (PID $PID)."
+  else
+    echo "❌ Could not stop process $PID. Try closing the terminal window that launched jr_app."
+  fi
+
+else
+  # macOS / Linux: find PID via lsof
+  PID=$(lsof -ti :"$PORT" 2>/dev/null || true)
+
+  if [[ -z "$PID" ]]; then
+    echo "ℹ️  No JR Anchored app found running on port $PORT."
+    echo ""
+    exit 0
+  fi
+
+  if kill "$PID" 2>/dev/null; then
+    echo "✅ JR Anchored app stopped (PID $PID)."
+  else
+    echo "❌ Could not stop process $PID. Try closing the terminal window that launched jr_app."
+  fi
+fi
+
+echo ""
