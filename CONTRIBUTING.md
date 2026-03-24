@@ -76,6 +76,23 @@ first to discuss the proposal — see
 [Contributing Community Scripts](#contributing-community-scripts) below
 for the full process.
 
+**What contributors provide vs what the maintainer handles:**
+
+| Contributor | Maintainer |
+|---|---|
+| R or Python script(s) | Wrapper scripts |
+| Help text file(s) | OQ test suite and validation documents |
+| Sample data CSV(s) | python-docx generators and PDF production |
+| Algorithm description / references | Website integration (7 pages) |
+| | GUI wiring (`app/jr_app.py`) |
+| | Integrity hash regeneration |
+| | Release commit and version bump |
+
+Integration into the validated environment — OQ tests, validation plan,
+validation report, user manual, web pages, GUI, and release — is handled
+by the maintainer. Contributors do not need to know the project's
+validation framework or web structure.
+
 ---
 
 ## Contributing Community Scripts
@@ -86,10 +103,10 @@ sound and broadly applicable to design verification workflows, here is
 how to contribute it.
 
 If your contribution is a **group of related scripts** (for example a
-new analysis domain like capability analysis or DoE), consider contributing
-it as a **module** under `repos/<module>/` rather than as individual
-community scripts. See [CREATING_MODULES.md](docs/CREATING_MODULES.md)
-for the full module structure and workflow.
+new analysis domain like capability analysis or DoE), it will be
+integrated as a **module** under `repos/<module>/`. The integration
+work is handled by the maintainer — see the contributor/maintainer
+split above.
 
 ### Step 1 — Open a GitHub issue
 
@@ -98,37 +115,41 @@ Before writing code, open an issue describing:
 - When an engineer would use it (the decision point in a design
   verification workflow).
 - What inputs it expects (argument list) and what outputs it produces
-  (terminal output, CSV, PNG).
+  (terminal output, PNG, etc.).
 - Any R or Python packages it requires that are not already in
   `admin/R_requirements.txt` or `admin/python_requirements.txt`.
+- Key references (standards, papers, textbooks) that the method is
+  based on — these feed into the validation plan and the references
+  page.
 
 This gives the maintainer a chance to confirm the script fits the
 project's scope and conventions before you invest time writing it.
 
-### Step 2 — Develop the script
+### Step 2 — Develop the script and help text
 
-Follow the conventions in `docs/admin_manual.pdf`. Key requirements:
+What you need to provide:
 
-| Artefact | Location | Notes |
-|---|---|---|
-| Script | `R/jrc_yourscript.R` or `Python/jrc_yourscript.py` | Follow the bypass-protection pattern in existing scripts |
-| Wrapper | `wrapper/jrc_yourscript` | Generate with `admin_scaffold_R` or `admin_scaffold_Python` |
-| Help file | `help/jrc_yourscript.txt` | Plain text; describes all arguments and gives a usage example |
-| OQ tests | `oq/test_yourscript.py` | pytest; covers at least the happy path and one boundary/edge case |
+| Artefact | Notes |
+|---|---|
+| Script(s) | Follow the `jrc_` naming prefix. Check `RENV_PATHS_ROOT` at startup and `stop()` if not set. Write PNG output to `~/Downloads/` with a timestamped filename. Exit non-zero on all error conditions. |
+| Help text | Plain text for each script: USAGE, DESCRIPTION, ARGUMENTS, OUTPUT, and at least one EXAMPLE. See existing `help/` files for the format. |
+| Sample data | One or two small CSV files a user could run the script against to see a realistic result. Use the standard two-column `id, value` format where the script allows it. |
 
-The script name must follow the `jrc_` prefix convention. Input data
-must follow the standard two-column CSV format (`id`, `value`).
+You do **not** need to provide wrappers, OQ tests, validation
+documents, or web page edits. The maintainer handles all of that.
 
 ### Step 3 — Submit a pull request
 
-Submit a pull request referencing the issue. The maintainer will:
+Submit a pull request with the script(s), help file(s), and sample
+data. Reference the issue. The maintainer will:
 - Review the statistical method for correctness and appropriate scope.
-- Test the script against the stated acceptance criteria.
-- Verify the OQ tests pass.
-- Assess the help text for clarity.
+- Assess the help text for clarity and completeness.
+- Build the full integration: wrapper, OQ suite, validation documents,
+  GUI wiring, and web updates.
 
 Accepted scripts are included in a future minor release with a
-CHANGELOG entry and updated validation documents.
+CHANGELOG entry, full OQ validation evidence, and updated
+documentation.
 
 ---
 
@@ -327,7 +348,8 @@ git rebase upstream/main
 - Support for Linux, provided macOS and Windows behaviour is not degraded
 - Performance improvements to the admin or rebuild scripts
 - New example R or Python scripts that demonstrate validated environment usage
-- Community scripts submitted with a complete validation package (see
+- Community scripts submitted with a script, help file, and sample data
+  (the maintainer handles validation integration — see
   [Contributing Community Scripts](#contributing-community-scripts))
 
 ### Will NOT accept
