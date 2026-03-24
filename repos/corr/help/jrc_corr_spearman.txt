@@ -1,0 +1,74 @@
+
+What this script does:
+       This script computes Spearman's rank correlation coefficient (rho) between
+       two variables. It is the non-parametric analogue of Pearson's r: instead of
+       operating on raw values, it ranks both variables and computes Pearson r on
+       the ranks. The result measures the strength and direction of a monotonic
+       (not necessarily linear) association.
+
+       Spearman rho is appropriate when:
+         - Data are ordinal (ranks, Likert scores)
+         - Continuous data are heavily skewed or not normally distributed
+         - The relationship is monotonic but non-linear
+         - Outliers are present and hard to remove
+
+       Because Spearman rho is based on ranks, it is robust to outliers and does
+       not require normality. It does, however, require that the relationship be
+       monotonic — i.e., as x increases, y consistently increases (or decreases).
+       If the relationship is non-monotonic (e.g., U-shaped), Spearman rho will
+       underestimate the association.
+
+       Note on confidence intervals: a confidence interval for Spearman rho is not
+       produced by this script. Fisher's z-transformation is not strictly valid for
+       Spearman rho, and other bootstrap-based methods are not available in base R
+       without additional packages. If a CI is required and normality is plausible,
+       use jrc_corr_pearson instead.
+
+       The p-value is computed using the t-approximation (with continuity correction
+       disabled via exact = FALSE), which is appropriate for n >= 10.
+
+Description: Spearman rank correlation — non-parametric association measure.
+             Outputs rho, S statistic, p-value, and a rank scatter plot PNG.
+             No confidence interval is computed.
+
+Usage: jrc_corr_spearman <data.csv> [--xcol x] [--ycol y]
+
+Arguments:
+       data.csv        Path to a CSV file containing at least two numeric columns.
+       --xcol <name>   Name of the x column (default: x).
+       --ycol <name>   Name of the y column (default: y).
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Spearman rho    The rank correlation coefficient (4 decimal places)
+       S statistic     Sum-of-squared rank differences (test statistic)
+       p-value         Two-sided p-value for H0: rho = 0
+       Note            Reminder that no CI is computed
+       Interpretation  Strength (weak / moderate / strong) and direction
+                       (positive / negative) of the monotonic association
+
+Output — PNG (~/Downloads/):
+       Scatter plot of the ranks of y vs ranks of x, with best-fit line on the
+       ranked data. Blue header bar shows key parameters.
+       Filename: <datetime>_jrc_corr_spearman.png
+
+Interpretation guidance:
+       |rho| < 0.3     Weak monotonic association
+       0.3 <= |rho| <= 0.7   Moderate monotonic association
+       |rho| > 0.7     Strong monotonic association
+
+       A significant p-value (< 0.05) indicates the rank association is unlikely
+       due to chance. The same caveats about sample size apply as for Pearson r.
+
+       If the rank scatter plot shows a non-linear but monotonic pattern, Spearman
+       rho correctly captures the direction and approximate strength. If the pattern
+       is non-monotonic, neither Pearson nor Spearman is appropriate.
+
+       For method comparison studies (assessing interchangeability of two
+       measurement methods), use jrc_corr_passing_bablok instead.
+
+Example:
+       jrc_corr_spearman survey_data.csv
+       jrc_corr_spearman measurements.csv --xcol device_a --ycol device_b
+       jrc_corr_spearman ranks.csv --xcol pain_before --ycol pain_after
+

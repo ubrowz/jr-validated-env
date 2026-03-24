@@ -1,0 +1,81 @@
+
+What this script does:
+       This script fits a simple ordinary least squares (OLS) linear regression
+       model of the form y = b0 + b1*x. It reports the estimated intercept and
+       slope with confidence intervals, goodness-of-fit statistics (R-squared,
+       adjusted R-squared, residual standard error), an overall F-test, and saves
+       a two-panel diagnostic PNG to ~/Downloads/.
+
+       OLS regression minimises the sum of squared vertical distances from each
+       data point to the fitted line. It assumes that x is measured without error
+       (x is fixed) and that all error is in y. This is a key distinction from
+       Passing-Bablok regression, which treats both methods symmetrically.
+
+       R-squared (R²) is the proportion of variance in y explained by x. R² = 1
+       means a perfect fit; R² = 0 means x explains none of the variation in y.
+       Adjusted R² penalises for the number of predictors (here always 1) and is
+       always <= R².
+
+       The residual standard error (RSE) estimates the standard deviation of the
+       unexplained variation: a smaller RSE indicates a better fit relative to the
+       scale of y.
+
+       The F-statistic tests H0: b1 = 0 (the slope is zero, i.e., x has no linear
+       effect on y). This is equivalent to testing whether R² > 0.
+
+       The residuals vs fitted plot (right panel) is a key diagnostic:
+         - Random scatter around zero: assumptions are satisfied
+         - Fan or funnel shape: heteroscedasticity — variance is not constant
+         - Curved pattern: the linear model may be misspecified (non-linear trend)
+         - Isolated outliers: potential influential observations
+
+       Important: OLS regression is not appropriate for method comparison when
+       both variables carry measurement error. Use jrc_corr_passing_bablok in
+       that case.
+
+Description: Simple linear regression (OLS). Reports coefficients with CIs,
+             R-squared, F-statistic, and saves a scatter + residuals diagnostic
+             PNG.
+
+Usage: jrc_corr_regression <data.csv> [--xcol x] [--ycol y] [--conf 0.95]
+
+Arguments:
+       data.csv        Path to a CSV file containing at least two numeric columns.
+       --xcol <name>   Name of the x column (predictor, default: x).
+       --ycol <name>   Name of the y column (response, default: y).
+       --conf <val>    Confidence level for coefficient CIs (default: 0.95).
+                       Must be strictly between 0 and 1.
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Model equation  Fitted equation with estimated b0 and b1
+       Intercept (b0)  Estimated intercept with confidence interval
+       Slope (b1)      Estimated slope with confidence interval
+       R-squared       Proportion of variance explained
+       Adjusted R²     R-squared adjusted for degrees of freedom
+       Residual SE     Residual standard error with degrees of freedom
+       F-statistic     Overall test of H0: b1 = 0, with p-value
+
+Output — PNG (~/Downloads/):
+       Left panel:  Scatter plot with regression line and 95% confidence band.
+       Right panel: Residuals vs fitted values for diagnostic inspection.
+       Blue header bar shows model summary.
+       Filename: <datetime>_jrc_corr_regression.png
+
+Interpretation guidance:
+       A slope (b1) CI that does not include 0 indicates a statistically
+       significant linear relationship between x and y.
+
+       Check the residual plot before trusting the model. A random scatter
+       of residuals confirms the linearity and constant-variance assumptions.
+       Patterns in the residuals suggest model misspecification.
+
+       R² values above 0.9 are often considered strong in applied measurement
+       settings, but context matters: a high R² does not guarantee good
+       prediction accuracy in absolute terms.
+
+Example:
+       jrc_corr_regression measurements.csv
+       jrc_corr_regression data.csv --xcol time --ycol response
+       jrc_corr_regression data.csv --xcol predictor --ycol outcome --conf 0.99
+

@@ -48,6 +48,8 @@ docs/ignore/
 repos/msa/docs/ignore/
 repos/spc/docs/ignore/
 repos/as/docs/ignore/
+repos/corr/docs/ignore/
+repos/cap/docs/ignore/
 
 # -----------------------------------------------------------------------------
 # Python auto-generated files

@@ -1,0 +1,101 @@
+
+What this script does:
+       This script implements Passing-Bablok regression for method comparison
+       studies. Unlike OLS regression (jrc_corr_regression), Passing-Bablok
+       does not assume that one variable is a gold-standard reference measured
+       without error. Both x and y are treated symmetrically — each can carry
+       measurement error.
+
+       The method is described in: Passing H, Bablok W (1983). A new biometrical
+       procedure for testing the equality of measurements from two different
+       analytical methods. J Clin Chem Clin Biochem 21:709-720.
+
+       The algorithm computes all N*(N-1)/2 pairwise slopes between data points,
+       then uses the median slope (with a correction for slopes near -1) as the
+       estimate of beta. The intercept alpha is then the median of (y - beta*x).
+       Confidence intervals are derived from the ordered slope values using the
+       normal approximation.
+
+       Two key tests assess method interchangeability:
+
+       Proportionality test (slope = 1):
+         If the CI for the slope includes 1, there is no evidence of a proportional
+         difference between methods (i.e., no systematic scaling difference).
+         If the CI excludes 1, the methods differ proportionally — one method reads
+         consistently higher or lower by a factor that scales with the magnitude.
+
+       Systematic bias test (intercept = 0):
+         If the CI for the intercept includes 0, there is no evidence of a constant
+         offset between methods. If the CI excludes 0, one method consistently reads
+         higher or lower by a fixed amount regardless of the magnitude being measured.
+
+       If both CIs include their null values (slope=1 and intercept=0), the methods
+       are considered interchangeable over the measured range.
+
+       Cusum linearity test:
+         This tests whether the Passing-Bablok linearity assumption is met. The test
+         computes the cumulative sum of signs of residuals (sorted by x). A large
+         maximum cumulative sum suggests a non-linear relationship, which would
+         invalidate the Passing-Bablok results. The critical value at 5% significance
+         is 1.36 * sqrt(n) (Kolmogorov-Smirnov approximation).
+
+       The PNG shows the Passing-Bablok regression line (solid blue), the CI band
+       (dashed blue lines using the slope and intercept CI bounds), and the line of
+       identity y=x (dashed grey). Methods agree perfectly when all points lie on
+       the identity line.
+
+       For a complete method comparison study, this script is typically used
+       alongside a Bland-Altman analysis (difference vs average plot), which
+       assesses agreement in absolute terms.
+
+Description: Passing-Bablok regression for method comparison. Reports slope and
+             intercept with CIs, proportionality test, bias test, and Cusum
+             linearity test. Saves a method comparison PNG.
+
+Usage: jrc_corr_passing_bablok <data.csv> [--xcol x] [--ycol y] [--conf 0.95]
+
+Arguments:
+       data.csv        Path to a CSV file containing at least two numeric columns.
+       --xcol <name>   Name of the x column (method A, default: x).
+       --ycol <name>   Name of the y column (method B, default: y).
+       --conf <val>    Confidence level for CIs (default: 0.95).
+                       Must be strictly between 0 and 1.
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Model equation    Fitted y = alpha + beta * x
+       Slope (beta)      Estimated slope with CI
+       Intercept (alpha) Estimated intercept with CI
+       Proportionality   Whether slope CI includes 1
+       Bias test         Whether intercept CI includes 0
+       Cusum test        Max cumulative sum vs critical value; linearity verdict
+
+Output — PNG (~/Downloads/):
+       Scatter plot with:
+         - Solid blue line:  Passing-Bablok regression line
+         - Dashed blue lines: CI bounds for the regression
+         - Dashed grey line:  Line of identity (y = x)
+       Blue header bar shows slope and intercept.
+       Filename: <datetime>_jrc_corr_passing_bablok.png
+
+Interpretation guidance:
+       Ideal method agreement: slope = 1, intercept = 0, all points on y = x line.
+
+       Slope > 1: method B reads proportionally higher than method A at higher
+       values (and lower at low values if intercept is negative).
+
+       Intercept != 0: method B reads consistently higher (positive) or lower
+       (negative) than method A by a fixed offset across the entire range.
+
+       If the Cusum linearity test rejects, the relationship is not linear over
+       the measured range. Consider splitting the range or investigating outliers.
+
+       This method requires at least 3 data points, though in practice a minimum
+       of 40 paired samples is recommended for reliable method comparison studies
+       (CLSI EP09 guidance). Use with caution for small datasets.
+
+Example:
+       jrc_corr_passing_bablok method_comparison.csv
+       jrc_corr_passing_bablok data.csv --xcol reference --ycol new_device
+       jrc_corr_passing_bablok data.csv --xcol lab_a --ycol lab_b --conf 0.99
+

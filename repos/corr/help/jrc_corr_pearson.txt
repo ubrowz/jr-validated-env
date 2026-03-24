@@ -1,0 +1,79 @@
+
+What this script does:
+       This script computes the Pearson product-moment correlation coefficient
+       between two numeric variables. It reports the correlation r, a confidence
+       interval based on Fisher's z-transformation, the t-statistic and p-value
+       for a two-sided hypothesis test (H0: r = 0), and saves a scatter plot with
+       the best-fit line to ~/Downloads/.
+
+       The Pearson r measures the strength and direction of a linear relationship
+       between two continuous variables. It ranges from -1 (perfect negative linear
+       relationship) to +1 (perfect positive linear relationship). r = 0 indicates
+       no linear association, though non-linear relationships may still exist.
+
+       The confidence interval uses Fisher's z-transformation: r is transformed to
+       z = 0.5 * ln((1+r)/(1-r)), a CI is computed in z-space (which is
+       approximately normal), then back-transformed to the r scale. This gives
+       accurate CIs even for r close to ±1.
+
+       The two-sided t-test tests H0: rho = 0 with t = r * sqrt(n-2) / sqrt(1-r^2)
+       on n-2 degrees of freedom. A p-value below 0.05 indicates the linear
+       association is statistically significant.
+
+       Assumptions:
+         - Both variables are continuous and approximately normally distributed
+         - The relationship between x and y is linear
+         - Observations are independent
+
+       If normality or linearity is in doubt, consider using jrc_corr_spearman
+       (rank-based, non-parametric). If both variables are measured with error and
+       neither is a gold-standard reference, consider jrc_corr_passing_bablok.
+
+Description: Pearson product-moment correlation with confidence interval and
+             hypothesis test. Outputs r, CI (Fisher z), t-statistic, p-value,
+             and a scatter plot PNG.
+
+Usage: jrc_corr_pearson <data.csv> [--xcol x] [--ycol y] [--conf 0.95]
+
+Arguments:
+       data.csv        Path to a CSV file containing at least two numeric columns.
+       --xcol <name>   Name of the x column (default: x).
+       --ycol <name>   Name of the y column (default: y).
+       --conf <val>    Confidence level for the CI (default: 0.95).
+                       Must be strictly between 0 and 1.
+       -h | --help     Show this help message.
+
+Output — Terminal:
+       Pearson r       The sample correlation coefficient (4 decimal places)
+       df              Degrees of freedom (n - 2)
+       CI              Lower and upper bounds of the confidence interval
+       t-statistic     Test statistic for H0: rho = 0
+       p-value         Two-sided p-value (scientific notation if < 0.0001)
+       Interpretation  Strength (weak / moderate / strong) and direction
+                       (positive / negative) of the association
+
+Output — PNG (~/Downloads/):
+       Scatter plot of y vs x with the best-fit regression line overlaid.
+       Blue header bar shows key parameters.
+       Filename: <datetime>_jrc_corr_pearson.png
+
+Interpretation guidance:
+       |r| < 0.3     Weak linear association
+       0.3 <= |r| <= 0.7   Moderate linear association
+       |r| > 0.7     Strong linear association
+
+       A significant p-value (< 0.05) means the correlation is unlikely to have
+       arisen by chance, but does not indicate practical importance. Large n can
+       make small r values statistically significant.
+
+       The CI indicates precision: a narrow CI around a large r value provides
+       stronger evidence of a true association.
+
+       Pearson r is sensitive to outliers. Inspect the scatter plot to check for
+       influential points or non-linear patterns before interpreting r.
+
+Example:
+       jrc_corr_pearson measurements.csv
+       jrc_corr_pearson measurements.csv --xcol method_a --ycol method_b
+       jrc_corr_pearson measurements.csv --xcol length --ycol weight --conf 0.99
+
