@@ -17,6 +17,7 @@ JR Anchored provides a structured way to:
 - Install packages exclusively from a **controlled local repository** — never directly from the internet during normal use
 - Verify **project integrity** before every script run
 - Generate **validation evidence** for auditors with a single command
+- Launch all 41 community scripts from a **point-and-click graphical interface** (no Terminal required)
 
 It is designed for small to medium medical device development teams on macOS and Windows who need a pragmatic, FDA-friendly approach to software validation without the overhead of a full enterprise solution.
 
@@ -77,6 +78,26 @@ jrc_ss_discrete --help
 ```
 
 > You only need to run `setup_jr_path.sh` once per machine.
+
+---
+
+## Graphical Interface
+
+JR Anchored includes a Streamlit-based GUI covering all 41 community scripts.
+It runs locally in your browser — no cloud connection, no account required.
+
+**macOS** — double-click `JR Anchored.app` (or run `bin/jr_app` in Terminal).
+
+**Windows** — double-click `JR Anchored.bat` (or use the Desktop shortcut
+created by `Create JR Anchored Shortcut.ps1`).
+
+The GUI opens at `http://localhost:8501`. Select a module, choose a script,
+upload your data file if required, fill in the parameters, and click Run.
+All scripts run through `jrrun` with the same integrity checking as the CLI.
+Press `Ctrl+C` in the Terminal window to stop.
+
+> See [gui.html](https://www.dwylup.com/gui.html) on the website for full
+> installation and usage instructions.
 
 ---
 
@@ -182,8 +203,17 @@ jr-anchored/
 │
 ├── bin/
 │   ├── jrrun                        ← run any R or Python script in the environment
+│   ├── jr_app                       ← launch the graphical interface (CLI entry point)
 │   ├── jr_versions                  ← show installed R, Python, and package versions
 │   └── jr_uninstall                 ← remove local environment components
+│
+├── app/
+│   └── jr_app.py                    ← Streamlit GUI (all 41 scripts, 8 modules)
+│
+├── JR Anchored.app                  ← macOS app bundle with anchor icon (Dock-ready)
+├── JR Anchored.bat                  ← Windows launcher
+├── JR Anchored.ico                  ← Windows icon file
+├── Create JR Anchored Shortcut.ps1  ← creates a Desktop shortcut with custom icon
 │
 ├── wrapper/                         ← per-script wrappers (no editing needed)
 ├── help/                            ← per-script help text files
