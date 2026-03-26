@@ -1,2 +1,4 @@
+# Generated output files — not committed
 *_results.txt
-*.pdf
+*_plot.pdf
+*_debug_d2y_*.csv

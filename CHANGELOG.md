@@ -40,6 +40,23 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **Circle test dataset** — `sample_data/circle.csv` (150-point parametric
   circle) and `sample_data/circle.cfg` added for testing ascending/descending
   phase separation.
+- **OQ test suite** — `repos/curve/oq/` with 28 automated pytest tests across
+  8 test classes (validation, global, phase, slope, query, transform,
+  transitions, output files). All 28/28 PASS. Test data: `linear.csv`,
+  `sine.csv`, `triangle.csv` plus 14 config fixtures.
+- **`admin_curve_oq`** — evidence runner producing timestamped
+  `curve_oq_execution_<timestamp>.txt` in `~/.jrscript/<PROJECT_ID>/validation/`.
+- **Validation documents** — `repos/curve/docs/ignore/` generators for
+  `curve_validation_plan.docx` (JR-VP-CURVE-001, 18 URs, 28 TCs),
+  `curve_validation_report.docx` (JR-VR-CURVE-001, 28/28 PASS),
+  and `curve_user_manual.docx`.
+- **GUI** — "Curve Analysis" module added to `app/jr_app.py` with `curve_cfg`
+  param type; user selects a sample `.cfg` from `repos/curve/sample_data/`.
+- **Web** — `modules.html` (Curve section), `script_guide.html`
+  (`jrc_curve_properties` card + category + tree leaf), `downloads.html`
+  (Curve Module section with 3 download cards), `references.html` (Curve
+  section with SG filter and numerical methods references), `index.html`
+  (46 scripts / 407 OQ tests). All page footers updated to v2.3.0.
 
 ---
 

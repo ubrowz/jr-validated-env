@@ -26,12 +26,13 @@ PROJECT_ROOT = os.path.dirname(APP_DIR)
 JRRUN        = os.path.join(PROJECT_ROOT, "bin", "jrrun")
 DOWNLOADS    = os.path.expanduser("~/Downloads")
 
-SPC_DATA  = os.path.join(PROJECT_ROOT, "repos", "spc",  "oq", "data")
-MSA_DATA  = os.path.join(PROJECT_ROOT, "repos", "msa",  "oq", "data")
-AS_DATA   = os.path.join(PROJECT_ROOT, "repos", "as",   "oq", "data")
-CORR_DATA = os.path.join(PROJECT_ROOT, "repos", "corr", "oq", "data")
-CAP_DATA  = os.path.join(PROJECT_ROOT, "repos", "cap",  "oq", "data")
-COMM_DATA = os.path.join(PROJECT_ROOT, "oq", "data")
+SPC_DATA   = os.path.join(PROJECT_ROOT, "repos", "spc",   "oq", "data")
+MSA_DATA   = os.path.join(PROJECT_ROOT, "repos", "msa",   "oq", "data")
+AS_DATA    = os.path.join(PROJECT_ROOT, "repos", "as",    "oq", "data")
+CORR_DATA  = os.path.join(PROJECT_ROOT, "repos", "corr",  "oq", "data")
+CAP_DATA   = os.path.join(PROJECT_ROOT, "repos", "cap",   "oq", "data")
+CURVE_DATA = os.path.join(PROJECT_ROOT, "repos", "curve", "sample_data")
+COMM_DATA  = os.path.join(PROJECT_ROOT, "oq", "data")
 
 BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
 
@@ -625,6 +626,30 @@ CATALOGUE = {
             "png_pattern": None,
         },
     },
+
+    # -----------------------------------------------------------------------
+    "Curve Analysis": {
+        "Curve Properties": {
+            "script": "jrc_curve_properties.py",
+            "description": (
+                "Extracts engineering properties from an XY measurement series — "
+                "force vs. displacement, torque vs. angle, pressure vs. volume, or "
+                "any time-ordered (X, Y) dataset.\n\n"
+                "Properties computed include: peak values (max Y, min Y, max X, min X), "
+                "area under curve (AUC), hysteresis area between loading/unloading arms, "
+                "overall and secant slope, instantaneous slope at specified X, "
+                "interpolated Y at X and X at Y, inflection points, and yield-like "
+                "points where slope drops to a specified fraction of its maximum.\n\n"
+                "The script is **config-file driven** — all analysis options are "
+                "specified in a `.cfg` file (INI format). Select a sample config below, "
+                "or run `jrc_curve_properties path/to/config.cfg` from the terminal for "
+                "custom data."
+            ),
+            "param_type": "curve_cfg",
+            "sample_data_dir": CURVE_DATA,
+            "png_pattern": None,
+        },
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -730,6 +755,22 @@ if needs_file:
         elif sc2 != "(none)":
             data_path2 = os.path.join(sdir, sc2)
 
+    elif param_type == "curve_cfg":
+        cfg_files = sorted(glob.glob(os.path.join(cfg["sample_data_dir"], "*.cfg")))
+        cfg_names = ["(none)"] + [os.path.basename(f) for f in cfg_files]
+        cfg_choice = st.selectbox(
+            "Select a sample config (.cfg)",
+            cfg_names,
+            key=f"cfg_{module_choice}_{script_choice}",
+        )
+        if cfg_choice != "(none)":
+            data_path = os.path.join(cfg["sample_data_dir"], cfg_choice)
+            st.info(f"Using sample config: **{cfg_choice}**")
+        st.caption(
+            "For custom data: place your .cfg and data CSV in the same folder "
+            "and run `jrc_curve_properties path/to/config.cfg` from the terminal."
+        )
+
     else:
         col_upload, col_sample = st.columns(2)
         with col_upload:
@@ -789,7 +830,10 @@ st.markdown("### Parameters")
 
 sk = script_choice  # short key prefix
 
-if param_type == "fileonly":
+if param_type == "curve_cfg":
+    st.caption("All analysis options are specified in the config file — no additional parameters.")
+
+elif param_type == "fileonly":
     st.caption("No additional parameters required for this script.")
 
 elif param_type == "corr":
@@ -982,7 +1026,10 @@ if param_type == "bland_altman":
 
 if st.button(f"▶  Run {script_choice}", type="primary", disabled=run_disabled):
 
-    if param_type == "fileonly":
+    if param_type == "curve_cfg":
+        cmd = BASH_PREFIX + [JRRUN, cfg["script"], data_path]
+
+    elif param_type == "fileonly":
         cmd = BASH_PREFIX + [JRRUN, cfg["script"], data_path]
 
     elif param_type == "corr":
@@ -1133,5 +1180,7 @@ if st.button(f"▶  Run {script_choice}", type="primary", disabled=run_disabled)
 elif run_disabled:
     if param_type == "bland_altman":
         st.warning("Upload or select both CSV files to enable the Run button.")
+    elif param_type == "curve_cfg":
+        st.warning("Select a sample config file to enable the Run button.")
     else:
         st.warning("Upload a CSV file or select sample data to enable the Run button.")
