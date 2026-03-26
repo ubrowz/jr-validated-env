@@ -14,6 +14,23 @@ Maps to validation plan JR-VP-SPC-001 as follows:
   TC-SPC-XBS-009  Missing column → non-zero exit, column name in output
   TC-SPC-XBS-010  Unbalanced subgroups → non-zero exit
   TC-SPC-XBS-011  Bypass protection — direct Rscript call fails
+
+Numeric correctness assertions (TC-SPC-XBS-012 to TC-SPC-XBS-015):
+
+  Reference dataset: xbar_s_stable.csv (20 subgroups × 8 measurements)
+  Independent computation using Shewhart X-bar & S formulas:
+    grand X-bar = 100.060000
+    s-bar       = 0.473726
+    c4(n=8)     = 0.965030,  A3 = 3/(c4*sqrt(8)) = 1.099095
+    B4(n=8)     = 1.814910
+    UCL_x = X-bar + A3*s-bar = 100.060 + 1.099095*0.473726 = 100.5807
+    LCL_x = X-bar - A3*s-bar = 100.060 - 1.099095*0.473726 = 99.5393
+    UCL_s = B4 * s-bar        = 1.814910 * 0.473726         = 0.8598
+
+  TC-SPC-XBS-012  Grand X-bar = 100.060  ± 0.001
+  TC-SPC-XBS-013  UCL (X-bar) = 100.5807 ± 0.001
+  TC-SPC-XBS-014  LCL (X-bar) = 99.5393  ± 0.001
+  TC-SPC-XBS-015  UCL_s       = 0.8598   ± 0.001
 """
 
 import glob
@@ -21,7 +38,9 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+import re as _re
+
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -177,3 +196,71 @@ class TestXbarS:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+def _extract_section_float(result, section_start, section_end, label):
+    """Extract a float from the region between section_start and section_end markers."""
+    out = combined(result)
+    m_sec = _re.search(
+        rf"{_re.escape(section_start)}.*?(?={_re.escape(section_end)})",
+        out, _re.DOTALL,
+    )
+    if not m_sec:
+        return None
+    m = _re.search(rf"{_re.escape(label)}\s+([-\d.]+)", m_sec.group(0))
+    return float(m.group(1)) if m else None
+
+
+class TestXbarSNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_spc_xbs_012_grand_xbar_exact(self):
+        """
+        TC-SPC-XBS-012:
+        Grand X-bar for xbar_s_stable.csv = 100.060 ± 0.001.
+        """
+        r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        xbar = extract_float(r, "X-dbar):")
+        assert xbar is not None, f"Grand X-bar not found in output:\n{combined(r)}"
+        assert abs(xbar - 100.060) < 0.001, \
+            f"Expected grand X-bar = 100.060 ± 0.001, got {xbar:.4f}"
+
+    def test_tc_spc_xbs_013_ucl_xbar_exact(self):
+        """
+        TC-SPC-XBS-013:
+        UCL (X-bar chart) = 100.5807 ± 0.001.
+        Independent reference: X-bar + A3*s-bar = 100.060 + 1.099095*0.473726 = 100.5807.
+        """
+        r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        ucl = _extract_section_float(r, "X-bar Chart", "--- S Chart", "UCL:")
+        assert ucl is not None, f"UCL (X-bar) not found in output:\n{combined(r)}"
+        assert abs(ucl - 100.5807) < 0.001, \
+            f"Expected UCL (X-bar) = 100.5807 ± 0.001, got {ucl:.4f}"
+
+    def test_tc_spc_xbs_014_lcl_xbar_exact(self):
+        """
+        TC-SPC-XBS-014:
+        LCL (X-bar chart) = 99.5393 ± 0.001.
+        Independent reference: X-bar - A3*s-bar = 100.060 - 1.099095*0.473726 = 99.5393.
+        """
+        r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        lcl = _extract_section_float(r, "X-bar Chart", "--- S Chart", "LCL:")
+        assert lcl is not None, f"LCL (X-bar) not found in output:\n{combined(r)}"
+        assert abs(lcl - 99.5393) < 0.001, \
+            f"Expected LCL (X-bar) = 99.5393 ± 0.001, got {lcl:.4f}"
+
+    def test_tc_spc_xbs_015_ucl_s_exact(self):
+        """
+        TC-SPC-XBS-015:
+        UCL (S chart) = 0.8598 ± 0.001.
+        Independent reference: B4 * s-bar = 1.814910 * 0.473726 = 0.8598.
+        """
+        r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        ucl_s = _extract_section_float(r, "--- S Chart", "--- Verdict", "UCL:")
+        assert ucl_s is not None, f"UCL (S chart) not found in output:\n{combined(r)}"
+        assert abs(ucl_s - 0.8598) < 0.001, \
+            f"Expected UCL (S) = 0.8598 ± 0.001, got {ucl_s:.4f}"

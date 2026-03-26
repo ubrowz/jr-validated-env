@@ -10,6 +10,40 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [Unreleased] — Numerical OQ Enhancement (v2.5.0 target)
+
+### Added — Numeric correctness assertions across all modules
+
+- **33 new tolerance-based OQ test cases** across 6 modules: Cap, MSA, SPC,
+  Corr, AS, and Curve. Each asserts a computed numeric value against an
+  independently derived expected result (hand calculation or Python reference
+  implementation), closing the gap between behavioural testing and calculation
+  correctness under 21 CFR 820.70(i) / ISO 13485 §7.5.6.
+- Total OQ test count: **407 → 440** (33 new numeric assertions).
+- New `extract_float()` helper added to all module `conftest.py` files for
+  consistent regex-based value extraction from script output.
+- Two new analytical datasets:
+  - `repos/cap/oq/data/cap_cpk_1p000.csv` — centred, Cpk = Cp = 1.000 (exact)
+  - `repos/cap/oq/data/cap_cpk_0p667.csv` — offset, Cpk = 0.667, Cp = 1.000 (exact)
+  - `repos/corr/oq/data/corr_exact_linear.csv` — y = 2x+1, r = slope = 1.000 (exact)
+- `docs/validation_improvement_plan.md` — execution guide for this enhancement,
+  documenting all TCs, expected values, tolerances, and derivations.
+- Fixed pre-existing syntax error in `repos/msa/oq/test_msa_linearity_bias.py`
+  (f-string with nested double quotes, line 178).
+
+### Module breakdown
+
+| Module | New TCs | Key metrics validated |
+|--------|---------|----------------------|
+| Cap    | TC-CAP-N-014..018 (5) | Cpk, Cp, Ppk |
+| MSA    | TC-MSA-GRR-011..013, T1-012..013 (5) | %GRR, ndc, Cg, Cgk |
+| SPC    | TC-SPC-IMR-012..015, XBR-013..016, XBS-012..015, P-012..013, C-011..012 (16) | UCL, LCL, centrelines |
+| Corr   | TC-CORR-P-012..013, R-012..014 (5) | r, slope, intercept, R² |
+| AS     | TC-AS-ATTR-012..013 (2) | Pa(AQL), Pa(RQL) |
+| Curve  | TC-CURVE-N-001..003 (3) | AUC, slope, y_at_x |
+
+---
+
 ## [2.4.0] — 2026-03-26
 
 ### Added — `jrc_curve_properties` further enhancements

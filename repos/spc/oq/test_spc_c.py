@@ -13,6 +13,17 @@ Maps to validation plan JR-VP-SPC-001 as follows:
   TC-SPC-C-008  File not found → non-zero exit
   TC-SPC-C-009  Missing column → non-zero exit, column name in output
   TC-SPC-C-010  Bypass protection — direct Rscript call fails
+
+Numeric correctness assertions (TC-SPC-C-011 to TC-SPC-C-012):
+
+  Reference dataset: c_stable.csv (25 subgroups of defect counts)
+  Independent computation using Shewhart C-chart formulas:
+    c-bar = sum(defects) / k = 124 / 25 = 4.960
+    UCL = c-bar + 3*sqrt(c-bar) = 4.960 + 3*2.227 = 11.641
+    LCL = max(0, c-bar - 3*sqrt(c-bar)) = 0.000
+
+  TC-SPC-C-011  c-bar = 4.960 ± 0.001
+  TC-SPC-C-012  UCL   = 11.641 ± 0.010
 """
 
 import glob
@@ -21,7 +32,7 @@ import re
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -163,3 +174,33 @@ class TestCChart:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestSpcCNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_spc_c_011_cbar_exact(self):
+        """
+        TC-SPC-C-011:
+        c-bar for c_stable.csv = 4.960 ± 0.001.
+        Independent reference: sum(defects) / k = 124 / 25 = 4.960.
+        """
+        r = run("jrc_spc_c.R", data("c_stable.csv"), "defects")
+        assert r.returncode == 0, combined(r)
+        cbar = extract_float(r, "c-bar:")
+        assert cbar is not None, f"c-bar not found in output:\n{combined(r)}"
+        assert abs(cbar - 4.960) < 0.001, \
+            f"Expected c-bar = 4.960 ± 0.001, got {cbar:.4f}"
+
+    def test_tc_spc_c_012_ucl_exact(self):
+        """
+        TC-SPC-C-012:
+        UCL for c_stable.csv = 11.641 ± 0.010.
+        Independent reference: c-bar + 3*sqrt(c-bar) = 4.960 + 3*2.2271 = 11.641.
+        """
+        r = run("jrc_spc_c.R", data("c_stable.csv"), "defects")
+        assert r.returncode == 0, combined(r)
+        ucl = extract_float(r, "UCL:")
+        assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        assert abs(ucl - 11.641) < 0.010, \
+            f"Expected UCL = 11.641 ± 0.010, got {ucl:.4f}"

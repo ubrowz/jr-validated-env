@@ -38,11 +38,25 @@ Maps to validation plan JR-VP-CURVE-001 as follows:
   TC-CURVE-O-001  results .txt file created after successful run
   TC-CURVE-O-002  plot PDF created when plot=yes and plot_file specified
   TC-CURVE-O-003  debug d2y CSV created when [debug] d2y=yes
+
+Numeric correctness assertions (TC-CURVE-N-001 to TC-CURVE-N-003):
+
+  Dataset: linear.csv — 21 pts, x=0..20, y=2x (exact linear relationship)
+  Independent computation:
+    AUC (trapezoid) = sum of trapezoids = 20 * (0+40)/2 = 400.0 (exact)
+    slope (OLS)     = Sxy / Sxx = 2.000 (exact for y=2x)
+    Y at x=5        = 2*5 = 10.0 (exact from the data)
+
+  TC-CURVE-N-001  AUC for linear data     = 400.0 ± 0.5  (trapezoid rule, exact linear)
+  TC-CURVE-N-002  overall slope           = 2.000 ± 0.001 (OLS on y=2x)
+  TC-CURVE-N-003  Y at x=5 (y_at_x query) = 10.0  ± 0.01 (exact point on y=2x)
 """
 
 import os
 
-from conftest import DATA_DIR, run, combined, data
+import re
+
+from conftest import DATA_DIR, run, combined, data, extract_float
 
 
 class TestCurveValidation:
@@ -374,3 +388,50 @@ class TestCurveOutputFiles:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         assert os.path.isfile(expected), \
             f"Expected debug d2y CSV not found: {expected}"
+
+
+class TestCurveNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_curve_n_001_auc_exact(self):
+        """
+        TC-CURVE-N-001:
+        AUC for linear.csv (y=2x, x=0..20) = 400.0 ± 0.5.
+        Analytical derivation (trapezoid rule on exact linear data):
+          AUC = integral(2x, 0, 20) = [x²]_0^20 = 400 exactly.
+        """
+        r = run("jrc_curve_properties.py", data("test_global.cfg"))
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"AUC\s*:\s*([\d.]+)", combined(r))
+        assert m, f"AUC not found in output:\n{combined(r)}"
+        auc = float(m.group(1))
+        assert abs(auc - 400.0) < 0.5, \
+            f"Expected AUC = 400.0 ± 0.5, got {auc}"
+
+    def test_tc_curve_n_002_overall_slope_exact(self):
+        """
+        TC-CURVE-N-002:
+        Overall OLS slope for linear.csv (y=2x) = 2.000 ± 0.001.
+        Analytical derivation: b1 = Sxy/Sxx = 2.000 for y=2x.
+        """
+        r = run("jrc_curve_properties.py", data("test_slope.cfg"))
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"slope overall\s*:\s*([-\d.]+)", combined(r))
+        assert m, f"slope overall not found in output:\n{combined(r)}"
+        slope = float(m.group(1))
+        assert abs(slope - 2.000) < 0.001, \
+            f"Expected slope overall = 2.000 ± 0.001, got {slope}"
+
+    def test_tc_curve_n_003_y_at_x_exact(self):
+        """
+        TC-CURVE-N-003:
+        Y at x=5.0 for linear.csv (y=2x) = 10.0 ± 0.01.
+        Analytical derivation: y = 2*5 = 10.0 (exact point in data).
+        """
+        r = run("jrc_curve_properties.py", data("test_query.cfg"))
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"Y at x=5\.0\s*:\s*([-\d.]+)", combined(r))
+        assert m, f"Y at x=5.0 not found in output:\n{combined(r)}"
+        y_val = float(m.group(1))
+        assert abs(y_val - 10.0) < 0.01, \
+            f"Expected Y at x=5.0 = 10.0 ± 0.01, got {y_val}"

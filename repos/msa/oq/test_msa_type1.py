@@ -14,6 +14,18 @@ Maps to validation plan JR-VP-MSA-001 as follows:
   TC-MSA-T1-009  Missing 'value' column → non-zero exit, 'value' named
   TC-MSA-T1-010  Fewer than 10 measurements → non-zero exit
   TC-MSA-T1-011  Bypass protection — direct Rscript call fails
+
+Numeric correctness assertions (TC-MSA-T1-012 to TC-MSA-T1-013):
+
+  Reference dataset: type1_good.csv (n=25, reference=10.0, tolerance=0.5)
+  Independent computation using ISO 22514-7 / AIAG formulas:
+    SD   = 0.00267 (sample SD via n-1)
+    bias = 0.00988 (mean - reference)
+    Cg   = 0.2 * T / (6 * SD) = 6.250
+    Cgk  = min(0.1*T - bias, 0.1*T + bias) / (3 * SD) = 5.015
+
+  TC-MSA-T1-012  Cg  = 6.250 ± 0.005
+  TC-MSA-T1-013  Cgk = 5.015 ± 0.005
 """
 
 import glob
@@ -22,7 +34,7 @@ import re
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -164,3 +176,37 @@ class TestType1:
         )
         assert result.returncode != 0
         assert "RENV_PATHS_ROOT" in (result.stdout or "") + (result.stderr or "")
+
+
+class TestMsaType1Numeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_msa_t1_012_cg_exact(self):
+        """
+        TC-MSA-T1-012:
+        Cg for type1_good.csv = 6.250 ± 0.005.
+        Independent reference: Cg = 0.2 * T / (6 * SD) = 0.1 / 0.01602 = 6.250.
+        """
+        r = run("jrc_msa_type1.R", data("type1_good.csv"),
+                "--reference", "10.0", "--tolerance", "0.5")
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"\bCg\s*[:=]\s*([\d.]+)", combined(r))
+        assert m, f"Cg not found in output:\n{combined(r)}"
+        cg = float(m.group(1))
+        assert abs(cg - 6.250) < 0.005, \
+            f"Expected Cg = 6.250 ± 0.005, got {cg:.3f}"
+
+    def test_tc_msa_t1_013_cgk_exact(self):
+        """
+        TC-MSA-T1-013:
+        Cgk for type1_good.csv = 5.015 ± 0.005.
+        Independent reference: Cgk = (0.1*T - bias) / (3*SD) = 0.04012/0.00801 = 5.015.
+        """
+        r = run("jrc_msa_type1.R", data("type1_good.csv"),
+                "--reference", "10.0", "--tolerance", "0.5")
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"\bCgk\s*[:=]\s*([\d.]+)", combined(r))
+        assert m, f"Cgk not found in output:\n{combined(r)}"
+        cgk = float(m.group(1))
+        assert abs(cgk - 5.015) < 0.005, \
+            f"Expected Cgk = 5.015 ± 0.005, got {cgk:.3f}"

@@ -15,6 +15,21 @@ Maps to validation plan JR-VP-SPC-001 as follows:
   TC-SPC-XBR-010  Unbalanced subgroups → non-zero exit
   TC-SPC-XBR-011  Subgroup size > 10 → non-zero exit, guidance message
   TC-SPC-XBR-012  Bypass protection — direct Rscript call fails
+
+Numeric correctness assertions (TC-SPC-XBR-013 to TC-SPC-XBR-016):
+
+  Reference dataset: xbar_r_stable.csv (20 subgroups × 5 measurements)
+  Independent computation using Shewhart X-bar & R formulas (A2=0.577, D4=2.114):
+    grand X-bar = 50.165000
+    R-bar       = 1.300000
+    UCL_x = X-bar + A2*R-bar = 50.165 + 0.577*1.300 = 50.9151
+    LCL_x = X-bar - A2*R-bar = 50.165 - 0.577*1.300 = 49.4149
+    UCL_R = D4 * R-bar       = 2.114 * 1.300        = 2.7482
+
+  TC-SPC-XBR-013  Grand X-bar = 50.165 ± 0.001
+  TC-SPC-XBR-014  UCL_x       = 50.9151 ± 0.001
+  TC-SPC-XBR-015  LCL_x       = 49.4149 ± 0.001
+  TC-SPC-XBR-016  UCL_R       = 2.7482  ± 0.001
 """
 
 import glob
@@ -22,7 +37,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -191,3 +206,59 @@ class TestXbarR:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestXbarRNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_spc_xbr_013_grand_xbar_exact(self):
+        """
+        TC-SPC-XBR-013:
+        Grand X-bar for xbar_r_stable.csv = 50.165 ± 0.001.
+        Independent reference: mean of all 20 subgroup means = 50.165000.
+        """
+        r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        xbar = extract_float(r, "X-dbar):")
+        assert xbar is not None, f"Grand X-bar not found in output:\n{combined(r)}"
+        assert abs(xbar - 50.165) < 0.001, \
+            f"Expected grand X-bar = 50.165 ± 0.001, got {xbar:.4f}"
+
+    def test_tc_spc_xbr_014_ucl_xbar_exact(self):
+        """
+        TC-SPC-XBR-014:
+        UCL (X-bar chart) = 50.9151 ± 0.001.
+        Independent reference: X-bar + A2*R-bar = 50.165 + 0.577*1.300 = 50.9151.
+        """
+        r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        ucl = extract_float(r, "UCL:")
+        assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        assert abs(ucl - 50.9151) < 0.001, \
+            f"Expected UCL = 50.9151 ± 0.001, got {ucl:.4f}"
+
+    def test_tc_spc_xbr_015_lcl_xbar_exact(self):
+        """
+        TC-SPC-XBR-015:
+        LCL (X-bar chart) = 49.4149 ± 0.001.
+        Independent reference: X-bar - A2*R-bar = 50.165 - 0.577*1.300 = 49.4149.
+        """
+        r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        lcl = extract_float(r, "LCL:")
+        assert lcl is not None, f"LCL not found in output:\n{combined(r)}"
+        assert abs(lcl - 49.4149) < 0.001, \
+            f"Expected LCL = 49.4149 ± 0.001, got {lcl:.4f}"
+
+    def test_tc_spc_xbr_016_ucl_r_exact(self):
+        """
+        TC-SPC-XBR-016:
+        UCL_R (Range chart) = 2.7482 ± 0.001.
+        Independent reference: D4 * R-bar = 2.114 * 1.300 = 2.7482.
+        """
+        r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
+        assert r.returncode == 0, combined(r)
+        ucl_r = extract_float(r, "UCL_R:")
+        assert ucl_r is not None, f"UCL_R not found in output:\n{combined(r)}"
+        assert abs(ucl_r - 2.7482) < 0.001, \
+            f"Expected UCL_R = 2.7482 ± 0.001, got {ucl_r:.4f}"

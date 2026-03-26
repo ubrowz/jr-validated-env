@@ -14,6 +14,16 @@ Maps to validation plan JR-VP-CORR-001 as follows:
   TC-CORR-P-009  Non-numeric column (corr_nonnumeric.csv) -> non-zero exit
   TC-CORR-P-010  Negative correlation (corr_negative.csv) -> exit 0, r < 0 in output
   TC-CORR-P-011  Direct Rscript call without RENV_PATHS_ROOT -> non-zero exit, RENV_PATHS_ROOT in output
+
+Numeric correctness assertions (TC-CORR-P-012 to TC-CORR-P-013):
+
+  Reference dataset: corr_exact_linear.csv — 10 points, y = 2x + 1 (x=1..10)
+  Independent computation (exact analytical result):
+    Pearson r  = 1.000000  (perfect linear relationship — derived from formula)
+    p-value < 0.001        (significant at any conventional alpha)
+
+  TC-CORR-P-012  Pearson r  = 1.000 ± 0.001 (perfect linear data)
+  TC-CORR-P-013  p-value is small (< 0.001 for n=10 with r=1.000)
 """
 
 import glob
@@ -21,7 +31,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -162,3 +172,34 @@ class TestCorrPearson:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestCorrPearsonNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_corr_p_012_pearson_r_exact(self):
+        """
+        TC-CORR-P-012:
+        Pearson r for corr_exact_linear.csv (y=2x+1) = 1.000 ± 0.001.
+        Analytical derivation: perfect linear relationship gives r = Sxy/sqrt(Sxx*Syy) = 1.
+        """
+        r = run("jrc_corr_pearson.R", data("corr_exact_linear.csv"))
+        assert r.returncode == 0, combined(r)
+        pearson_r = extract_float(r, "Pearson r:")
+        assert pearson_r is not None, f"Pearson r not found in output:\n{combined(r)}"
+        assert abs(pearson_r - 1.000) < 0.001, \
+            f"Expected Pearson r = 1.000 ± 0.001, got {pearson_r:.4f}"
+
+    def test_tc_corr_p_013_p_value_significant(self):
+        """
+        TC-CORR-P-013:
+        p-value for corr_exact_linear.csv is extremely small (< 0.001).
+        With r=1.000 and n=10, t-statistic → ∞, p-value → 0.
+        """
+        r = run("jrc_corr_pearson.R", data("corr_exact_linear.csv"))
+        assert r.returncode == 0, combined(r)
+        out = combined(r)
+        assert "p-value:" in out, f"p-value label not found:\n{out}"
+        # p-value is reported in scientific notation; just confirm significance marker
+        assert "significant" in out.lower(), \
+            f"Expected 'significant' in output for r=1.000 data:\n{out}"

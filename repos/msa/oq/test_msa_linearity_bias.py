@@ -174,5 +174,6 @@ class TestLinearityBias:
         )
         assert result.returncode != 0, \
             "Expected non-zero exit when called without RENV_PATHS_ROOT"
-        assert "RENV_PATHS_ROOT" in (result.stdout or "") + (result.stderr or ""), \
-            f"Expected 'RENV_PATHS_ROOT' in error:\n{(result.stdout or "") + (result.stderr or "")}"
+        out = (result.stdout or "") + (result.stderr or "")
+        assert "RENV_PATHS_ROOT" in out, \
+            f"Expected 'RENV_PATHS_ROOT' in error:\n{out}"

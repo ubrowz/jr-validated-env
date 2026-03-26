@@ -14,6 +14,18 @@ Maps to validation plan JR-VP-AS-001 as follows:
   TC-AS-ATTR-009  lot_size = 1 -> non-zero exit
   TC-AS-ATTR-010  --alpha > 1 -> non-zero exit
   TC-AS-ATTR-011  Direct Rscript call without RENV_PATHS_ROOT -> non-zero exit + RENV_PATHS_ROOT in output
+
+Numeric correctness assertions (TC-AS-ATTR-012 to TC-AS-ATTR-013):
+
+  Reference: N=500, AQL=0.01, RQL=0.10 → single plan: n=51, c=2
+  Independent computation using hypergeometric CDF (ISO 2859-1 / ASTM E2234):
+    Pa(p=0.01) = P(X≤2 | Hypergeom(N=500, K=5, n=51))  = 0.9913
+    Pa(p=0.10) = P(X≤2 | Hypergeom(N=500, K=50, n=51)) = 0.0918
+
+  Pa values read from the OC Curve table in the output.
+
+  TC-AS-ATTR-012  Pa at p=0.010 (AQL) = 0.9913 ± 0.0005
+  TC-AS-ATTR-013  Pa at p=0.100 (RQL) = 0.0918 ± 0.0005
 """
 
 import glob
@@ -21,7 +33,9 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+import re
+
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -165,3 +179,37 @@ class TestAttributes:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestAsAttributesNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_as_attr_012_pa_at_aql_exact(self):
+        """
+        TC-AS-ATTR-012:
+        Pa at p=0.010 (AQL) for N=500, n=51, c=2 plan = 0.9913 ± 0.0005.
+        Independent reference: Hypergeometric CDF P(X≤2 | N=500, K=5, n=51) = 0.9913.
+        """
+        r = run("jrc_as_attributes.R", "500", "0.01", "0.10")
+        assert r.returncode == 0, combined(r)
+        # Extract Pa for p=0.010 from OC Curve table row "  0.010   0.XXXX"
+        m = re.search(r"0\.010\s+([\d.]+)", combined(r))
+        assert m, f"Pa at p=0.010 not found in OC table:\n{combined(r)}"
+        pa = float(m.group(1))
+        assert abs(pa - 0.9913) < 0.0005, \
+            f"Expected Pa(AQL) = 0.9913 ± 0.0005, got {pa:.4f}"
+
+    def test_tc_as_attr_013_pa_at_rql_exact(self):
+        """
+        TC-AS-ATTR-013:
+        Pa at p=0.100 (RQL) for N=500, n=51, c=2 plan = 0.0918 ± 0.0005.
+        Independent reference: Hypergeometric CDF P(X≤2 | N=500, K=50, n=51) = 0.0918.
+        """
+        r = run("jrc_as_attributes.R", "500", "0.01", "0.10")
+        assert r.returncode == 0, combined(r)
+        # Extract Pa for p=0.100 from OC Curve table row "  0.100   0.XXXX"
+        m = re.search(r"0\.100\s+([\d.]+)", combined(r))
+        assert m, f"Pa at p=0.100 not found in OC table:\n{combined(r)}"
+        pa = float(m.group(1))
+        assert abs(pa - 0.0918) < 0.0005, \
+            f"Expected Pa(RQL) = 0.0918 ± 0.0005, got {pa:.4f}"

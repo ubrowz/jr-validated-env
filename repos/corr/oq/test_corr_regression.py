@@ -14,6 +14,18 @@ Maps to validation plan JR-VP-CORR-001 as follows:
   TC-CORR-R-009  Non-numeric column -> non-zero exit
   TC-CORR-R-010  Slope approximately 2.0 for corr_linear.csv (output contains "1.9" or "2.0")
   TC-CORR-R-011  Direct Rscript call without RENV_PATHS_ROOT -> non-zero exit
+
+Numeric correctness assertions (TC-CORR-R-012 to TC-CORR-R-014):
+
+  Reference dataset: corr_exact_linear.csv — 10 points, y = 2x + 1 (x=1..10)
+  Independent computation (exact OLS formulas):
+    slope (b1)     = Sxy / Sxx  = 2.000 (exact for y=2x+1)
+    intercept (b0) = mean(y) - b1*mean(x) = 1.000 (exact)
+    R-squared      = r²         = 1.000 (exact for perfect linear data)
+
+  TC-CORR-R-012  Slope (b1)     = 2.000 ± 0.001
+  TC-CORR-R-013  Intercept (b0) = 1.000 ± 0.001
+  TC-CORR-R-014  R-squared      = 1.000 ± 0.001
 """
 
 import glob
@@ -21,7 +33,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -161,3 +173,46 @@ class TestCorrRegression:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestCorrRegressionNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_corr_r_012_slope_exact(self):
+        """
+        TC-CORR-R-012:
+        OLS slope for corr_exact_linear.csv (y=2x+1) = 2.000 ± 0.001.
+        Analytical derivation: b1 = Sxy/Sxx = 165/82.5 = 2.000 (exact).
+        """
+        r = run("jrc_corr_regression.R", data("corr_exact_linear.csv"))
+        assert r.returncode == 0, combined(r)
+        slope = extract_float(r, "Slope     (b1):")
+        assert slope is not None, f"Slope not found in output:\n{combined(r)}"
+        assert abs(slope - 2.000) < 0.001, \
+            f"Expected slope = 2.000 ± 0.001, got {slope:.4f}"
+
+    def test_tc_corr_r_013_intercept_exact(self):
+        """
+        TC-CORR-R-013:
+        OLS intercept for corr_exact_linear.csv = 1.000 ± 0.001.
+        Analytical derivation: b0 = mean(y) - b1*mean(x) = 12 - 2*5.5 = 1.000 (exact).
+        """
+        r = run("jrc_corr_regression.R", data("corr_exact_linear.csv"))
+        assert r.returncode == 0, combined(r)
+        intercept = extract_float(r, "Intercept (b0):")
+        assert intercept is not None, f"Intercept not found in output:\n{combined(r)}"
+        assert abs(intercept - 1.000) < 0.001, \
+            f"Expected intercept = 1.000 ± 0.001, got {intercept:.4f}"
+
+    def test_tc_corr_r_014_r_squared_exact(self):
+        """
+        TC-CORR-R-014:
+        R-squared for corr_exact_linear.csv = 1.000 ± 0.001.
+        Analytical derivation: r²=1 for perfect linear data (no residuals).
+        """
+        r = run("jrc_corr_regression.R", data("corr_exact_linear.csv"))
+        assert r.returncode == 0, combined(r)
+        r2 = extract_float(r, "R-squared:")
+        assert r2 is not None, f"R-squared not found in output:\n{combined(r)}"
+        assert abs(r2 - 1.000) < 0.001, \
+            f"Expected R-squared = 1.000 ± 0.001, got {r2:.4f}"

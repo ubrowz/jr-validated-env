@@ -13,6 +13,22 @@ Maps to validation plan JR-VP-MSA-001 as follows:
   TC-MSA-GRR-008  Unbalanced design → non-zero exit, 'unbalanced' in output
   TC-MSA-GRR-009  Single operator → non-zero exit
   TC-MSA-GRR-010  Bypass protection — direct Rscript call fails
+
+Numeric correctness assertions (TC-MSA-GRR-011 to TC-MSA-GRR-013):
+
+  These test cases assert that key GRR metrics match independently computed
+  reference values, providing quantitative correctness evidence for audit.
+
+  Reference dataset: gauge_rr_balanced.csv (10 parts × 3 operators × 3 reps)
+  Independent computation: AIAG MSA 4th ed. ANOVA method, implemented in Python
+  (see repos/msa/oq/data/ comments). Results:
+    %GRR (%Study Var) = 4.15%  (independent Python ANOVA: 4.1476%)
+    Part-to-Part %    = 99.91%
+    ndc               = 33
+
+  TC-MSA-GRR-011  %GRR extracted from output = 4.15% ± 0.10%
+  TC-MSA-GRR-012  ndc extracted from output  = 33 (exact integer)
+  TC-MSA-GRR-013  Part-to-Part % ≈ 99.91% ± 0.20%
 """
 
 import glob
@@ -21,7 +37,7 @@ import re
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -177,3 +193,49 @@ class TestGaugeRR:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestMsaGaugeRrNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_msa_grr_011_pct_grr_exact(self):
+        """
+        TC-MSA-GRR-011:
+        %GRR (%Study Var) for gauge_rr_balanced.csv = 4.15% ± 0.10%.
+        Independent reference: AIAG MSA 4th ed. ANOVA method computed in Python
+        gives 4.1476% from the same data.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"%GRR\s*\(%Study Var\)[:\s]+([\d.]+)%", combined(r))
+        assert m, f"%GRR value not found in output:\n{combined(r)}"
+        pct_grr = float(m.group(1))
+        assert abs(pct_grr - 4.15) < 0.10, \
+            f"Expected %GRR = 4.15% ± 0.10%, got {pct_grr:.2f}%"
+
+    def test_tc_msa_grr_012_ndc_exact(self):
+        """
+        TC-MSA-GRR-012:
+        ndc for gauge_rr_balanced.csv = 33 (exact integer).
+        Independent reference: ndc = floor(1.41 * sqrt(var_part) / GRR) = 33.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"ndc:\s+(\d+)", combined(r))
+        assert m, f"ndc not found in output:\n{combined(r)}"
+        ndc = int(m.group(1))
+        assert ndc == 33, f"Expected ndc = 33, got {ndc}"
+
+    def test_tc_msa_grr_013_part_to_part_pct_exact(self):
+        """
+        TC-MSA-GRR-013:
+        Part-to-Part % for gauge_rr_balanced.csv = 99.91% ± 0.20%.
+        Independent reference: P:P std dev / TV = 0.35203 / 0.35233 = 99.91%.
+        """
+        r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
+        assert r.returncode == 0, combined(r)
+        m = re.search(r"Part-to-Part\s+[\d.]+\s+([\d.]+)%", combined(r))
+        assert m, f"Part-to-Part % not found in output:\n{combined(r)}"
+        pct_pt = float(m.group(1))
+        assert abs(pct_pt - 99.91) < 0.20, \
+            f"Expected Part-to-Part = 99.91% ± 0.20%, got {pct_pt:.2f}%"

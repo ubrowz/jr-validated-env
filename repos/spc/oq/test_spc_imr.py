@@ -14,6 +14,25 @@ Maps to validation plan JR-VP-SPC-001 as follows:
   TC-SPC-IMR-009  Missing column → non-zero exit, column name in output
   TC-SPC-IMR-010  Too few observations (1 row) → non-zero exit
   TC-SPC-IMR-011  Bypass protection — direct Rscript call fails
+
+Numeric correctness assertions (TC-SPC-IMR-012 to TC-SPC-IMR-015):
+
+  Reference dataset: imr_stable.csv (n=25 individual measurements)
+  Independent computation using Shewhart I-MR formulas:
+    X-bar = mean of all values = 10.0668
+    MR-bar = mean of successive |differences| = 0.32125
+    d2 = 1.128 (constant for n=2 pairs), D4 = 3.267
+    sigma_within = MR-bar / d2 = 0.28480
+    UCL_I = X-bar + 3*sigma_within = 10.9212
+    LCL_I = X-bar - 3*sigma_within = 9.2124
+    UCL_MR = D4 * MR-bar = 1.04952
+
+  All values confirmed by independent Python implementation (see git history).
+
+  TC-SPC-IMR-012  X-bar   = 10.0668 ± 0.0001
+  TC-SPC-IMR-013  UCL_I   = 10.9212 ± 0.001
+  TC-SPC-IMR-014  LCL_I   = 9.2124  ± 0.001
+  TC-SPC-IMR-015  UCL_MR  = 1.0495  ± 0.001
 """
 
 import glob
@@ -21,7 +40,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -179,3 +198,59 @@ class TestIMR:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestIMRNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_spc_imr_012_xbar_exact(self):
+        """
+        TC-SPC-IMR-012:
+        X-bar for imr_stable.csv = 10.0668 ± 0.0001.
+        Independent reference: arithmetic mean of the 25 values = 10.066800.
+        """
+        r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
+        assert r.returncode == 0, combined(r)
+        xbar = extract_float(r, "X-bar:")
+        assert xbar is not None, f"X-bar not found in output:\n{combined(r)}"
+        assert abs(xbar - 10.0668) < 0.0001, \
+            f"Expected X-bar = 10.0668 ± 0.0001, got {xbar:.6f}"
+
+    def test_tc_spc_imr_013_ucl_exact(self):
+        """
+        TC-SPC-IMR-013:
+        UCL (Individuals chart) for imr_stable.csv = 10.9212 ± 0.001.
+        Independent reference: X-bar + 3*(MR-bar/d2) = 10.0668 + 3*0.28480 = 10.9212.
+        """
+        r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
+        assert r.returncode == 0, combined(r)
+        ucl = extract_float(r, "UCL:")
+        assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        assert abs(ucl - 10.9212) < 0.001, \
+            f"Expected UCL = 10.9212 ± 0.001, got {ucl:.4f}"
+
+    def test_tc_spc_imr_014_lcl_exact(self):
+        """
+        TC-SPC-IMR-014:
+        LCL (Individuals chart) for imr_stable.csv = 9.2124 ± 0.001.
+        Independent reference: X-bar - 3*(MR-bar/d2) = 10.0668 - 3*0.28480 = 9.2124.
+        """
+        r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
+        assert r.returncode == 0, combined(r)
+        lcl = extract_float(r, "LCL:")
+        assert lcl is not None, f"LCL not found in output:\n{combined(r)}"
+        assert abs(lcl - 9.2124) < 0.001, \
+            f"Expected LCL = 9.2124 ± 0.001, got {lcl:.4f}"
+
+    def test_tc_spc_imr_015_ucl_mr_exact(self):
+        """
+        TC-SPC-IMR-015:
+        UCL_MR (Moving Range chart) for imr_stable.csv = 1.0495 ± 0.001.
+        Independent reference: D4 * MR-bar = 3.267 * 0.32125 = 1.04952.
+        """
+        r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
+        assert r.returncode == 0, combined(r)
+        ucl_mr = extract_float(r, "UCL_MR:")
+        assert ucl_mr is not None, f"UCL_MR not found in output:\n{combined(r)}"
+        assert abs(ucl_mr - 1.0495) < 0.001, \
+            f"Expected UCL_MR = 1.0495 ± 0.001, got {ucl_mr:.4f}"

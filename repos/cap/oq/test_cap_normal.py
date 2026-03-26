@@ -16,6 +16,41 @@ Maps to validation plan JR-VP-CAP-001 as follows:
   TC-CAP-N-011  Non-numeric column (cap_nonnumeric.csv) -> non-zero exit
   TC-CAP-N-012  LSL >= USL -> non-zero exit
   TC-CAP-N-013  Direct Rscript call without RENV_PATHS_ROOT -> non-zero exit
+
+Numeric correctness assertions (TC-CAP-N-014 to TC-CAP-N-018):
+
+  These test cases use analytically constructed datasets whose expected output
+  values are independently computable from first principles (AIAG/ISO formulas).
+  They assert that the script produces the correct numeric result within a
+  documented tolerance, providing quantitative correctness evidence for audit.
+
+  Analytical datasets (oq/data/):
+
+    cap_cpk_1p000.csv — 26 pts alternating [9.859, 10.141], LSL=9.25, USL=10.75
+      Derivation:
+        mean      = 10.000  (symmetric about target)
+        MR-bar    = |10.141 - 9.859| = 0.282  (constant MR)
+        sigma_w   = MR-bar / d2 = 0.282 / 1.128 = 0.250  (d2=1.128 for n=2 pairs)
+        Cp        = (10.75 - 9.25) / (6 * 0.250) = 1.500 / 1.500 = 1.000 (exact)
+        Cpk       = min(0.750, 0.750) / (3 * 0.250) = 1.000 (exact, both sides equal)
+        sigma_s   = sqrt(26 * 0.141^2 / 25) = 0.14379
+        Pp        = 1.500 / (6 * 0.14379) = 1.739
+        Ppk       = 1.739  (centred)
+
+    cap_cpk_0p667.csv — 26 pts alternating [10.109, 10.391], LSL=9.25, USL=10.75
+      Derivation:
+        mean      = 10.250  (shifted +0.250 toward USL)
+        sigma_w   = 0.250  (same alternating structure)
+        Cp        = 1.000  (exact, specification width unchanged)
+        Cpk       = min(0.500, 1.000) / (3 * 0.250) = 0.500/0.750 = 0.667 (exact)
+
+  Tolerances are set to half the least significant digit of the printed output (4 dp).
+
+  TC-CAP-N-014  Cpk for centred dataset = 1.000 ± 0.005
+  TC-CAP-N-015  Cp  for centred dataset = 1.000 ± 0.005
+  TC-CAP-N-016  Cpk for offset dataset  = 0.667 ± 0.005 (USL side governs)
+  TC-CAP-N-017  Cp  for offset dataset  = 1.000 ± 0.005 (Cp is location-independent)
+  TC-CAP-N-018  Ppk for centred dataset = 1.739 ± 0.020 (sigma_s vs sigma_w differ)
 """
 
 import glob
@@ -23,7 +58,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -186,3 +221,72 @@ class TestCapNormal:
         out = (result.stdout or "") + (result.stderr or "")
         assert "RENV_PATHS_ROOT" in out, \
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
+
+
+class TestCapNormalNumeric:
+    """Numeric correctness assertions — see module docstring for derivations."""
+
+    def test_tc_cap_n_014_cpk_centred_exact(self):
+        """
+        TC-CAP-N-014:
+        Cpk for centred analytical dataset (cap_cpk_1p000.csv) = 1.000 ± 0.005.
+        """
+        r = run("jrc_cap_normal.R", data("cap_cpk_1p000.csv"), "value", "9.25", "10.75")
+        assert r.returncode == 0, combined(r)
+        cpk = extract_float(r, "Cpk:")
+        assert cpk is not None, f"Cpk not found in output:\n{combined(r)}"
+        assert abs(cpk - 1.000) < 0.005, \
+            f"Expected Cpk = 1.000 ± 0.005, got {cpk:.4f}"
+
+    def test_tc_cap_n_015_cp_centred_exact(self):
+        """
+        TC-CAP-N-015:
+        Cp for centred analytical dataset (cap_cpk_1p000.csv) = 1.000 ± 0.005.
+        """
+        r = run("jrc_cap_normal.R", data("cap_cpk_1p000.csv"), "value", "9.25", "10.75")
+        assert r.returncode == 0, combined(r)
+        cp = extract_float(r, "Cp:")
+        assert cp is not None, f"Cp not found in output:\n{combined(r)}"
+        assert abs(cp - 1.000) < 0.005, \
+            f"Expected Cp = 1.000 ± 0.005, got {cp:.4f}"
+
+    def test_tc_cap_n_016_cpk_offset_exact(self):
+        """
+        TC-CAP-N-016:
+        Cpk for offset analytical dataset (cap_cpk_0p667.csv) = 0.667 ± 0.005.
+        The USL side governs: (10.75 - 10.25) / (3 * 0.250) = 0.667.
+        """
+        r = run("jrc_cap_normal.R", data("cap_cpk_0p667.csv"), "value", "9.25", "10.75")
+        assert r.returncode == 0, combined(r)
+        cpk = extract_float(r, "Cpk:")
+        assert cpk is not None, f"Cpk not found in output:\n{combined(r)}"
+        assert abs(cpk - 0.667) < 0.005, \
+            f"Expected Cpk = 0.667 ± 0.005, got {cpk:.4f}"
+
+    def test_tc_cap_n_017_cp_location_independent(self):
+        """
+        TC-CAP-N-017:
+        Cp for offset dataset (cap_cpk_0p667.csv) = 1.000 ± 0.005.
+        Cp measures process potential (spec width vs spread); it is independent
+        of where the process is centred.
+        """
+        r = run("jrc_cap_normal.R", data("cap_cpk_0p667.csv"), "value", "9.25", "10.75")
+        assert r.returncode == 0, combined(r)
+        cp = extract_float(r, "Cp:")
+        assert cp is not None, f"Cp not found in output:\n{combined(r)}"
+        assert abs(cp - 1.000) < 0.005, \
+            f"Expected Cp = 1.000 ± 0.005, got {cp:.4f}"
+
+    def test_tc_cap_n_018_ppk_centred_exact(self):
+        """
+        TC-CAP-N-018:
+        Ppk for centred dataset (cap_cpk_1p000.csv) = 1.739 ± 0.020.
+        sigma_s (sample SD) = 0.14379; Ppk = 0.750 / (3 * 0.14379) = 1.739.
+        Wider tolerance reflects that sigma_s differs from sigma_w.
+        """
+        r = run("jrc_cap_normal.R", data("cap_cpk_1p000.csv"), "value", "9.25", "10.75")
+        assert r.returncode == 0, combined(r)
+        ppk = extract_float(r, "Ppk:")
+        assert ppk is not None, f"Ppk not found in output:\n{combined(r)}"
+        assert abs(ppk - 1.739) < 0.020, \
+            f"Expected Ppk = 1.739 ± 0.020, got {ppk:.4f}"

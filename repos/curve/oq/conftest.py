@@ -5,6 +5,7 @@ All curve test modules import helpers from this file.
 """
 
 import os
+import re
 import subprocess
 import sys
 
@@ -42,3 +43,13 @@ def combined(result):
 def data(name):
     """Return full path to a file in the OQ data directory."""
     return os.path.join(DATA_DIR, name)
+
+
+def extract_float(result, label):
+    """
+    Extract the first float that follows *label* in the combined output.
+    *label* should include any trailing colon/marker, e.g. ``"AUC   :"``
+    or just a unique prefix. Returns float, or None if not found.
+    """
+    m = re.search(rf"{re.escape(label)}\s*:\s*([-\d.]+)", combined(result))
+    return float(m.group(1)) if m else None
