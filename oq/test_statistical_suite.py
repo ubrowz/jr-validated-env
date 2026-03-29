@@ -6,7 +6,7 @@ Covers: jrc_bland_altman, jrc_weibull, jrc_verify_attr
 
 import os
 import glob
-from conftest import run, combined, DATA_DIR
+from conftest import run, combined, extract_float, DATA_DIR
 
 
 def data(name):
@@ -194,3 +194,57 @@ class TestVerifyAttr:
                 data("normal_n30_mean10_sd1_seed42.csv"), "value", "7.0")
         assert r.returncode != 0
         assert "usage" in combined(r).lower()
+
+    def test_tc_ver_009_ti_lower_value_and_pass_verdict(self):
+        """TC-VER-009: known dataset (mean=10, sd=1), P=0.95, C=0.95, LSL=7.0 → ✅
+        Dataset: verify_attr_known.csv — 28 rows of 10.0 + rows 29 (13.8079) and 30 (6.1921).
+        Exact: mean=10.0000, sd=1.0000 (sum(x-10)^2 = 2×(3.8079)^2 ≈ 29.000; var = 29/29 = 1).
+        K1(n=30, P=0.95, C=0.95) = 2.220 (nct.ppf(0.95, df=29, nc=sqrt(30)*qnorm(0.95))/sqrt(30)).
+        Expected lower TL = 10.000 - 2.220×1.000 = 7.780.
+        LSL=7.0 < 7.780 → ✅.
+        Assertion: extracted TI lower ≈ 7.780 ± 0.050 AND ✅ in output.
+        """
+        r = run("jrc_verify_attr.R", "0.95", "0.95",
+                data("verify_attr_known.csv"), "value", "7.0", "-")
+        assert r.returncode == 0
+        tl = extract_float(r, "1-sided lower tolerance limit:")
+        assert tl is not None, f"Could not extract TI lower limit:\n{combined(r)}"
+        assert abs(tl - 7.780) <= 0.050, \
+            f"Expected TI lower ≈ 7.780 ± 0.050, got {tl}"
+        assert "✅" in combined(r)
+
+    def test_tc_ver_010_ti_lower_value_and_fail_verdict(self):
+        """TC-VER-010: same dataset as TC-VER-009, LSL tightened to 8.0 → ❌
+        Same TI lower = 7.780 (same data, same K-factor K1=2.220).
+        7.780 < 8.0 = LSL → ❌.
+        TC-VER-009 and TC-VER-010 use identical K-factor arithmetic but different spec limits,
+        simultaneously verifying (a) the numeric TI computation and (b) the verdict logic.
+        """
+        r = run("jrc_verify_attr.R", "0.95", "0.95",
+                data("verify_attr_known.csv"), "value", "8.0", "-")
+        assert r.returncode == 0
+        tl = extract_float(r, "1-sided lower tolerance limit:")
+        assert tl is not None, f"Could not extract TI lower limit:\n{combined(r)}"
+        assert abs(tl - 7.780) <= 0.050, \
+            f"Expected TI lower ≈ 7.780 ± 0.050, got {tl}"
+        assert tl < 8.0, f"Expected TI lower < 8.0 (so verdict is ❌), got {tl}"
+        assert "❌" in combined(r)
+
+    def test_tc_ver_011_ti_2sided_values_and_pass_verdict(self):
+        """TC-VER-011: same dataset, 2-sided, LSL=7.0, USL=13.0 → ✅
+        K2(n=30, P=0.95, C=0.95) = 2.555 (computed via nct / two-sided algorithm).
+        LTL = 10.000 - 2.555×1.000 = 7.445; UTL = 10.000 + 2.555 = 12.555.
+        7.445 > 7.0 (LSL) and 12.555 < 13.0 (USL) → ✅.
+        """
+        r = run("jrc_verify_attr.R", "0.95", "0.95",
+                data("verify_attr_known.csv"), "value", "7.0", "13.0")
+        assert r.returncode == 0
+        ltl = extract_float(r, "2-sided lower tolerance limit:")
+        utl = extract_float(r, "2-sided upper tolerance limit:")
+        assert ltl is not None, f"Could not extract 2-sided lower TL:\n{combined(r)}"
+        assert utl is not None, f"Could not extract 2-sided upper TL:\n{combined(r)}"
+        assert abs(ltl - 7.445) <= 0.050, \
+            f"Expected 2-sided LTL ≈ 7.445 ± 0.050, got {ltl}"
+        assert abs(utl - 12.555) <= 0.050, \
+            f"Expected 2-sided UTL ≈ 12.555 ± 0.050, got {utl}"
+        assert "✅" in combined(r)

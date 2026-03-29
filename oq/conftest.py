@@ -76,3 +76,25 @@ def extract_n_at_f(result, f=0):
     pattern = rf"f\s*=\s*{f}\D+?n\s*=\s*(\d+)"
     m = re.search(pattern, combined(result))
     return int(m.group(1)) if m else None
+
+
+def extract_float(result, label):
+    """
+    Extract the first float that follows *label* in the combined output.
+    *label* should include any trailing colon, e.g. ``"proportion achieved:"``.
+    Returns float, or None if not found.
+    """
+    m = re.search(rf"{re.escape(label)}\s+([-\d.]+)", combined(result))
+    return float(m.group(1)) if m else None
+
+
+def extract_table_n(result, power, col):
+    """
+    Extract n from a 3-column (C=0.90, 0.95, 0.99) table row formatted as:
+        p = {power:.2f}   N1      N2      N3
+    col: 1 = C=0.90, 2 = C=0.95, 3 = C=0.99
+    Returns int or None.
+    """
+    pat = rf"p\s*=\s*{power:.2f}\s+(\d+)\s+(\d+)\s+(\d+)"
+    m = re.search(pat, combined(result))
+    return int(m.group(col)) if m else None

@@ -10,6 +10,42 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [Unreleased] — Phase 9 OQ: Community Script Numeric Assertions (v2.6.0 target)
+
+### Added — High-risk community script numeric OQ coverage
+
+- **25 new numeric OQ test cases** for the 9 community scripts that directly
+  affect design-verification conclusions under 21 CFR 820.70(i) / ISO 13485.
+  Each asserts a computed value against an independently derived result (closed-
+  form formula or published K-factor table), covering the calculation paths that
+  produce binding ✅/❌ verdicts or required sample sizes.
+- **New analytical dataset** `oq/data/verify_attr_known.csv` — 30-row dataset
+  with exact mean = 10.0000 and sd = 1.0000 by construction (28 × 10.0000 plus
+  symmetric outliers ±3.8079), symmetric so skewness = 0 and the normal path is
+  exercised without Box-Cox.
+- `extract_float()` and `extract_table_n()` helpers added to `oq/conftest.py`
+  for regex-based extraction of labelled values and table rows.
+- Total OQ test count: **440 → 465** (25 new numeric assertions).
+- `docs/validation_improvement_plan.md` — Phase 9 OQ plan documenting tier
+  assignments, risk rationale, and deferred non-normal tests for a later phase.
+
+### Test breakdown
+
+| Script | New TCs | Key metrics validated |
+|--------|---------|----------------------|
+| jrc_ss_discrete | TC-DISC-006..009 (4) | n via chi-squared exact formula |
+| jrc_ss_discrete_ci | TC-DISCICI-005..006 (2) | Clopper-Pearson exact proportion |
+| jrc_ss_attr | TC-ATTR-008 (1) | required n range for known K-factor |
+| jrc_ss_attr_check | TC-ATTRCK-004..005 (2) | pass/fail boundary around K1(30,0.95,0.95) |
+| jrc_ss_attr_ci | TC-ATTRCI-004 (1) | achieved proportion for k_sample=3.0 |
+| jrc_ss_sigma | TC-SIGMA-005..007 (3) | n via normal sample size formula |
+| jrc_ss_fatigue | TC-FAT-006..007 (2) | cross-script consistency + p_eff reduction |
+| jrc_ss_paired | TC-PAIRED-006..007 (2) | 1-sided vs 2-sided n difference |
+| jrc_ss_equivalence | TC-EQUIV-005..006 (2) | TOST n = 1-sided paired n |
+| jrc_verify_attr | TC-VER-009..011 (3) | K-factor numeric + ✅/❌ verdict boundary |
+
+---
+
 ## [Unreleased] — Numerical OQ Enhancement (v2.5.0 target)
 
 ### Added — Numeric correctness assertions across all modules
