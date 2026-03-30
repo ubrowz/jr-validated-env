@@ -23,7 +23,6 @@ import streamlit as st
 
 APP_DIR      = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(APP_DIR)
-JRRUN        = os.path.join(PROJECT_ROOT, "bin", "jrrun")
 DOWNLOADS    = os.path.expanduser("~/Downloads")
 
 SPC_DATA   = os.path.join(PROJECT_ROOT, "repos", "spc",   "oq", "data")
@@ -34,7 +33,24 @@ CAP_DATA   = os.path.join(PROJECT_ROOT, "repos", "cap",   "oq", "data")
 CURVE_DATA = os.path.join(PROJECT_ROOT, "repos", "curve", "sample_data")
 COMM_DATA  = os.path.join(PROJECT_ROOT, "oq", "data")
 
-BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
+# ---------------------------------------------------------------------------
+# Windows: convert a Windows path to a POSIX path for bash (MSYS2).
+# e.g. C:\Users\foo\bar  →  /c/Users/foo/bar
+# bash receives backslash-paths as literal strings, breaking dirname/$0.
+# ---------------------------------------------------------------------------
+def _to_posix(p: str) -> str:
+    p = p.replace("\\", "/")
+    if len(p) >= 2 and p[1] == ":":          # C:/... → /c/...
+        p = "/" + p[0].lower() + p[2:]
+    return p
+
+if sys.platform == "win32":
+    _BASH = r"C:\Program Files\Git\bin\bash.exe"
+    BASH_PREFIX = [_BASH, "--login"]
+    JRRUN = _to_posix(os.path.join(PROJECT_ROOT, "bin", "jrrun"))
+else:
+    BASH_PREFIX = []
+    JRRUN = os.path.join(PROJECT_ROOT, "bin", "jrrun")
 
 # ---------------------------------------------------------------------------
 # Script catalogue
