@@ -40,6 +40,23 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [Unreleased] — OQ evidence quality improvement (2026-03-31)
+
+### Changed
+
+- **All 7 `oq/conftest.py` files** — `run()` helper now prints `CMD`, `OUT`
+  (every line of script stdout+stderr), and `EXIT` after every test invocation.
+  With pytest `-s`, this flows into the timestamped evidence file, making it
+  possible to reconstruct exactly what the script produced for each test case.
+- **All 7 `admin_*_oq` runner scripts** — default pytest args updated from
+  `"-v" "--tb=short"` to `"-v" "-s" "--tb=short"` so print output is captured.
+- **14 numeric test classes across all 8 modules** — added explicit
+  `print(f"label: expected X ± tol, got Y")` statements before every
+  tolerance-based assertion, making expected vs actual values visible in
+  the evidence file for all numeric correctness checks.
+
+---
+
 ## [Unreleased] — Web guides, home page, Windows GUI fixes (2026-03-30)
 
 ### Added
