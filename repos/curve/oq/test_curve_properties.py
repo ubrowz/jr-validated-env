@@ -405,6 +405,7 @@ class TestCurveNumeric:
         m = re.search(r"AUC\s*:\s*([\d.]+)", combined(r))
         assert m, f"AUC not found in output:\n{combined(r)}"
         auc = float(m.group(1))
+        print(f"  AUC: expected 400.0 ± 0.5, got {auc}")
         assert abs(auc - 400.0) < 0.5, \
             f"Expected AUC = 400.0 ± 0.5, got {auc}"
 
@@ -419,6 +420,7 @@ class TestCurveNumeric:
         m = re.search(r"slope overall\s*:\s*([-\d.]+)", combined(r))
         assert m, f"slope overall not found in output:\n{combined(r)}"
         slope = float(m.group(1))
+        print(f"  slope overall: expected 2.000 ± 0.001, got {slope}")
         assert abs(slope - 2.000) < 0.001, \
             f"Expected slope overall = 2.000 ± 0.001, got {slope}"
 
@@ -433,5 +435,6 @@ class TestCurveNumeric:
         m = re.search(r"Y at x=5\.0\s*:\s*([-\d.]+)", combined(r))
         assert m, f"Y at x=5.0 not found in output:\n{combined(r)}"
         y_val = float(m.group(1))
+        print(f"  y_at_x (x=5.0): expected 10.0 ± 0.01, got {y_val}")
         assert abs(y_val - 10.0) < 0.01, \
             f"Expected Y at x=5.0 = 10.0 ± 0.01, got {y_val}"

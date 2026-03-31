@@ -208,9 +208,12 @@ class TestVerifyAttr:
                 data("verify_attr_known.csv"), "value", "7.0", "-")
         assert r.returncode == 0
         tl = extract_float(r, "1-sided lower tolerance limit:")
+        print(f"  TI lower: extracted = {tl}")
         assert tl is not None, f"Could not extract TI lower limit:\n{combined(r)}"
+        print(f"  TI lower: expected 7.780 ± 0.050, got {tl}")
         assert abs(tl - 7.780) <= 0.050, \
             f"Expected TI lower ≈ 7.780 ± 0.050, got {tl}"
+        print(f"  verdict: found '✅' in output = {'✅' in combined(r)}")
         assert "✅" in combined(r)
 
     def test_tc_ver_010_ti_lower_value_and_fail_verdict(self):
@@ -224,10 +227,14 @@ class TestVerifyAttr:
                 data("verify_attr_known.csv"), "value", "8.0", "-")
         assert r.returncode == 0
         tl = extract_float(r, "1-sided lower tolerance limit:")
+        print(f"  TI lower: extracted = {tl}")
         assert tl is not None, f"Could not extract TI lower limit:\n{combined(r)}"
+        print(f"  TI lower: expected 7.780 ± 0.050, got {tl}")
         assert abs(tl - 7.780) <= 0.050, \
             f"Expected TI lower ≈ 7.780 ± 0.050, got {tl}"
+        print(f"  TI lower < 8.0 (verdict ❌): {tl} < 8.0 = {tl < 8.0}")
         assert tl < 8.0, f"Expected TI lower < 8.0 (so verdict is ❌), got {tl}"
+        print(f"  verdict: found '❌' in output = {'❌' in combined(r)}")
         assert "❌" in combined(r)
 
     def test_tc_ver_011_ti_2sided_values_and_pass_verdict(self):
@@ -241,10 +248,15 @@ class TestVerifyAttr:
         assert r.returncode == 0
         ltl = extract_float(r, "2-sided lower tolerance limit:")
         utl = extract_float(r, "2-sided upper tolerance limit:")
+        print(f"  2-sided LTL: extracted = {ltl}")
         assert ltl is not None, f"Could not extract 2-sided lower TL:\n{combined(r)}"
+        print(f"  2-sided UTL: extracted = {utl}")
         assert utl is not None, f"Could not extract 2-sided upper TL:\n{combined(r)}"
+        print(f"  2-sided LTL: expected 7.445 ± 0.050, got {ltl}")
         assert abs(ltl - 7.445) <= 0.050, \
             f"Expected 2-sided LTL ≈ 7.445 ± 0.050, got {ltl}"
+        print(f"  2-sided UTL: expected 12.555 ± 0.050, got {utl}")
         assert abs(utl - 12.555) <= 0.050, \
             f"Expected 2-sided UTL ≈ 12.555 ± 0.050, got {utl}"
+        print(f"  verdict: found '✅' in output = {'✅' in combined(r)}")
         assert "✅" in combined(r)

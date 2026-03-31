@@ -147,7 +147,7 @@ echo " "
 
 PYTEST_ARGS=("$@")
 if [[ ${#PYTEST_ARGS[@]} -eq 0 ]]; then
-  PYTEST_ARGS=("-v" "--tb=short")
+  PYTEST_ARGS=("-v" "-s" "--tb=short")
 fi
 
 cd "$OQ_DIR"

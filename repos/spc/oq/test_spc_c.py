@@ -188,7 +188,9 @@ class TestSpcCNumeric:
         r = run("jrc_spc_c.R", data("c_stable.csv"), "defects")
         assert r.returncode == 0, combined(r)
         cbar = extract_float(r, "c-bar:")
+        print(f"  c-bar: extracted = {cbar}")
         assert cbar is not None, f"c-bar not found in output:\n{combined(r)}"
+        print(f"  c-bar: expected 4.960 ± 0.001, got {cbar:.4f}")
         assert abs(cbar - 4.960) < 0.001, \
             f"Expected c-bar = 4.960 ± 0.001, got {cbar:.4f}"
 
@@ -201,6 +203,8 @@ class TestSpcCNumeric:
         r = run("jrc_spc_c.R", data("c_stable.csv"), "defects")
         assert r.returncode == 0, combined(r)
         ucl = extract_float(r, "UCL:")
+        print(f"  UCL: extracted = {ucl}")
         assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        print(f"  UCL: expected 11.641 ± 0.010, got {ucl:.4f}")
         assert abs(ucl - 11.641) < 0.010, \
             f"Expected UCL = 11.641 ± 0.010, got {ucl:.4f}"

@@ -193,6 +193,7 @@ class TestMsaType1Numeric:
         m = re.search(r"\bCg\s*[:=]\s*([\d.]+)", combined(r))
         assert m, f"Cg not found in output:\n{combined(r)}"
         cg = float(m.group(1))
+        print(f"  Cg: expected 6.250 ± 0.005, got {cg:.3f}")
         assert abs(cg - 6.250) < 0.005, \
             f"Expected Cg = 6.250 ± 0.005, got {cg:.3f}"
 
@@ -208,5 +209,6 @@ class TestMsaType1Numeric:
         m = re.search(r"\bCgk\s*[:=]\s*([\d.]+)", combined(r))
         assert m, f"Cgk not found in output:\n{combined(r)}"
         cgk = float(m.group(1))
+        print(f"  Cgk: expected 5.015 ± 0.005, got {cgk:.3f}")
         assert abs(cgk - 5.015) < 0.005, \
             f"Expected Cgk = 5.015 ± 0.005, got {cgk:.3f}"

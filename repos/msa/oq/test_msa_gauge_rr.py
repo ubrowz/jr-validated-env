@@ -210,6 +210,7 @@ class TestMsaGaugeRrNumeric:
         m = re.search(r"%GRR\s*\(%Study Var\)[:\s]+([\d.]+)%", combined(r))
         assert m, f"%GRR value not found in output:\n{combined(r)}"
         pct_grr = float(m.group(1))
+        print(f"  %GRR: expected 4.15% ± 0.10%, got {pct_grr:.2f}%")
         assert abs(pct_grr - 4.15) < 0.10, \
             f"Expected %GRR = 4.15% ± 0.10%, got {pct_grr:.2f}%"
 
@@ -224,6 +225,7 @@ class TestMsaGaugeRrNumeric:
         m = re.search(r"ndc:\s+(\d+)", combined(r))
         assert m, f"ndc not found in output:\n{combined(r)}"
         ndc = int(m.group(1))
+        print(f"  ndc: expected 33 (exact), got {ndc}")
         assert ndc == 33, f"Expected ndc = 33, got {ndc}"
 
     def test_tc_msa_grr_013_part_to_part_pct_exact(self):
@@ -237,5 +239,6 @@ class TestMsaGaugeRrNumeric:
         m = re.search(r"Part-to-Part\s+[\d.]+\s+([\d.]+)%", combined(r))
         assert m, f"Part-to-Part % not found in output:\n{combined(r)}"
         pct_pt = float(m.group(1))
+        print(f"  Part-to-Part %: expected 99.91% ± 0.20%, got {pct_pt:.2f}%")
         assert abs(pct_pt - 99.91) < 0.20, \
             f"Expected Part-to-Part = 99.91% ± 0.20%, got {pct_pt:.2f}%"

@@ -234,7 +234,9 @@ class TestCapNormalNumeric:
         r = run("jrc_cap_normal.R", data("cap_cpk_1p000.csv"), "value", "9.25", "10.75")
         assert r.returncode == 0, combined(r)
         cpk = extract_float(r, "Cpk:")
+        print(f"  Cpk: extracted = {cpk}")
         assert cpk is not None, f"Cpk not found in output:\n{combined(r)}"
+        print(f"  Cpk: expected 1.000 ± 0.005, got {cpk:.4f}")
         assert abs(cpk - 1.000) < 0.005, \
             f"Expected Cpk = 1.000 ± 0.005, got {cpk:.4f}"
 
@@ -246,7 +248,9 @@ class TestCapNormalNumeric:
         r = run("jrc_cap_normal.R", data("cap_cpk_1p000.csv"), "value", "9.25", "10.75")
         assert r.returncode == 0, combined(r)
         cp = extract_float(r, "Cp:")
+        print(f"  Cp: extracted = {cp}")
         assert cp is not None, f"Cp not found in output:\n{combined(r)}"
+        print(f"  Cp: expected 1.000 ± 0.005, got {cp:.4f}")
         assert abs(cp - 1.000) < 0.005, \
             f"Expected Cp = 1.000 ± 0.005, got {cp:.4f}"
 
@@ -259,7 +263,9 @@ class TestCapNormalNumeric:
         r = run("jrc_cap_normal.R", data("cap_cpk_0p667.csv"), "value", "9.25", "10.75")
         assert r.returncode == 0, combined(r)
         cpk = extract_float(r, "Cpk:")
+        print(f"  Cpk: extracted = {cpk}")
         assert cpk is not None, f"Cpk not found in output:\n{combined(r)}"
+        print(f"  Cpk: expected 0.667 ± 0.005, got {cpk:.4f}")
         assert abs(cpk - 0.667) < 0.005, \
             f"Expected Cpk = 0.667 ± 0.005, got {cpk:.4f}"
 
@@ -273,7 +279,9 @@ class TestCapNormalNumeric:
         r = run("jrc_cap_normal.R", data("cap_cpk_0p667.csv"), "value", "9.25", "10.75")
         assert r.returncode == 0, combined(r)
         cp = extract_float(r, "Cp:")
+        print(f"  Cp: extracted = {cp}")
         assert cp is not None, f"Cp not found in output:\n{combined(r)}"
+        print(f"  Cp: expected 1.000 ± 0.005, got {cp:.4f}")
         assert abs(cp - 1.000) < 0.005, \
             f"Expected Cp = 1.000 ± 0.005, got {cp:.4f}"
 
@@ -287,6 +295,8 @@ class TestCapNormalNumeric:
         r = run("jrc_cap_normal.R", data("cap_cpk_1p000.csv"), "value", "9.25", "10.75")
         assert r.returncode == 0, combined(r)
         ppk = extract_float(r, "Ppk:")
+        print(f"  Ppk: extracted = {ppk}")
         assert ppk is not None, f"Ppk not found in output:\n{combined(r)}"
+        print(f"  Ppk: expected 1.739 ± 0.020, got {ppk:.4f}")
         assert abs(ppk - 1.739) < 0.020, \
             f"Expected Ppk = 1.739 ± 0.020, got {ppk:.4f}"

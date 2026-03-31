@@ -222,7 +222,9 @@ class TestXbarSNumeric:
         r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         xbar = extract_float(r, "X-dbar):")
+        print(f"  Grand X-bar: extracted = {xbar}")
         assert xbar is not None, f"Grand X-bar not found in output:\n{combined(r)}"
+        print(f"  Grand X-bar: expected 100.060 ± 0.001, got {xbar:.4f}")
         assert abs(xbar - 100.060) < 0.001, \
             f"Expected grand X-bar = 100.060 ± 0.001, got {xbar:.4f}"
 
@@ -235,7 +237,9 @@ class TestXbarSNumeric:
         r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         ucl = _extract_section_float(r, "X-bar Chart", "--- S Chart", "UCL:")
+        print(f"  UCL_x: extracted = {ucl}")
         assert ucl is not None, f"UCL (X-bar) not found in output:\n{combined(r)}"
+        print(f"  UCL_x: expected 100.5807 ± 0.001, got {ucl:.4f}")
         assert abs(ucl - 100.5807) < 0.001, \
             f"Expected UCL (X-bar) = 100.5807 ± 0.001, got {ucl:.4f}"
 
@@ -248,7 +252,9 @@ class TestXbarSNumeric:
         r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         lcl = _extract_section_float(r, "X-bar Chart", "--- S Chart", "LCL:")
+        print(f"  LCL_x: extracted = {lcl}")
         assert lcl is not None, f"LCL (X-bar) not found in output:\n{combined(r)}"
+        print(f"  LCL_x: expected 99.5393 ± 0.001, got {lcl:.4f}")
         assert abs(lcl - 99.5393) < 0.001, \
             f"Expected LCL (X-bar) = 99.5393 ± 0.001, got {lcl:.4f}"
 
@@ -261,6 +267,8 @@ class TestXbarSNumeric:
         r = run("jrc_spc_xbar_s.R", data("xbar_s_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         ucl_s = _extract_section_float(r, "--- S Chart", "--- Verdict", "UCL:")
+        print(f"  UCL_s: extracted = {ucl_s}")
         assert ucl_s is not None, f"UCL (S chart) not found in output:\n{combined(r)}"
+        print(f"  UCL_s: expected 0.8598 ± 0.001, got {ucl_s:.4f}")
         assert abs(ucl_s - 0.8598) < 0.001, \
             f"Expected UCL (S) = 0.8598 ± 0.001, got {ucl_s:.4f}"

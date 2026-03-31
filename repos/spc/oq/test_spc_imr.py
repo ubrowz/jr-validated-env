@@ -212,7 +212,9 @@ class TestIMRNumeric:
         r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
         assert r.returncode == 0, combined(r)
         xbar = extract_float(r, "X-bar:")
+        print(f"  X-bar: extracted = {xbar}")
         assert xbar is not None, f"X-bar not found in output:\n{combined(r)}"
+        print(f"  X-bar: expected 10.0668 ± 0.0001, got {xbar:.6f}")
         assert abs(xbar - 10.0668) < 0.0001, \
             f"Expected X-bar = 10.0668 ± 0.0001, got {xbar:.6f}"
 
@@ -225,7 +227,9 @@ class TestIMRNumeric:
         r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
         assert r.returncode == 0, combined(r)
         ucl = extract_float(r, "UCL:")
+        print(f"  UCL_I: extracted = {ucl}")
         assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        print(f"  UCL_I: expected 10.9212 ± 0.001, got {ucl:.4f}")
         assert abs(ucl - 10.9212) < 0.001, \
             f"Expected UCL = 10.9212 ± 0.001, got {ucl:.4f}"
 
@@ -238,7 +242,9 @@ class TestIMRNumeric:
         r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
         assert r.returncode == 0, combined(r)
         lcl = extract_float(r, "LCL:")
+        print(f"  LCL_I: extracted = {lcl}")
         assert lcl is not None, f"LCL not found in output:\n{combined(r)}"
+        print(f"  LCL_I: expected 9.2124 ± 0.001, got {lcl:.4f}")
         assert abs(lcl - 9.2124) < 0.001, \
             f"Expected LCL = 9.2124 ± 0.001, got {lcl:.4f}"
 
@@ -251,6 +257,8 @@ class TestIMRNumeric:
         r = run("jrc_spc_imr.R", data("imr_stable.csv"), "value")
         assert r.returncode == 0, combined(r)
         ucl_mr = extract_float(r, "UCL_MR:")
+        print(f"  UCL_MR: extracted = {ucl_mr}")
         assert ucl_mr is not None, f"UCL_MR not found in output:\n{combined(r)}"
+        print(f"  UCL_MR: expected 1.0495 ± 0.001, got {ucl_mr:.4f}")
         assert abs(ucl_mr - 1.0495) < 0.001, \
             f"Expected UCL_MR = 1.0495 ± 0.001, got {ucl_mr:.4f}"

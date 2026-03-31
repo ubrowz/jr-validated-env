@@ -63,6 +63,7 @@ class TestSsDiscrete:
         """
         r = run("jrc_ss_discrete.R", "0.99", "0.95")
         assert r.returncode == 0
+        print(f"  n at f=0: expected 300, got {extract_n_at_f(r, 0)}")
         assert extract_n_at_f(r, 0) == 300
 
     def test_tc_disc_007_n_exact_p99_c95_f1(self):
@@ -72,6 +73,7 @@ class TestSsDiscrete:
         """
         r = run("jrc_ss_discrete.R", "0.99", "0.95")
         assert r.returncode == 0
+        print(f"  n at f=1: expected 475, got {extract_n_at_f(r, 1)}")
         assert extract_n_at_f(r, 1) == 475
 
     def test_tc_disc_008_n_exact_p95_c90_f0(self):
@@ -82,6 +84,7 @@ class TestSsDiscrete:
         """
         r = run("jrc_ss_discrete.R", "0.95", "0.90")
         assert r.returncode == 0
+        print(f"  n at f=0: expected 47, got {extract_n_at_f(r, 0)}")
         assert extract_n_at_f(r, 0) == 47
 
     def test_tc_disc_009_n_exact_p99_c99_f0(self):
@@ -92,6 +95,7 @@ class TestSsDiscrete:
         """
         r = run("jrc_ss_discrete.R", "0.99", "0.99")
         assert r.returncode == 0
+        print(f"  n at f=0: expected 461, got {extract_n_at_f(r, 0)}")
         assert extract_n_at_f(r, 0) == 461
 
 
@@ -138,7 +142,9 @@ class TestSsDiscreteCi:
         r = run("jrc_ss_discrete_ci.R", "0.95", "300", "0")
         assert r.returncode == 0
         p = extract_float(r, "proportion achieved:")
+        print(f"  proportion achieved: extracted = {p}")
         assert p is not None, f"Could not extract proportion from output:\n{combined(r)}"
+        print(f"  proportion achieved: expected 0.9998 ± 0.0001, got {p}")
         assert abs(p - 0.9998) <= 0.0001, f"Expected proportion ≈ 0.9998, got {p}"
 
     def test_tc_discici_006_proportion_n22_f0(self):
@@ -151,7 +157,9 @@ class TestSsDiscreteCi:
         r = run("jrc_ss_discrete_ci.R", "0.95", "22", "0")
         assert r.returncode == 0
         p = extract_float(r, "proportion achieved:")
+        print(f"  proportion achieved: extracted = {p}")
         assert p is not None, f"Could not extract proportion from output:\n{combined(r)}"
+        print(f"  proportion achieved: expected 0.9977 ± 0.0001, got {p}")
         assert abs(p - 0.9977) <= 0.0001, f"Expected proportion ≈ 0.9977, got {p}"
 
 
@@ -225,8 +233,11 @@ class TestSsAttr:
                 data("verify_attr_known.csv"), "value", "7.0", "-")
         assert r.returncode == 0
         n = extract_float(r, "required sample size for verification:")
+        print(f"  required n: extracted = {n}")
         assert n is not None, f"Could not extract required n:\n{combined(r)}"
+        print(f"  required n: expected in [3, 10], got {int(n)}")
         assert 3 <= int(n) <= 10, f"Expected required n in [3, 10], got {int(n)}"
+        print(f"  'sufficient' found in output = {'sufficient' in combined(r).lower()}")
         assert "sufficient" in combined(r).lower()
 
 
@@ -268,6 +279,7 @@ class TestSsAttrCheck:
         r = run("jrc_ss_attr_check.R", "0.95", "0.95",
                 data("verify_attr_known.csv"), "value", "7.0", "-", "30")
         assert r.returncode == 0
+        print(f"  verdict: 'pass' found in output = {'pass' in combined(r).lower()}")
         assert "pass" in combined(r).lower()
 
     def test_tc_attrck_005_fail_n30_tight_spec(self):
@@ -281,6 +293,7 @@ class TestSsAttrCheck:
         r = run("jrc_ss_attr_check.R", "0.95", "0.95",
                 data("verify_attr_known.csv"), "value", "8.5", "-", "30")
         assert r.returncode == 0
+        print(f"  verdict: 'fail' found in output = {'fail' in combined(r).lower()}")
         assert "fail" in combined(r).lower()
 
 
@@ -322,7 +335,9 @@ class TestSsAttrCi:
                 data("verify_attr_known.csv"), "value", "7.0", "-")
         assert r.returncode == 0
         p = extract_float(r, "proportion achieved at 0.95 confidence:")
+        print(f"  proportion achieved: extracted = {p}")
         assert p is not None, f"Could not extract proportion:\n{combined(r)}"
+        print(f"  proportion achieved: expected in (0.985, 1.000), got {p}")
         assert 0.985 < p < 1.000, f"Expected proportion in (0.985, 1.000), got {p}"
 
 
@@ -362,6 +377,7 @@ class TestSsSigma:
         r = run("jrc_ss_sigma.R", "1.5", "9.0", "-")
         assert r.returncode == 0
         n = extract_table_n(r, 0.90, 2)   # col 2 = C=0.95
+        print(f"  n (power=0.90, C=0.95): expected 5, got {n}")
         assert n is not None, f"Could not extract n from table:\n{combined(r)}"
         assert n == 5, f"Expected n=5 at power=0.90, C=0.95, got {n}"
 
@@ -374,9 +390,11 @@ class TestSsSigma:
         r = run("jrc_ss_sigma.R", "1.0", "9.0", "11.0")
         assert r.returncode == 0
         n = extract_table_n(r, 0.95, 2)   # col 2 = C=0.95
+        print(f"  n (power=0.95, C=0.95): expected 14, got {n}")
         assert n is not None, f"Could not extract n from table:\n{combined(r)}"
         assert n == 14, f"Expected n=14 at power=0.95, C=0.95, got {n}"
         # Also verify the FDA-standard summary line
+        print(f"  'N >= 14' in output = {'N >= 14' in combined(r)}")
         assert "N >= 14" in combined(r), \
             f"Expected 'N >= 14' in FDA summary line:\n{combined(r)}"
 
@@ -388,6 +406,7 @@ class TestSsSigma:
         r = run("jrc_ss_sigma.R", "2.0", "9.0", "-")
         assert r.returncode == 0
         n = extract_table_n(r, 0.90, 1)   # col 1 = C=0.90
+        print(f"  n (power=0.90, C=0.90): expected 3, got {n}")
         assert n is not None, f"Could not extract n from table:\n{combined(r)}"
         assert n == 3, f"Expected n=3 at power=0.90, C=0.90, got {n}"
 
@@ -434,6 +453,7 @@ class TestSsPaired:
         r = run("jrc_ss_paired.R", "0.5", "1.0", "2")
         assert r.returncode == 0
         n = extract_table_n(r, 0.90, 2)   # col 2 = C=0.95
+        print(f"  n (power=0.90, C=0.95, 2-sided): expected 44, got {n}")
         assert n is not None, f"Could not extract n:\n{combined(r)}"
         assert n == 44, f"Expected n=44 at power=0.90, C=0.95 (2-sided), got {n}"
 
@@ -447,6 +467,7 @@ class TestSsPaired:
         r = run("jrc_ss_paired.R", "0.5", "1.0", "1")
         assert r.returncode == 0
         n = extract_table_n(r, 0.90, 2)   # col 2 = C=0.95
+        print(f"  n (power=0.90, C=0.95, 1-sided): expected 36, got {n}")
         assert n is not None, f"Could not extract n:\n{combined(r)}"
         assert n == 36, f"Expected n=36 at power=0.90, C=0.95 (1-sided), got {n}"
 
@@ -490,6 +511,7 @@ class TestSsEquivalence:
         r = run("jrc_ss_equivalence.R", "0.5", "1.0", "2")
         assert r.returncode == 0
         n = extract_table_n(r, 0.90, 2)   # col 2 = C=0.95
+        print(f"  n (power=0.90, C=0.95, TOST): expected 36, got {n}")
         assert n is not None, f"Could not extract n:\n{combined(r)}"
         assert n == 36, f"Expected n=36 at power=0.90, C=0.95 (TOST), got {n}"
 
@@ -502,6 +524,7 @@ class TestSsEquivalence:
         r = run("jrc_ss_equivalence.R", "0.5", "1.0", "2")
         assert r.returncode == 0
         n = extract_table_n(r, 0.95, 2)   # col 2 = C=0.95
+        print(f"  n (power=0.95, C=0.95, TOST): expected 45, got {n}")
         assert n is not None, f"Could not extract n:\n{combined(r)}"
         assert n == 45, f"Expected n=45 at power=0.95, C=0.95 (TOST), got {n}"
 
@@ -554,6 +577,7 @@ class TestSsFatigue:
         """
         r = run("jrc_ss_fatigue.R", "0.90", "0.95", "2.0", "1.0")
         assert r.returncode == 0
+        print(f"  n at f=0: expected 30, got {extract_n_at_f(r, 0)}")
         assert extract_n_at_f(r, 0) == 30
 
     def test_tc_fat_007_n_exact_af2_reduces_sample(self):
@@ -564,6 +588,7 @@ class TestSsFatigue:
         """
         r = run("jrc_ss_fatigue.R", "0.90", "0.95", "2.0", "2.0")
         assert r.returncode == 0
+        print(f"  n at f=0: expected 9, got {extract_n_at_f(r, 0)}")
         assert extract_n_at_f(r, 0) == 9
 
 

@@ -196,6 +196,7 @@ class TestAsAttributesNumeric:
         m = re.search(r"0\.010\s+([\d.]+)", combined(r))
         assert m, f"Pa at p=0.010 not found in OC table:\n{combined(r)}"
         pa = float(m.group(1))
+        print(f"  Pa(AQL): expected 0.9913 ± 0.0005, got {pa:.4f}")
         assert abs(pa - 0.9913) < 0.0005, \
             f"Expected Pa(AQL) = 0.9913 ± 0.0005, got {pa:.4f}"
 
@@ -211,5 +212,6 @@ class TestAsAttributesNumeric:
         m = re.search(r"0\.100\s+([\d.]+)", combined(r))
         assert m, f"Pa at p=0.100 not found in OC table:\n{combined(r)}"
         pa = float(m.group(1))
+        print(f"  Pa(RQL): expected 0.0918 ± 0.0005, got {pa:.4f}")
         assert abs(pa - 0.0918) < 0.0005, \
             f"Expected Pa(RQL) = 0.0918 ± 0.0005, got {pa:.4f}"

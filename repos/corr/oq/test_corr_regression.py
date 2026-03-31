@@ -187,7 +187,9 @@ class TestCorrRegressionNumeric:
         r = run("jrc_corr_regression.R", data("corr_exact_linear.csv"))
         assert r.returncode == 0, combined(r)
         slope = extract_float(r, "Slope     (b1):")
+        print(f"  Slope (b1): extracted = {slope}")
         assert slope is not None, f"Slope not found in output:\n{combined(r)}"
+        print(f"  Slope (b1): expected 2.000 ± 0.001, got {slope:.4f}")
         assert abs(slope - 2.000) < 0.001, \
             f"Expected slope = 2.000 ± 0.001, got {slope:.4f}"
 
@@ -200,7 +202,9 @@ class TestCorrRegressionNumeric:
         r = run("jrc_corr_regression.R", data("corr_exact_linear.csv"))
         assert r.returncode == 0, combined(r)
         intercept = extract_float(r, "Intercept (b0):")
+        print(f"  Intercept (b0): extracted = {intercept}")
         assert intercept is not None, f"Intercept not found in output:\n{combined(r)}"
+        print(f"  Intercept (b0): expected 1.000 ± 0.001, got {intercept:.4f}")
         assert abs(intercept - 1.000) < 0.001, \
             f"Expected intercept = 1.000 ± 0.001, got {intercept:.4f}"
 
@@ -213,6 +217,8 @@ class TestCorrRegressionNumeric:
         r = run("jrc_corr_regression.R", data("corr_exact_linear.csv"))
         assert r.returncode == 0, combined(r)
         r2 = extract_float(r, "R-squared:")
+        print(f"  R-squared: extracted = {r2}")
         assert r2 is not None, f"R-squared not found in output:\n{combined(r)}"
+        print(f"  R-squared: expected 1.000 ± 0.001, got {r2:.4f}")
         assert abs(r2 - 1.000) < 0.001, \
             f"Expected R-squared = 1.000 ± 0.001, got {r2:.4f}"

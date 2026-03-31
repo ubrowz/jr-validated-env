@@ -186,7 +186,9 @@ class TestCorrPearsonNumeric:
         r = run("jrc_corr_pearson.R", data("corr_exact_linear.csv"))
         assert r.returncode == 0, combined(r)
         pearson_r = extract_float(r, "Pearson r:")
+        print(f"  Pearson r: extracted = {pearson_r}")
         assert pearson_r is not None, f"Pearson r not found in output:\n{combined(r)}"
+        print(f"  Pearson r: expected 1.000 ± 0.001, got {pearson_r:.4f}")
         assert abs(pearson_r - 1.000) < 0.001, \
             f"Expected Pearson r = 1.000 ± 0.001, got {pearson_r:.4f}"
 
@@ -200,6 +202,7 @@ class TestCorrPearsonNumeric:
         assert r.returncode == 0, combined(r)
         out = combined(r)
         assert "p-value:" in out, f"p-value label not found:\n{out}"
+        print(f"  p-value: 'significant' found in output = {'significant' in out.lower()}")
         # p-value is reported in scientific notation; just confirm significance marker
         assert "significant" in out.lower(), \
             f"Expected 'significant' in output for r=1.000 data:\n{out}"

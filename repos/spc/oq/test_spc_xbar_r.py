@@ -220,7 +220,9 @@ class TestXbarRNumeric:
         r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         xbar = extract_float(r, "X-dbar):")
+        print(f"  Grand X-bar: extracted = {xbar}")
         assert xbar is not None, f"Grand X-bar not found in output:\n{combined(r)}"
+        print(f"  Grand X-bar: expected 50.165 ± 0.001, got {xbar:.4f}")
         assert abs(xbar - 50.165) < 0.001, \
             f"Expected grand X-bar = 50.165 ± 0.001, got {xbar:.4f}"
 
@@ -233,7 +235,9 @@ class TestXbarRNumeric:
         r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         ucl = extract_float(r, "UCL:")
+        print(f"  UCL_x: extracted = {ucl}")
         assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        print(f"  UCL_x: expected 50.9151 ± 0.001, got {ucl:.4f}")
         assert abs(ucl - 50.9151) < 0.001, \
             f"Expected UCL = 50.9151 ± 0.001, got {ucl:.4f}"
 
@@ -246,7 +250,9 @@ class TestXbarRNumeric:
         r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         lcl = extract_float(r, "LCL:")
+        print(f"  LCL_x: extracted = {lcl}")
         assert lcl is not None, f"LCL not found in output:\n{combined(r)}"
+        print(f"  LCL_x: expected 49.4149 ± 0.001, got {lcl:.4f}")
         assert abs(lcl - 49.4149) < 0.001, \
             f"Expected LCL = 49.4149 ± 0.001, got {lcl:.4f}"
 
@@ -259,6 +265,8 @@ class TestXbarRNumeric:
         r = run("jrc_spc_xbar_r.R", data("xbar_r_stable.csv"), "value", "subgroup")
         assert r.returncode == 0, combined(r)
         ucl_r = extract_float(r, "UCL_R:")
+        print(f"  UCL_R: extracted = {ucl_r}")
         assert ucl_r is not None, f"UCL_R not found in output:\n{combined(r)}"
+        print(f"  UCL_R: expected 2.7482 ± 0.001, got {ucl_r:.4f}")
         assert abs(ucl_r - 2.7482) < 0.001, \
             f"Expected UCL_R = 2.7482 ± 0.001, got {ucl_r:.4f}"

@@ -204,7 +204,9 @@ class TestSpcPNumeric:
         r = run("jrc_spc_p.R", data("p_stable.csv"), "defectives", "n")
         assert r.returncode == 0, combined(r)
         pbar = extract_float(r, "p-bar:")
+        print(f"  p-bar: extracted = {pbar}")
         assert pbar is not None, f"p-bar not found in output:\n{combined(r)}"
+        print(f"  p-bar: expected 0.04160 ± 0.0001, got {pbar:.5f}")
         assert abs(pbar - 0.04160) < 0.0001, \
             f"Expected p-bar = 0.04160 ± 0.0001, got {pbar:.5f}"
 
@@ -217,6 +219,8 @@ class TestSpcPNumeric:
         r = run("jrc_spc_p.R", data("p_stable.csv"), "defectives", "n")
         assert r.returncode == 0, combined(r)
         ucl = extract_float(r, "UCL:")
+        print(f"  UCL: extracted = {ucl}")
         assert ucl is not None, f"UCL not found in output:\n{combined(r)}"
+        print(f"  UCL: expected 0.10150 ± 0.001, got {ucl:.5f}")
         assert abs(ucl - 0.10150) < 0.0010, \
             f"Expected UCL = 0.10150 ± 0.001, got {ucl:.5f}"

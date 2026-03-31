@@ -54,12 +54,20 @@ def run(script, *args, cwd=None):
     to stdout via print().
     """
     cmd = BASH_PREFIX + [JRRUN, script] + [str(a) for a in args]
-    return subprocess.run(
+    result = subprocess.run(
         cmd,
         capture_output=True,
         encoding="utf-8",
         cwd=cwd or DATA_DIR,
     )
+    # Print invocation and output for OQ evidence (visible with pytest -s)
+    args_str = " ".join(str(a) for a in args)
+    print(f"\n  CMD : {script} {args_str}")
+    out = (result.stdout or "") + (result.stderr or "")
+    for line in out.rstrip().splitlines():
+        print(f"  OUT : {line}")
+    print(f"  EXIT: {result.returncode}")
+    return result
 
 
 def combined(result):
