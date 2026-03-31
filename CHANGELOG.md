@@ -32,6 +32,12 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   `_PROJECT_ROOT` path resolution (was 3 `dirname` levels, needed 4) so evidence
   file discovery works correctly from `repos/<module>/docs/ignore/`.
 
+### Infrastructure
+
+- **`web/` branch strategy** — `web/` content moved from `main` to a dedicated
+  local-only branch `web-local`. `main` is now clean of web commits and pushes
+  without triggering the pre-push hook. `web/` remains on disk and gitignored.
+
 ---
 
 ## [Unreleased] — Web guides, home page, Windows GUI fixes (2026-03-30)
