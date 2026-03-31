@@ -10,6 +10,30 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [Unreleased] — Validation report generators for all 8 modules (2026-03-31)
+
+### Added
+
+- **Validation report generators for SPC and AS modules** —
+  `repos/spc/docs/ignore/generate_spc_validation_report.py` (71 TCs, 27 URs)
+  and `repos/as/docs/ignore/generate_as_validation_report.py` (46 TCs, 16 URs).
+  Both generators read actual pytest evidence files and derive per-TC PASS/FAIL
+  from them, producing a Word .docx with TC table, RTM, and summary section.
+- **Statistics validation report generator extended to cover DoE** —
+  `docs/ignore/generate_statistics_validation_report.py` updated to version 3.0;
+  now covers Core + DoE (combined, 164 TCs, 24 URs) in addition to the 24
+  community scripts. DoE prefix groups `TC-DOE-DES-` and `TC-DOE-ANA-` added.
+- **`admin/admin_oq`** — OS version line added to evidence header for
+  traceability.
+
+### Changed
+
+- All 6 module generators (`corr`, `cap`, `msa`, `curve`, `spc`, `as`) — fixed
+  `_PROJECT_ROOT` path resolution (was 3 `dirname` levels, needed 4) so evidence
+  file discovery works correctly from `repos/<module>/docs/ignore/`.
+
+---
+
 ## [Unreleased] — Web guides, home page, Windows GUI fixes (2026-03-30)
 
 ### Added
