@@ -1,0 +1,112 @@
+#!/bin/bash
+#
+# admin_oq_all — Run all OQ test suites: core/community (admin_oq) plus
+#                every module admin_*_oq found under repos/*/
+#
+# Usage: admin_oq_all
+#
+# Runs each suite in sequence. Prints a pass/fail summary at the end.
+# Exits non-zero if any suite failed.
+#
+# Author: Joep Rous
+# Version: 1.0
+
+set -uo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolve paths
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+REPOS_DIR="$PROJECT_ROOT/repos"
+
+# ---------------------------------------------------------------------------
+# Discover suites
+# ---------------------------------------------------------------------------
+
+# Core/community suite always runs first
+SUITES=("$SCRIPT_DIR/admin_oq")
+
+# Find one admin_*_oq script per repos subfolder, sorted by folder name
+while IFS= read -r -d '' script; do
+  SUITES+=("$script")
+done < <(find "$REPOS_DIR" -mindepth 2 -maxdepth 2 \
+           -type f -name "admin_*oq" -perm -u+x \
+           -not -name "admin_oq_validate" \
+           | sort -z)
+
+# ---------------------------------------------------------------------------
+# Print plan
+# ---------------------------------------------------------------------------
+
+echo " "
+echo "JR Validated Environment — Full OQ Run"
+echo "======================================="
+echo "Suites to run: ${#SUITES[@]}"
+for s in "${SUITES[@]}"; do
+  echo "  $(basename "$(dirname "$s")")/$(basename "$s")"
+done
+echo " "
+
+# ---------------------------------------------------------------------------
+# Run each suite and collect results
+# ---------------------------------------------------------------------------
+
+declare -a RESULTS_NAME
+declare -a RESULTS_EXIT
+
+for suite in "${SUITES[@]}"; do
+  if [[ ! -x "$suite" ]]; then
+    echo "⚠️  Skipping (not executable): $suite"
+    RESULTS_NAME+=("$(basename "$suite")")
+    RESULTS_EXIT+=(2)
+    continue
+  fi
+
+  label="$(basename "$(dirname "$suite")")/$(basename "$suite")"
+  echo "-----------------------------------------------------------"
+  echo "▶  $label"
+  echo "-----------------------------------------------------------"
+
+  # Run the suite; capture exit without triggering set -e
+  "$suite" || true
+  exit_code="${PIPESTATUS[0]:-$?}"
+
+  RESULTS_NAME+=("$label")
+  RESULTS_EXIT+=("$exit_code")
+  echo " "
+done
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+echo "==========================================================="
+echo "OQ ALL — SUMMARY"
+echo "==========================================================="
+
+overall=0
+for i in "${!RESULTS_NAME[@]}"; do
+  code="${RESULTS_EXIT[$i]}"
+  if [[ "$code" -eq 0 ]]; then
+    status="✅ PASS"
+  elif [[ "$code" -eq 2 ]]; then
+    status="⚠️  SKIP"
+    overall=1
+  else
+    status="❌ FAIL"
+    overall=1
+  fi
+  printf "  %-45s %s\n" "${RESULTS_NAME[$i]}" "$status"
+done
+
+echo "-----------------------------------------------------------"
+if [[ "$overall" -eq 0 ]]; then
+  echo "✅ All OQ suites PASSED."
+else
+  echo "❌ One or more OQ suites FAILED or were skipped."
+fi
+echo " "
+
+exit "$overall"
