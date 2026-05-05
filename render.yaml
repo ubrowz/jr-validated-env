@@ -1,0 +1,7 @@
+services:
+  - type: cron
+    name: jr-version-check
+    env: python
+    schedule: "0 7 * * *"
+    buildCommand: ""
+    startCommand: python3 tools/owner_check_versions.py
