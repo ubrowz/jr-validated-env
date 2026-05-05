@@ -1,0 +1,46 @@
+──────────────────────────────────────────────────────────────────────────────
+DELIVERY EMAIL TEMPLATE — JR Anchored Validation Pack
+Fill in: [NAME], [VERSION], [DATE], [FILENAME], [HASH]
+Attach:  jr-anchored-pack-[DATE].zip
+──────────────────────────────────────────────────────────────────────────────
+
+TO:      [buyer email]
+SUBJECT: Your JR Anchored Validation Pack — v[VERSION]
+
+Hi [NAME],
+
+Thank you for your purchase. The JR Anchored Validation Pack v[VERSION] is
+attached.
+
+Before installing, verify the integrity of the download:
+
+    shasum -a 256 [FILENAME].zip
+
+The SHA-256 hash should match:
+
+    [HASH]
+
+You can also verify against the published hash at:
+    https://www.dwylup.com/validation_pack.html
+
+To install, unzip the file into your JR Anchored project root and run:
+
+    bash pack/install.sh
+
+Full instructions are in INSTALL.md inside the zip.
+
+Licence: one organisation, valid for this major version (v[MAJOR]). A new
+licence is required when you upgrade to the next major version.
+
+Any questions — just reply to this email.
+
+JR Anchored
+www.dwylup.com
+──────────────────────────────────────────────────────────────────────────────
+CHECKLIST BEFORE SENDING
+  [ ] Buyer name filled in
+  [ ] Subject line version correct
+  [ ] Zip attached (jr-anchored-pack-[DATE].zip)
+  [ ] [VERSION], [DATE], [FILENAME], [HASH] all filled in
+  [ ] Hash matches dist/*.sha256
+──────────────────────────────────────────────────────────────────────────────
