@@ -117,8 +117,8 @@ fi
 
 # --- Detect language from extension
 case "$TARGET_SCRIPT" in
-  *.R)  LANG="R"      ;;
-  *.py) LANG="python" ;;
+  *.R)  _JR_LANG="R"      ;;
+  *.py) _JR_LANG="python" ;;
   *)
     echo "❌ Cannot determine language from filename: $(basename "$TARGET_SCRIPT")"
     echo "   Script must have a .R or .py extension."
@@ -201,7 +201,7 @@ _hash_input_files() {
 # ===========================================================================
 # R branch
 # ===========================================================================
-if [[ "$LANG" == "R" ]]; then
+if [[ "$_JR_LANG" == "R" ]]; then
 
   export RENV_HOME="$HOME/.renv/$PROJECT_ID"
   export RENV_PATHS_ROOT="$HOME/.renv/$PROJECT_ID"
@@ -364,7 +364,7 @@ fi
 # ===========================================================================
 # Python branch
 # ===========================================================================
-if [[ "$LANG" == "python" ]]; then
+if [[ "$_JR_LANG" == "python" ]]; then
 
   export VENV_PATH="$HOME/.venvs/$PROJECT_ID"
   export LOCAL_REPO="$PROJECT_ROOT/Python_repo/my-repo"
