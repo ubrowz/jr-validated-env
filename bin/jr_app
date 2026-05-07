@@ -60,7 +60,45 @@ fi
 # Launch
 # ---------------------------------------------------------------------------
 
-PORT=8501
+# On macOS/Linux: free port 8501 if held by a stale Python/Streamlit process,
+# or walk up to 8510 to find an available port.
+_find_port() {
+  local port=8501
+  local max_port=8510
+  while [[ $port -le $max_port ]]; do
+    if ! lsof -i ":$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
+      echo "$port"; return
+    fi
+    local pids
+    pids=$(lsof -i ":$port" -sTCP:LISTEN -t 2>/dev/null || true)
+    local freed=false
+    for pid in $pids; do
+      local comm
+      comm=$(ps -p "$pid" -o comm= 2>/dev/null || true)
+      if [[ "$comm" == *python* ]] || [[ "$comm" == *streamlit* ]]; then
+        echo "⚠️  Port $port held by previous session (PID $pid) — stopping it..." >&2
+        kill "$pid" 2>/dev/null && freed=true || true
+        sleep 1
+      fi
+    done
+    if $freed && ! lsof -i ":$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
+      echo "$port"; return
+    fi
+    port=$((port + 1))
+  done
+  echo "error"
+}
+
+if [[ "$(jr_os)" == "windows" ]]; then
+  PORT=8501
+else
+  PORT=$(_find_port)
+  if [[ "$PORT" == "error" ]]; then
+    echo "❌  No available ports found between 8501 and 8510."
+    exit 1
+  fi
+fi
+
 URL="http://localhost:$PORT"
 
 echo ""
@@ -82,5 +120,7 @@ echo ""
 exec "$PYTHON_BIN" -m streamlit run "$APP_FILE" \
   --server.port "$PORT" \
   --server.headless true \
+  --server.fileWatcherType none \
   --browser.gatherUsageStats false \
-  --client.toolbarMode minimal
+  --client.toolbarMode minimal \
+  --theme.primaryColor "#2E5BBA"

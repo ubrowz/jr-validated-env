@@ -68,128 +68,124 @@ else:
 CATALOGUE = {
 
     # -----------------------------------------------------------------------
-    "Process Capability": {
-        "Capability Analysis (Normal)": {
-            "script": "jrc_cap_normal.R",
-            "description": (
-                "Process capability analysis for normally distributed data. "
-                "Computes **Cp**, **Cpk**, **Pp**, **Ppk**, and **Cpm** (Taguchi) using "
-                "within-subgroup (MR-based) and overall sigma estimates. Reports sigma level, "
-                "estimated PPM out-of-spec, and saves a histogram with normal curve and "
-                "spec limits to `~/Downloads/`."
-            ),
-            "param_type": "capability",
-            "has_report": True,
-            "sample_data_dir": CAP_DATA,
-            "sample_prefix": "cap_normal_",
-            "png_pattern": "*_jrc_cap_normal.png",
-        },
-        "Capability Analysis (Non-Normal)": {
-            "script": "jrc_cap_nonnormal.R",
-            "description": (
-                "Process capability analysis for non-normally distributed data using the "
-                "**percentile method** (ISO 22514-2 / AIAG). Estimates process spread from "
-                "the 0.135th and 99.865th sample percentiles — equivalent to ±3σ boundaries "
-                "without assuming normality. Reports **Pp** and **Ppk**, observed non-conformance, "
-                "and Shapiro-Wilk advisory. Saves a histogram with KDE to `~/Downloads/`."
-            ),
-            "param_type": "capability",
-            "has_report": True,
-            "sample_data_dir": CAP_DATA,
-            "sample_prefix": "cap_nonnormal_",
-            "png_pattern": "*_jrc_cap_nonnormal.png",
-        },
-        "Capability Sixpack": {
-            "script": "jrc_cap_sixpack.R",
-            "description": (
-                "Six-panel capability report — the standard deliverable for a process "
-                "validation package. Combines: **I-MR control chart** (with spec limits), "
-                "**Moving Range chart**, **capability histogram** with normal curve, "
-                "**normal probability plot** (Q-Q), **numerical summary** (Cp, Cpk, Cpm, Pp, Ppk, "
-                "sigma level, PPM), and a colour-coded **verdict panel**. "
-                "Saves a 3600×2400 px PNG to `~/Downloads/`."
-            ),
-            "param_type": "capability",
-            "has_report": True,
-            "sample_data_dir": CAP_DATA,
-            "sample_prefix": "cap_normal_",
-            "png_pattern": "*_jrc_cap_sixpack.png",
-        },
-    },
+    "Core": {
 
-    # -----------------------------------------------------------------------
-    "Correlation": {
-        "Pearson Correlation": {
-            "script": "jrc_corr_pearson.R",
+        # Sample Size Planning
+        "Sample Size — Discrete Pass/Fail": {
+            "script": "jrc_ss_discrete.R",
             "description": (
-                "Computes the Pearson product-moment correlation coefficient between "
-                "two numeric variables. Reports **r**, a confidence interval (Fisher z), "
-                "t-statistic, p-value, and saves a scatter plot to `~/Downloads/`."
+                "Minimum sample size for discrete (pass/fail) design verification. "
+                "Uses the binomial tolerance interval method. Reports n for a range "
+                "of power and confidence combinations."
             ),
-            "param_type": "corr",
-            "has_conf": True,
-            "sample_data_dir": CORR_DATA,
-            "sample_prefix": "corr_",
-            "png_pattern": "*_jrc_corr_pearson.png",
-        },
-        "Spearman Correlation": {
-            "script": "jrc_corr_spearman.R",
-            "description": (
-                "Computes Spearman's rank correlation coefficient (rho) — the "
-                "non-parametric analogue of Pearson's r. Reports rho, S statistic, "
-                "p-value, and saves a rank scatter plot to `~/Downloads/`."
-            ),
-            "param_type": "corr",
-            "has_conf": False,
-            "sample_data_dir": CORR_DATA,
-            "sample_prefix": "corr_",
-            "png_pattern": "*_jrc_corr_spearman.png",
-        },
-        "Passing-Bablok Regression": {
-            "script": "jrc_corr_passing_bablok.R",
-            "description": (
-                "Passing-Bablok regression for method comparison. Unlike OLS, treats "
-                "both variables symmetrically — appropriate when both methods carry "
-                "measurement error. Reports slope and intercept with CIs and saves a "
-                "plot to `~/Downloads/`."
-            ),
-            "param_type": "corr",
-            "has_conf": True,
-            "sample_data_dir": CORR_DATA,
-            "sample_prefix": "corr_",
-            "png_pattern": "*_jrc_corr_passing_bablok.png",
-        },
-        "Linear Regression": {
-            "script": "jrc_corr_regression.R",
-            "description": (
-                "Fits a simple OLS linear regression model (y = b₀ + b₁x). Reports "
-                "intercept and slope with CIs, R², adjusted R², residual standard "
-                "error, F-statistic, and saves a scatter + residuals plot to `~/Downloads/`."
-            ),
-            "param_type": "corr",
-            "has_conf": True,
-            "sample_data_dir": CORR_DATA,
-            "sample_prefix": "corr_",
-            "png_pattern": "*_jrc_corr_regression.png",
-        },
-        "Bland-Altman Analysis": {
-            "script": "jrc_bland_altman.R",
-            "description": (
-                "Bland-Altman method comparison analysis. Computes bias (mean difference), "
-                "limits of agreement, and tests for proportional bias. "
-                "Saves a Bland-Altman plot alongside the input file."
-            ),
-            "param_type": "bland_altman",
-            "sample_data_dir": COMM_DATA,
-            "sample_prefix": "bland_altman_method1",
+            "param_type": "ss_discrete",
+            "sample_data_dir": None,
             "png_pattern": None,
-            "png_from_output": True,
         },
-    },
+        "Sample Size — Discrete Achieved CI": {
+            "script": "jrc_ss_discrete_ci.R",
+            "description": (
+                "Proportion achieved by a discrete (pass/fail) verification test at a "
+                "fixed confidence level, given sample size n and observed failures f. "
+                "The post-test companion to jrc_ss_discrete."
+            ),
+            "param_type": "ss_discrete_ci",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+        "Sample Size — Continuous Paired": {
+            "script": "jrc_ss_paired.R",
+            "description": (
+                "Minimum number of paired observations to detect a meaningful difference "
+                "δ between two conditions. Reports n for a range of power and confidence "
+                "combinations including the FDA-recommended (0.95, 0.95)."
+            ),
+            "param_type": "ss_power",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+        "Sample Size — Continuous Equivalence": {
+            "script": "jrc_ss_equivalence.R",
+            "description": (
+                "Minimum number of paired observations to demonstrate equivalence within "
+                "margin δ. Reports n for a range of power and confidence combinations. "
+                "Typically requires more samples than a difference test."
+            ),
+            "param_type": "ss_power",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+        "Sample Size — Continuous Tolerance Interval": {
+            "script": "jrc_ss_attr.R",
+            "description": (
+                "Minimum sample size to establish a statistical tolerance interval "
+                "demonstrating that at least `proportion` of the population lies within "
+                "the specification, at the stated confidence level."
+            ),
+            "param_type": "ss_attr",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "normal_",
+            "png_pattern": None,
+        },
+        "Sample Size — Check Planned N": {
+            "script": "jrc_ss_attr_check.R",
+            "description": (
+                "Checks whether a planned sample size N meets the tolerance interval "
+                "requirement for the given proportion and confidence. Reports the "
+                "achieved confidence for N."
+            ),
+            "param_type": "ss_attr_check",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "normal_",
+            "png_pattern": None,
+        },
+        "Sample Size — Continuous Achieved CI": {
+            "script": "jrc_ss_attr_ci.R",
+            "description": (
+                "Confidence level achieved by a completed continuous verification test "
+                "for a given proportion and specification. The reverse calculation for "
+                "jrc_ss_attr."
+            ),
+            "param_type": "ss_attr_ci",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "normal_",
+            "png_pattern": None,
+        },
+        "Sample Size — Sigma Estimation": {
+            "script": "jrc_ss_sigma.R",
+            "description": (
+                "Minimum number of pilot samples needed to estimate the process standard "
+                "deviation with sufficient precision before a tolerance interval study."
+            ),
+            "param_type": "ss_sigma",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+        "Sample Size — Fatigue / Lifetime": {
+            "script": "jrc_ss_fatigue.R",
+            "description": (
+                "Minimum number of units for fatigue or lifetime testing to demonstrate "
+                "a B-life reliability target (e.g. B10 = 90% survival). Uses the "
+                "Weibull accelerated life model."
+            ),
+            "param_type": "ss_fatigue",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+        "Sample Size — Gauge R&R Study Design": {
+            "script": "jrc_msa_grr_design.R",
+            "description": (
+                "Gauge R&R study design guidance. Given a target %GRR and the process "
+                "tolerance or standard deviation, reports the required gauge precision "
+                "and number of distinct categories (ndc)."
+            ),
+            "param_type": "ss_gauge_rr",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
 
-    # -----------------------------------------------------------------------
-    "Statistics": {
-        "Descriptive Statistics": {
+        # Data Analysis
+        "Data Analysis — Descriptive Statistics": {
             "script": "jrc_descriptive.R",
             "description": (
                 "Descriptive statistics summary for a single column. Reports mean, "
@@ -200,7 +196,7 @@ CATALOGUE = {
             "sample_prefix": "normal_",
             "png_pattern": None,
         },
-        "Normality Tests": {
+        "Data Analysis — Normality Tests": {
             "script": "jrc_normality.R",
             "description": (
                 "Tests whether a dataset follows a normal distribution using three "
@@ -211,7 +207,7 @@ CATALOGUE = {
             "sample_prefix": "normal_",
             "png_pattern": None,
         },
-        "Outlier Detection": {
+        "Data Analysis — Outlier Detection": {
             "script": "jrc_outliers.R",
             "description": (
                 "Detects outliers using iterative Grubbs test and the IQR method. "
@@ -223,7 +219,7 @@ CATALOGUE = {
             "sample_prefix": "outlier_",
             "png_pattern": None,
         },
-        "Capability Analysis": {
+        "Data Analysis — Capability Analysis": {
             "script": "jrc_capability.R",
             "description": (
                 "Computes Cp/Pp (spread-only) and Cpk/Ppk (centring-aware) process "
@@ -234,7 +230,7 @@ CATALOGUE = {
             "sample_prefix": "normal_",
             "png_pattern": None,
         },
-        "Weibull Analysis": {
+        "Data Analysis — Weibull Analysis": {
             "script": "jrc_weibull.R",
             "description": (
                 "Fits a 2-parameter Weibull distribution to lifetime or fatigue data "
@@ -247,91 +243,20 @@ CATALOGUE = {
             "png_pattern": None,
             "png_from_output": True,
         },
-    },
-
-    # -----------------------------------------------------------------------
-    "Sample Size": {
-        "Discrete Pass/Fail": {
-            "script": "jrc_ss_discrete.R",
+        "Data Analysis — Bland-Altman Analysis": {
+            "script": "jrc_bland_altman.R",
             "description": (
-                "Minimum sample size for discrete (pass/fail) design verification. "
-                "Uses the binomial tolerance interval method. Reports n for a range "
-                "of power and confidence combinations."
+                "Bland-Altman method comparison analysis. Computes bias (mean difference), "
+                "limits of agreement, and tests for proportional bias. "
+                "Saves a Bland-Altman plot alongside the input file."
             ),
-            "param_type": "ss_discrete",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Discrete — Achieved CI": {
-            "script": "jrc_ss_discrete_ci.R",
-            "description": (
-                "Proportion achieved by a discrete (pass/fail) verification test at a "
-                "fixed confidence level, given sample size n and observed failures f. "
-                "The post-test companion to jrc_ss_discrete."
-            ),
-            "param_type": "ss_discrete_ci",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Continuous — Paired Test": {
-            "script": "jrc_ss_paired.R",
-            "description": (
-                "Minimum number of paired observations to detect a meaningful difference "
-                "δ between two conditions. Reports n for a range of power and confidence "
-                "combinations including the FDA-recommended (0.95, 0.95)."
-            ),
-            "param_type": "ss_power",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Continuous — Equivalence": {
-            "script": "jrc_ss_equivalence.R",
-            "description": (
-                "Minimum number of paired observations to demonstrate equivalence within "
-                "margin δ. Reports n for a range of power and confidence combinations. "
-                "Typically requires more samples than a difference test."
-            ),
-            "param_type": "ss_power",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Continuous — Tolerance Interval": {
-            "script": "jrc_ss_attr.R",
-            "description": (
-                "Minimum sample size to establish a statistical tolerance interval "
-                "demonstrating that at least `proportion` of the population lies within "
-                "the specification, at the stated confidence level."
-            ),
-            "param_type": "ss_attr",
+            "param_type": "bland_altman",
             "sample_data_dir": COMM_DATA,
-            "sample_prefix": "normal_",
+            "sample_prefix": "bland_altman_method1",
             "png_pattern": None,
+            "png_from_output": True,
         },
-        "Continuous — Check Planned N": {
-            "script": "jrc_ss_attr_check.R",
-            "description": (
-                "Checks whether a planned sample size N meets the tolerance interval "
-                "requirement for the given proportion and confidence. Reports the "
-                "achieved confidence for N."
-            ),
-            "param_type": "ss_attr_check",
-            "sample_data_dir": COMM_DATA,
-            "sample_prefix": "normal_",
-            "png_pattern": None,
-        },
-        "Continuous — Achieved CI": {
-            "script": "jrc_ss_attr_ci.R",
-            "description": (
-                "Confidence level achieved by a completed continuous verification test "
-                "for a given proportion and specification. The reverse calculation for "
-                "jrc_ss_attr."
-            ),
-            "param_type": "ss_attr_ci",
-            "sample_data_dir": COMM_DATA,
-            "sample_prefix": "normal_",
-            "png_pattern": None,
-        },
-        "Verify Continuous Result": {
+        "Data Analysis — Verify Continuous Result": {
             "script": "jrc_verify_attr.R",
             "description": (
                 "Statistical tolerance interval verification for continuous data. "
@@ -346,7 +271,7 @@ CATALOGUE = {
             "png_pattern": None,
             "png_from_output": True,
         },
-        "Verify Pass/Fail Result": {
+        "Data Analysis — Verify Pass/Fail Result": {
             "script": "jrc_verify_discrete.R",
             "description": (
                 "Evaluates whether a pass/fail design verification test demonstrates the "
@@ -359,37 +284,192 @@ CATALOGUE = {
             "sample_data_dir": None,
             "png_pattern": None,
         },
-        "Sigma Estimation": {
-            "script": "jrc_ss_sigma.R",
+
+        # Generate Test Data
+        "Generate Data — Normal Distribution": {
+            "script": "jrc_gen_normal.R",
             "description": (
-                "Minimum number of pilot samples needed to estimate the process standard "
-                "deviation with sufficient precision before a tolerance interval study."
+                "Generates a synthetic normally distributed dataset and writes it "
+                "to a CSV file in `~/Downloads/`. Useful for testing analysis scripts "
+                "before real data is available."
             ),
-            "param_type": "ss_sigma",
+            "param_type": "gen_2param",
+            "param1_label": "Mean", "param1_default": "10.0",
+            "param2_label": "SD",   "param2_default": "1.0",
             "sample_data_dir": None,
             "png_pattern": None,
         },
-        "Fatigue / Lifetime": {
-            "script": "jrc_ss_fatigue.R",
+        "Generate Data — Log-Normal Distribution": {
+            "script": "jrc_gen_lognormal.R",
             "description": (
-                "Minimum number of units for fatigue or lifetime testing to demonstrate "
-                "a B-life reliability target (e.g. B10 = 90% survival). Uses the "
-                "Weibull accelerated life model."
+                "Generates a synthetic log-normally distributed dataset. "
+                "Parameters are on the log scale (meanlog, sdlog). "
+                "Writes a CSV to `~/Downloads/`."
             ),
-            "param_type": "ss_fatigue",
+            "param_type": "gen_2param",
+            "param1_label": "Mean (log scale)", "param1_default": "0.0",
+            "param2_label": "SD (log scale)",   "param2_default": "0.5",
             "sample_data_dir": None,
             "png_pattern": None,
         },
-        "Gauge R&R Study Design": {
-            "script": "jrc_msa_grr_design.R",
+        "Generate Data — Uniform Distribution": {
+            "script": "jrc_gen_uniform.R",
             "description": (
-                "Gauge R&R study design guidance. Given a target %GRR and the process "
-                "tolerance or standard deviation, reports the required gauge precision "
-                "and number of distinct categories (ndc)."
+                "Generates a synthetic uniformly distributed dataset between min and "
+                "max. Writes a CSV to `~/Downloads/`."
             ),
-            "param_type": "ss_gauge_rr",
+            "param_type": "gen_2param",
+            "param1_label": "Min", "param1_default": "0.0",
+            "param2_label": "Max", "param2_default": "1.0",
             "sample_data_dir": None,
             "png_pattern": None,
+        },
+        "Generate Data — Right-Skewed (sqrt)": {
+            "script": "jrc_gen_sqrt.R",
+            "description": (
+                "Generates a synthetic right-skewed dataset from a chi-squared "
+                "distribution. Suitable for testing square-root transformation "
+                "workflows. Writes a CSV to `~/Downloads/`."
+            ),
+            "param_type": "gen_2param",
+            "param1_label": "Degrees of freedom (df)", "param1_default": "2",
+            "param2_label": "Scale",                    "param2_default": "3.0",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+        "Generate Data — Right-Skewed (Box-Cox)": {
+            "script": "jrc_gen_boxcox.R",
+            "description": (
+                "Generates a right-skewed dataset from a Weibull distribution, "
+                "suitable for testing Box-Cox transformation workflows. "
+                "Writes a CSV to `~/Downloads/`."
+            ),
+            "param_type": "gen_2param",
+            "param1_label": "Shape", "param1_default": "1.5",
+            "param2_label": "Scale", "param2_default": "2.0",
+            "sample_data_dir": None,
+            "png_pattern": None,
+        },
+
+        # Prepare Data
+        "Prepare Data — Convert CSV": {
+            "script": "jrc_convert_csv.py",
+            "description": (
+                "Converts a multi-column delimited file to the standard two-column "
+                "jrc CSV format (`id`, `value`). Supports column selection by name or "
+                "1-based number, configurable skip lines for metadata headers at the top "
+                "of the file, and auto-delimiter detection (tab / space / comma). "
+                "Use this before any analysis script when your data file has multiple "
+                "columns or non-standard headers."
+            ),
+            "param_type": "convert_csv",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "convert_multicolumn",
+            "png_pattern": None,
+        },
+        "Prepare Data — Convert TXT": {
+            "script": "jrc_convert_txt.py",
+            "description": (
+                "Converts a single-column plain-text file (one value per line, no header) "
+                "to the standard two-column jrc CSV format (`id`, `value`). Supports an "
+                "optional line range to exclude stabilisation periods or post-test noise."
+            ),
+            "param_type": "convert_txt",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "convert_singlecolumn",
+            "png_pattern": None,
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    "DoE": {
+        "Design Experiment": {
+            "script": "jrc_doe_design.R",
+            "description": (
+                "Generate a randomised DoE run matrix as a self-contained HTML file "
+                "ready to print for the bench. Supports 2-level full factorial, "
+                "3-level full factorial, fractional factorial, and Plackett-Burman."
+            ),
+            "param_type": "doe_design",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "doe_factors_",
+            "png_pattern": None,
+        },
+        "Analyse Results": {
+            "script": "jrc_doe_analyse.R",
+            "description": (
+                "Analyse a completed DoE run matrix. Fits a linear model in coded "
+                "factor space and produces an HTML report with ANOVA table, Pareto "
+                "chart of effects, main effects plot, and interaction plots."
+            ),
+            "param_type": "doe_analyse",
+            "sample_data_dir": COMM_DATA,
+            "sample_prefix": "doe_results_",
+            "png_pattern": None,
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    "MSA": {
+        "Gauge R&R": {
+            "script": "jrc_msa_gauge_rr.R",
+            "description": (
+                "Gauge R&R analysis using the two-way ANOVA method. Computes "
+                "repeatability, reproducibility, part variation, and %GRR. "
+                "Saves a four-panel PNG to `~/Downloads/`."
+            ),
+            "param_type": "msa_tolerance",
+            "has_report": True,
+            "sample_data_dir": MSA_DATA,
+            "sample_prefix": "gauge_rr_balanced",
+            "png_pattern": "*_jrc_msa_gauge_rr.png",
+        },
+        "Nested GRR": {
+            "script": "jrc_msa_nested_grr.R",
+            "description": (
+                "Nested Gauge R&R for destructive or semi-destructive measurement "
+                "systems where each operator measures a different set of parts. "
+                "Saves a two-panel PNG to `~/Downloads/`."
+            ),
+            "param_type": "msa_tolerance",
+            "sample_data_dir": MSA_DATA,
+            "sample_prefix": "nested_grr_good",
+            "png_pattern": "*_jrc_msa_nested_grr.png",
+        },
+        "Type 1 Study": {
+            "script": "jrc_msa_type1.R",
+            "description": (
+                "Type 1 Gauge Study (AIAG/VDA method). One operator measures one "
+                "reference part repeatedly. Computes Cg, Cgk, %Var (bias), and "
+                "saves a run chart + histogram PNG to `~/Downloads/`."
+            ),
+            "param_type": "msa_type1",
+            "sample_data_dir": MSA_DATA,
+            "sample_prefix": "type1_",
+            "png_pattern": "*_jrc_msa_type1.png",
+        },
+        "Linearity & Bias": {
+            "script": "jrc_msa_linearity_bias.R",
+            "description": (
+                "Gauge linearity and bias analysis. Assesses whether gauge accuracy "
+                "is consistent across the measurement range. Saves a two-panel PNG."
+            ),
+            "param_type": "msa_tolerance",
+            "sample_data_dir": MSA_DATA,
+            "sample_prefix": "linearity_bias_good",
+            "png_pattern": "*_jrc_msa_linearity_bias.png",
+        },
+        "Attribute Agreement": {
+            "script": "jrc_msa_attribute.R",
+            "description": (
+                "Attribute Agreement Analysis. Computes within-appraiser and "
+                "between-appraiser agreement rates (Fleiss' kappa). Optionally "
+                "compares to a reference standard. Saves a two-panel PNG."
+            ),
+            "param_type": "fileonly",
+            "sample_data_dir": MSA_DATA,
+            "sample_prefix": "attribute_with_ref",
+            "png_pattern": "*_jrc_msa_attribute.png",
         },
     },
 
@@ -434,18 +514,6 @@ CATALOGUE = {
             "sample_prefix": "xbar_s_stable",
             "png_pattern": "*_jrc_spc_xbar_s.png",
         },
-        "C-chart": {
-            "script": "jrc_spc_c.R",
-            "description": (
-                "C-chart for defect count per unit (constant inspection opportunity). "
-                "Applies all 8 Western Electric rules. "
-                "Saves a single-panel PNG to `~/Downloads/`."
-            ),
-            "param_type": "fileonly",
-            "sample_data_dir": SPC_DATA,
-            "sample_prefix": "c_stable",
-            "png_pattern": "*_jrc_spc_c.png",
-        },
         "P-chart": {
             "script": "jrc_spc_p.R",
             "description": (
@@ -459,74 +527,22 @@ CATALOGUE = {
             "sample_prefix": "p_stable",
             "png_pattern": "*_jrc_spc_p.png",
         },
-    },
-
-    # -----------------------------------------------------------------------
-    "MSA": {
-        "Gauge R&R": {
-            "script": "jrc_msa_gauge_rr.R",
+        "C-chart": {
+            "script": "jrc_spc_c.R",
             "description": (
-                "Gauge R&R analysis using the two-way ANOVA method. Computes "
-                "repeatability, reproducibility, part variation, and %GRR. "
-                "Saves a four-panel PNG to `~/Downloads/`."
-            ),
-            "param_type": "msa_tolerance",
-            "has_report": True,
-            "sample_data_dir": MSA_DATA,
-            "sample_prefix": "gauge_rr_balanced",
-            "png_pattern": "*_jrc_msa_gauge_rr.png",
-        },
-        "Linearity & Bias": {
-            "script": "jrc_msa_linearity_bias.R",
-            "description": (
-                "Gauge linearity and bias analysis. Assesses whether gauge accuracy "
-                "is consistent across the measurement range. Saves a two-panel PNG."
-            ),
-            "param_type": "msa_tolerance",
-            "sample_data_dir": MSA_DATA,
-            "sample_prefix": "linearity_bias_good",
-            "png_pattern": "*_jrc_msa_linearity_bias.png",
-        },
-        "Nested GRR": {
-            "script": "jrc_msa_nested_grr.R",
-            "description": (
-                "Nested Gauge R&R for destructive or semi-destructive measurement "
-                "systems where each operator measures a different set of parts. "
-                "Saves a two-panel PNG to `~/Downloads/`."
-            ),
-            "param_type": "msa_tolerance",
-            "sample_data_dir": MSA_DATA,
-            "sample_prefix": "nested_grr_good",
-            "png_pattern": "*_jrc_msa_nested_grr.png",
-        },
-        "Type 1 Study": {
-            "script": "jrc_msa_type1.R",
-            "description": (
-                "Type 1 Gauge Study (AIAG/VDA method). One operator measures one "
-                "reference part repeatedly. Computes Cg, Cgk, %Var (bias), and "
-                "saves a run chart + histogram PNG to `~/Downloads/`."
-            ),
-            "param_type": "msa_type1",
-            "sample_data_dir": MSA_DATA,
-            "sample_prefix": "type1_",
-            "png_pattern": "*_jrc_msa_type1.png",
-        },
-        "Attribute Agreement": {
-            "script": "jrc_msa_attribute.R",
-            "description": (
-                "Attribute Agreement Analysis. Computes within-appraiser and "
-                "between-appraiser agreement rates (Fleiss' kappa). Optionally "
-                "compares to a reference standard. Saves a two-panel PNG."
+                "C-chart for defect count per unit (constant inspection opportunity). "
+                "Applies all 8 Western Electric rules. "
+                "Saves a single-panel PNG to `~/Downloads/`."
             ),
             "param_type": "fileonly",
-            "sample_data_dir": MSA_DATA,
-            "sample_prefix": "attribute_with_ref",
-            "png_pattern": "*_jrc_msa_attribute.png",
+            "sample_data_dir": SPC_DATA,
+            "sample_prefix": "c_stable",
+            "png_pattern": "*_jrc_spc_c.png",
         },
     },
 
     # -----------------------------------------------------------------------
-    "Acceptance Sampling": {
+    "AS": {
         "Attributes Plan": {
             "script": "jrc_as_attributes.R",
             "description": (
@@ -575,103 +591,114 @@ CATALOGUE = {
     },
 
     # -----------------------------------------------------------------------
-    "DoE": {
-        "Design Experiment": {
-            "script": "jrc_doe_design.R",
+    "Corr": {
+        "Pearson Correlation": {
+            "script": "jrc_corr_pearson.R",
             "description": (
-                "Generate a randomised DoE run matrix as a self-contained HTML file "
-                "ready to print for the bench. Supports 2-level full factorial, "
-                "3-level full factorial, fractional factorial, and Plackett-Burman."
+                "Computes the Pearson product-moment correlation coefficient between "
+                "two numeric variables. Reports **r**, a confidence interval (Fisher z), "
+                "t-statistic, p-value, and saves a scatter plot to `~/Downloads/`."
             ),
-            "param_type": "doe_design",
-            "sample_data_dir": COMM_DATA,
-            "sample_prefix": "doe_factors_",
-            "png_pattern": None,
+            "param_type": "corr",
+            "has_conf": True,
+            "sample_data_dir": CORR_DATA,
+            "sample_prefix": "corr_",
+            "png_pattern": "*_jrc_corr_pearson.png",
         },
-        "Analyse Results": {
-            "script": "jrc_doe_analyse.R",
+        "Spearman Correlation": {
+            "script": "jrc_corr_spearman.R",
             "description": (
-                "Analyse a completed DoE run matrix. Fits a linear model in coded "
-                "factor space and produces an HTML report with ANOVA table, Pareto "
-                "chart of effects, main effects plot, and interaction plots."
+                "Computes Spearman's rank correlation coefficient (rho) — the "
+                "non-parametric analogue of Pearson's r. Reports rho, S statistic, "
+                "p-value, and saves a rank scatter plot to `~/Downloads/`."
             ),
-            "param_type": "doe_analyse",
-            "sample_data_dir": COMM_DATA,
-            "sample_prefix": "doe_results_",
-            "png_pattern": None,
+            "param_type": "corr",
+            "has_conf": False,
+            "sample_data_dir": CORR_DATA,
+            "sample_prefix": "corr_",
+            "png_pattern": "*_jrc_corr_spearman.png",
         },
-    },
-
-    # -----------------------------------------------------------------------
-    "Data Generators": {
-        "Normal Distribution": {
-            "script": "jrc_gen_normal.R",
+        "OLS Linear Regression": {
+            "script": "jrc_corr_regression.R",
             "description": (
-                "Generates a synthetic normally distributed dataset and writes it "
-                "to a CSV file in `~/Downloads/`. Useful for testing analysis scripts "
-                "before real data is available."
+                "Fits a simple OLS linear regression model (y = b₀ + b₁x). Reports "
+                "intercept and slope with CIs, R², adjusted R², residual standard "
+                "error, F-statistic, and saves a scatter + residuals plot to `~/Downloads/`."
             ),
-            "param_type": "gen_2param",
-            "param1_label": "Mean", "param1_default": "10.0",
-            "param2_label": "SD",   "param2_default": "1.0",
-            "sample_data_dir": None,
-            "png_pattern": None,
+            "param_type": "corr",
+            "has_conf": True,
+            "sample_data_dir": CORR_DATA,
+            "sample_prefix": "corr_",
+            "png_pattern": "*_jrc_corr_regression.png",
         },
-        "Log-Normal Distribution": {
-            "script": "jrc_gen_lognormal.R",
+        "Passing-Bablok Regression": {
+            "script": "jrc_corr_passing_bablok.R",
             "description": (
-                "Generates a synthetic log-normally distributed dataset. "
-                "Parameters are on the log scale (meanlog, sdlog). "
-                "Writes a CSV to `~/Downloads/`."
+                "Passing-Bablok regression for method comparison. Unlike OLS, treats "
+                "both variables symmetrically — appropriate when both methods carry "
+                "measurement error. Reports slope and intercept with CIs and saves a "
+                "plot to `~/Downloads/`."
             ),
-            "param_type": "gen_2param",
-            "param1_label": "Mean (log scale)", "param1_default": "0.0",
-            "param2_label": "SD (log scale)",   "param2_default": "0.5",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Uniform Distribution": {
-            "script": "jrc_gen_uniform.R",
-            "description": (
-                "Generates a synthetic uniformly distributed dataset between min and "
-                "max. Writes a CSV to `~/Downloads/`."
-            ),
-            "param_type": "gen_2param",
-            "param1_label": "Min", "param1_default": "0.0",
-            "param2_label": "Max", "param2_default": "1.0",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Right-Skewed (sqrt)": {
-            "script": "jrc_gen_sqrt.R",
-            "description": (
-                "Generates a synthetic right-skewed dataset from a chi-squared "
-                "distribution. Suitable for testing square-root transformation "
-                "workflows. Writes a CSV to `~/Downloads/`."
-            ),
-            "param_type": "gen_2param",
-            "param1_label": "Degrees of freedom (df)", "param1_default": "2",
-            "param2_label": "Scale",                    "param2_default": "3.0",
-            "sample_data_dir": None,
-            "png_pattern": None,
-        },
-        "Right-Skewed (Box-Cox)": {
-            "script": "jrc_gen_boxcox.R",
-            "description": (
-                "Generates a right-skewed dataset from a Weibull distribution, "
-                "suitable for testing Box-Cox transformation workflows. "
-                "Writes a CSV to `~/Downloads/`."
-            ),
-            "param_type": "gen_2param",
-            "param1_label": "Shape", "param1_default": "1.5",
-            "param2_label": "Scale", "param2_default": "2.0",
-            "sample_data_dir": None,
-            "png_pattern": None,
+            "param_type": "corr",
+            "has_conf": True,
+            "sample_data_dir": CORR_DATA,
+            "sample_prefix": "corr_",
+            "png_pattern": "*_jrc_corr_passing_bablok.png",
         },
     },
 
     # -----------------------------------------------------------------------
-    "Curve Analysis": {
+    "Cap": {
+        "Normal Capability Analysis": {
+            "script": "jrc_cap_normal.R",
+            "description": (
+                "Process capability analysis for normally distributed data. "
+                "Computes **Cp**, **Cpk**, **Pp**, **Ppk**, and **Cpm** (Taguchi) using "
+                "within-subgroup (MR-based) and overall sigma estimates. Reports sigma level, "
+                "estimated PPM out-of-spec, and saves a histogram with normal curve and "
+                "spec limits to `~/Downloads/`."
+            ),
+            "param_type": "capability",
+            "has_report": True,
+            "sample_data_dir": CAP_DATA,
+            "sample_prefix": "cap_normal_",
+            "png_pattern": "*_jrc_cap_normal.png",
+        },
+        "Non-Normal Capability Analysis": {
+            "script": "jrc_cap_nonnormal.R",
+            "description": (
+                "Process capability analysis for non-normally distributed data using the "
+                "**percentile method** (ISO 22514-2 / AIAG). Estimates process spread from "
+                "the 0.135th and 99.865th sample percentiles — equivalent to ±3σ boundaries "
+                "without assuming normality. Reports **Pp** and **Ppk**, observed non-conformance, "
+                "and Shapiro-Wilk advisory. Saves a histogram with KDE to `~/Downloads/`."
+            ),
+            "param_type": "capability",
+            "has_report": True,
+            "sample_data_dir": CAP_DATA,
+            "sample_prefix": "cap_nonnormal_",
+            "png_pattern": "*_jrc_cap_nonnormal.png",
+        },
+        "Capability Sixpack": {
+            "script": "jrc_cap_sixpack.R",
+            "description": (
+                "Six-panel capability report — the standard deliverable for a process "
+                "validation package. Combines: **I-MR control chart** (with spec limits), "
+                "**Moving Range chart**, **capability histogram** with normal curve, "
+                "**normal probability plot** (Q-Q), **numerical summary** (Cp, Cpk, Cpm, Pp, Ppk, "
+                "sigma level, PPM), and a colour-coded **verdict panel**. "
+                "Saves a 3600×2400 px PNG to `~/Downloads/`."
+            ),
+            "param_type": "capability",
+            "has_report": True,
+            "sample_data_dir": CAP_DATA,
+            "sample_prefix": "cap_normal_",
+            "png_pattern": "*_jrc_cap_sixpack.png",
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    "Curve": {
         "Curve Properties": {
             "script": "jrc_curve_properties.py",
             "description": (
@@ -691,44 +718,6 @@ CATALOGUE = {
             "param_type": "curve_cfg",
             "sample_data_dir": CURVE_DATA,
             "png_pattern": None,
-        },
-    },
-
-    # -----------------------------------------------------------------------
-    "Reliability Demo Testing": {
-        "Plan Test": {
-            "script": "jrc_rdt_plan.R",
-            "description": (
-                "Plans a Reliability Demonstration Test (RDT). Given a reliability claim "
-                "(R at target life, confidence C), outputs the required number of test "
-                "units for k = 0 to 5 allowed failures.\n\n"
-                "Supports **Bogey/Binomial** mode (no Weibull shape assumption — "
-                "recommended for FDA design verification) and **Weibayes** mode "
-                "(Weibull shape β provided — reduces n when an accelerated test is used).\n\n"
-                "Saves a bar chart PNG to `~/Downloads/`. Use **Evaluate Results** after "
-                "testing to obtain the statistical verdict."
-            ),
-            "param_type": "rdt_plan",
-            "sample_data_dir": None,
-            "png_pattern": "*_jrc_rdt_plan.png",
-        },
-        "Evaluate Results": {
-            "script": "jrc_rdt_verify.R",
-            "description": (
-                "Evaluates whether a pre-specified reliability claim is demonstrated by "
-                "actual RDT test results. Reads a CSV of unit test times and pass/fail "
-                "statuses.\n\n"
-                "Always reports the **Binomial (Clopper-Pearson)** verdict. When β is "
-                "provided, also reports the **Weibayes** verdict — more powerful when "
-                "units were tested beyond target life.\n\n"
-                "CSV must contain `time` and `status` columns (status: 0 = survived, "
-                "1 = failed). Saves a timeline + verdict PNG to `~/Downloads/`."
-            ),
-            "param_type": "rdt_verify",
-            "has_report": True,
-            "sample_data_dir": RDT_DATA,
-            "sample_prefix": "rdt_verify_",
-            "png_pattern": "*_jrc_rdt_verify.png",
         },
     },
 
@@ -804,6 +793,44 @@ CATALOGUE = {
             "png_from_output": True,
         },
     },
+
+    # -----------------------------------------------------------------------
+    "RDT": {
+        "Plan Test": {
+            "script": "jrc_rdt_plan.R",
+            "description": (
+                "Plans a Reliability Demonstration Test (RDT). Given a reliability claim "
+                "(R at target life, confidence C), outputs the required number of test "
+                "units for k = 0 to 5 allowed failures.\n\n"
+                "Supports **Bogey/Binomial** mode (no Weibull shape assumption — "
+                "recommended for FDA design verification) and **Weibayes** mode "
+                "(Weibull shape β provided — reduces n when an accelerated test is used).\n\n"
+                "Saves a bar chart PNG to `~/Downloads/`. Use **Evaluate Results** after "
+                "testing to obtain the statistical verdict."
+            ),
+            "param_type": "rdt_plan",
+            "sample_data_dir": None,
+            "png_pattern": "*_jrc_rdt_plan.png",
+        },
+        "Evaluate Results": {
+            "script": "jrc_rdt_verify.R",
+            "description": (
+                "Evaluates whether a pre-specified reliability claim is demonstrated by "
+                "actual RDT test results. Reads a CSV of unit test times and pass/fail "
+                "statuses.\n\n"
+                "Always reports the **Binomial (Clopper-Pearson)** verdict. When β is "
+                "provided, also reports the **Weibayes** verdict — more powerful when "
+                "units were tested beyond target life.\n\n"
+                "CSV must contain `time` and `status` columns (status: 0 = survived, "
+                "1 = failed). Saves a timeline + verdict PNG to `~/Downloads/`."
+            ),
+            "param_type": "rdt_verify",
+            "has_report": True,
+            "sample_data_dir": RDT_DATA,
+            "sample_prefix": "rdt_verify_",
+            "png_pattern": "*_jrc_rdt_verify.png",
+        },
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -824,7 +851,7 @@ st.sidebar.title("⚓ JR Anchored")
 st.sidebar.caption("Validated R & Python analytics")
 st.sidebar.markdown("---")
 
-page = st.sidebar.radio("", ["Scripts", "⚙  Settings"], label_visibility="collapsed")
+page = st.sidebar.radio("Navigation", ["Scripts", "⚙  Settings"], label_visibility="collapsed")
 st.sidebar.markdown("---")
 
 if page == "Scripts":
@@ -850,12 +877,6 @@ NO_FILE_TYPES = {
 }
 needs_file = param_type not in NO_FILE_TYPES
 
-st.sidebar.markdown("---")
-st.sidebar.markdown(
-    "<small style='color:#888'>GUI is outside the validated boundary.<br>"
-    "Scripts run through <code>jrrun</code> with full integrity checking.</small>",
-    unsafe_allow_html=True,
-)
 st.sidebar.markdown("---")
 if st.sidebar.button("⏹  Stop JR App", use_container_width=True):
     os._exit(0)
@@ -999,6 +1020,40 @@ if needs_file:
             "and run `jrc_curve_properties path/to/config.cfg` from the terminal."
         )
 
+    elif param_type in ("convert_csv", "convert_txt"):
+        col_upload, col_sample = st.columns(2)
+        with col_upload:
+            uploaded_file = st.file_uploader(
+                "Upload a data file", type=["csv", "txt", "tsv"],
+                help="Plain-text or delimited file to convert.",
+                key=f"upload_{module_choice}_{script_choice}",
+            )
+        with col_sample:
+            sample_dir = cfg.get("sample_data_dir")
+            prefix = cfg.get("sample_prefix") or ""
+            if sample_dir:
+                sample_files = sorted(
+                    glob.glob(os.path.join(sample_dir, f"{prefix}*.txt")) +
+                    glob.glob(os.path.join(sample_dir, f"{prefix}*.csv"))
+                )
+                sample_names = ["(none)"] + [os.path.basename(f) for f in sample_files]
+            else:
+                sample_names = ["(none)"]
+            sample_choice_val = st.selectbox(
+                "Or use sample data", sample_names,
+                key=f"sample_{module_choice}_{script_choice}",
+            )
+
+        if uploaded_file is not None:
+            suffix = os.path.splitext(uploaded_file.name)[1] or ".txt"
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+            tmp.write(uploaded_file.getvalue()); tmp.close()
+            data_path = tmp.name; tmp_path = tmp.name
+            st.success(f"Using uploaded file: **{uploaded_file.name}**")
+        elif sample_choice_val != "(none)":
+            data_path = os.path.join(sample_dir, sample_choice_val)
+            st.info(f"Using sample data: **{sample_choice_val}**")
+
     else:
         col_upload, col_sample = st.columns(2)
         with col_upload:
@@ -1033,9 +1088,9 @@ if needs_file:
             data_path = os.path.join(sample_dir, sample_choice_val)
             st.info(f"Using sample data: **{sample_choice_val}**")
 
-    # Preview
+    # Preview (CSV files only)
     preview_path = data_path
-    if preview_path:
+    if preview_path and param_type not in ("convert_csv", "convert_txt", "curve_cfg"):
         try:
             import csv as csvmod
             with open(preview_path, "r") as f:
@@ -1297,6 +1352,25 @@ elif param_type == "shelf_extrapolate":
     c1, _ = st.columns([1, 2])
     se_time = c1.text_input("Target time to extrapolate to", value="36", key=f"time_{sk}")
 
+elif param_type == "convert_csv":
+    c1, c2, c3 = st.columns(3)
+    conv_col   = c1.text_input("Column name or number (1-based)", value="1",
+                               help="Column name (if header present) or 1-based column number.",
+                               key=f"col_{sk}")
+    conv_skip  = c2.number_input("Header lines to skip", min_value=0, value=0, step=1,
+                                 help="Lines of metadata at the top of the file before column headers or data.",
+                                 key=f"skip_{sk}")
+    conv_delim = c3.selectbox("Delimiter", ["auto-detect", "tab", "space", "comma"],
+                              key=f"delim_{sk}")
+
+elif param_type == "convert_txt":
+    st.caption("Optionally specify a line range to extract (e.g. to skip a stabilisation period).")
+    c1, c2 = st.columns(2)
+    conv_start = c1.text_input("First line to include (optional)", value="",
+                               placeholder="e.g. 50", key=f"start_{sk}")
+    conv_end   = c2.text_input("Last line to include (optional)",  value="",
+                               placeholder="e.g. 200", key=f"end_{sk}")
+
 # ---------------------------------------------------------------------------
 # Report flag (Validation Pack)
 # ---------------------------------------------------------------------------
@@ -1464,6 +1538,19 @@ if st.button(f"▶  Run {script_choice}", type="primary", disabled=run_disabled)
     elif param_type == "shelf_extrapolate":
         cmd = BASH_PREFIX + [JRRUN, cfg["script"], data_path, se_time.strip()]
 
+    elif param_type == "convert_csv":
+        delim_arg = conv_delim if conv_delim != "auto-detect" else ""
+        cmd = BASH_PREFIX + [JRRUN, cfg["script"], data_path, conv_col, str(int(conv_skip))]
+        if delim_arg:
+            cmd += [delim_arg]
+
+    elif param_type == "convert_txt":
+        cmd = BASH_PREFIX + [JRRUN, cfg["script"], data_path]
+        if conv_start.strip():
+            cmd += [conv_start.strip()]
+            if conv_end.strip():
+                cmd += [conv_end.strip()]
+
     if want_report:
         cmd += ["--report"]
 
@@ -1518,5 +1605,7 @@ elif run_disabled:
         st.warning("Upload or select both CSV files to enable the Run button.")
     elif param_type == "curve_cfg":
         st.warning("Select a sample config file to enable the Run button.")
+    elif param_type in ("convert_csv", "convert_txt"):
+        st.warning("Upload a file or select sample data to enable the Run button.")
     else:
         st.warning("Upload a CSV file or select sample data to enable the Run button.")
