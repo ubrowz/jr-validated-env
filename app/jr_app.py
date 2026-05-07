@@ -1435,10 +1435,22 @@ elif param_type == "convert_txt":
 want_report = False
 if cfg.get("has_report"):
     st.markdown("---")
-    want_report = st.checkbox(
-        "📄  Generate Word report (--report) — requires JR Anchored Validation Pack",
-        key=f"report_{sk}",
-    )
+    _pack_installed = os.path.isfile(os.path.join(PROJECT_ROOT, "pack", "jr_pack.py"))
+    if _pack_installed:
+        want_report = st.checkbox(
+            "📄  Generate Word report (--report)",
+            key=f"report_{sk}",
+        )
+    else:
+        st.checkbox(
+            "📄  Generate Word report (--report)",
+            value=False, disabled=True,
+            key=f"report_{sk}",
+        )
+        st.caption(
+            "Validation Pack not installed — Word reports are unavailable. "
+            "Visit [dwylup.com](https://www.dwylup.com) for details."
+        )
 
 # ---------------------------------------------------------------------------
 # Run button
