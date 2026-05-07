@@ -28,6 +28,11 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **GUI: Curve Properties — inline PDF plot** — after a successful run, the PDF plot
   is rendered inline in the GUI via a base64 `<iframe>`, with a download button below.
   No new dependencies required.
+- **GUI: Word report checkbox gated on pack installation** — the "Generate Word report"
+  checkbox is shown enabled only when `pack/jr_pack.py` is present (i.e. the Validation
+  Pack has been installed). On machines without the pack the checkbox is greyed out with
+  a caption linking to dwylup.com. Previously the checkbox was always enabled, leading to
+  a silent HTML-only fallback with no user feedback.
 
 ---
 
