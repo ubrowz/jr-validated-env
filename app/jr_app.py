@@ -8,6 +8,7 @@ integrity-checked, validated path as the CLI.
 Launch:  streamlit run app/jr_app.py
 """
 
+import base64
 import glob
 import os
 import re
@@ -1651,6 +1652,28 @@ if st.button(f"▶  Run {script_choice}", type="primary", disabled=run_disabled)
                     st.markdown("### Plot")
                     st.image(png_path, use_container_width=True)
                     st.markdown(f"<p style='font-size:1.2rem;color:#555'><code>{os.path.basename(png_path)}</code></p>", unsafe_allow_html=True)
+
+        # Curve Properties — show PDF plot inline via base64 iframe
+        if param_type == "curve_cfg":
+            match = re.search(r"Plot file\s*:\s+(.+\.pdf)", output)
+            if match:
+                pdf_path = match.group(1).strip()
+                if os.path.exists(pdf_path):
+                    st.markdown("### Plot")
+                    with open(pdf_path, "rb") as _pf:
+                        pdf_bytes = _pf.read()
+                    b64 = base64.b64encode(pdf_bytes).decode()
+                    st.markdown(
+                        f'<iframe src="data:application/pdf;base64,{b64}" '
+                        f'width="100%" height="650px" style="border:none;"></iframe>',
+                        unsafe_allow_html=True,
+                    )
+                    st.download_button(
+                        "⬇️  Download PDF",
+                        data=pdf_bytes,
+                        file_name=os.path.basename(pdf_path),
+                        mime="application/pdf",
+                    )
 
     else:
         st.error("Script failed.")
