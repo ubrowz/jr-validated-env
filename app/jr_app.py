@@ -43,6 +43,20 @@ PACK_CONFIG = os.path.join(PACK_DIR, "jr_pack_config.json")
 # e.g. C:\Users\foo\bar  →  /c/Users/foo/bar
 # bash receives backslash-paths as literal strings, breaking dirname/$0.
 # ---------------------------------------------------------------------------
+def _find_help_file(module_name: str, script_name: str) -> str | None:
+    base = os.path.splitext(script_name)[0]
+    module_folder = {
+        "MSA": "msa", "SPC": "spc", "AS": "as", "Corr": "corr",
+        "Cap": "cap", "Curve": "curve", "Shelf Life": "shelf_life", "RDT": "rdt",
+    }.get(module_name)
+    if module_folder:
+        p = os.path.join(PROJECT_ROOT, "repos", module_folder, "help", f"{base}.txt")
+        if os.path.exists(p):
+            return p
+    p = os.path.join(PROJECT_ROOT, "help", f"{base}.txt")
+    return p if os.path.exists(p) else None
+
+
 def _to_posix(p: str) -> str:
     p = p.replace("\\", "/")
     if len(p) >= 2 and p[1] == ":":          # C:/... → /c/...
@@ -958,6 +972,19 @@ st.title(script_choice)
 st.markdown(f"<p style='font-size:1.2rem;color:#555;margin-top:-12px'>Script: <code>{cfg['script']}</code></p>", unsafe_allow_html=True)
 st.markdown(cfg["description"])
 
+help_path = _find_help_file(module_choice, cfg["script"])
+if help_path:
+    with st.expander("📖  Script help (--help)"):
+        with open(help_path, encoding="utf-8") as _hf:
+            st.code(_hf.read(), language="text")
+
+if param_type == "curve_cfg":
+    sample_cfg_path = os.path.join(CURVE_DATA, "sample.cfg")
+    if os.path.exists(sample_cfg_path):
+        with st.expander("📋  Sample config (sample.cfg)"):
+            with open(sample_cfg_path, encoding="utf-8") as _sf:
+                st.code(_sf.read(), language="text")
+
 # ---------------------------------------------------------------------------
 # Data section (file-based scripts)
 # ---------------------------------------------------------------------------
@@ -1008,16 +1035,45 @@ if needs_file:
         cfg_files = sorted(glob.glob(os.path.join(cfg["sample_data_dir"], "*.cfg")))
         cfg_names = ["(none)"] + [os.path.basename(f) for f in cfg_files]
         cfg_choice = st.selectbox(
-            "Select a sample config (.cfg)",
+            "Sample config (.cfg)",
             cfg_names,
             key=f"cfg_{module_choice}_{script_choice}",
         )
         if cfg_choice != "(none)":
             data_path = os.path.join(cfg["sample_data_dir"], cfg_choice)
             st.info(f"Using sample config: **{cfg_choice}**")
+
+        st.markdown("**Or upload your own:**")
+        col_cfg, col_csv = st.columns(2)
+        uploaded_cfg = col_cfg.file_uploader(
+            "Config file (.cfg)", type=["cfg"],
+            key=f"cfgup_{script_choice}",
+        )
+        uploaded_csv = col_csv.file_uploader(
+            "Data CSV", type=["csv"],
+            key=f"csvup_{script_choice}",
+        )
+        if uploaded_cfg:
+            cfg_text = uploaded_cfg.getvalue().decode("utf-8")
+            if uploaded_csv:
+                csv_tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+                csv_tmp.write(uploaded_csv.getvalue()); csv_tmp.close()
+                tmp_path2 = csv_tmp.name
+                cfg_text = re.sub(
+                    r"(?m)^(\s*file\s*=\s*).*$", r"\g<1>" + csv_tmp.name, cfg_text
+                )
+            else:
+                st.warning("Upload the matching data CSV so the config can find it.")
+            cfg_dest = os.path.join(DOWNLOADS, uploaded_cfg.name)
+            with open(cfg_dest, "w", encoding="utf-8") as _cf:
+                _cf.write(cfg_text)
+            data_path = cfg_dest
+            tmp_path = cfg_dest
+            st.success(f"Using uploaded config: **{uploaded_cfg.name}**")
+
         st.caption(
-            "For custom data: place your .cfg and data CSV in the same folder "
-            "and run `jrc_curve_properties path/to/config.cfg` from the terminal."
+            "For complex setups with multiple data files, use the terminal: "
+            "`jrc_curve_properties path/to/config.cfg`"
         )
 
     elif param_type in ("convert_csv", "convert_txt"):
