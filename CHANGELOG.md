@@ -10,6 +10,27 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **GUI: `--help` expander on every script page** — a collapsible "📖 Script help"
+  expander appears below the script description, showing the full help text for the
+  selected script. Content is read from the `help/` files at render time.
+- **GUI: Curve Properties — config file upload** — users can now upload their own
+  `.cfg` and data CSV directly in the GUI alongside the existing sample-config
+  selector. The GUI patches the `file =` path in the uploaded config to point to
+  the temp CSV, and writes the cfg to `~/Downloads` so all output files land there
+  with meaningful names derived from the uploaded filename.
+- **GUI: Curve Properties — sample config viewer** — a collapsible "📋 Sample config"
+  expander shows the full annotated `sample.cfg` so users can read the config syntax
+  without leaving the GUI.
+- **GUI: Curve Properties — inline PDF plot** — after a successful run, the PDF plot
+  is rendered inline in the GUI via a base64 `<iframe>`, with a download button below.
+  No new dependencies required.
+
+---
+
 ## [3.8.2] — 2026-05-04
 
 ### Changed
