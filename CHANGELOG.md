@@ -10,6 +10,18 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [3.9.1] — 2026-05-07
+
+### Fixed
+
+- **`bin/jrrun`: locale warnings on every script run** — `LANG` was used as an
+  internal variable to flag R vs Python scripts. Because `LANG` is a standard POSIX
+  locale environment variable already exported by the shell, overwriting it with `"R"`
+  leaked into all child processes (Rscript, Perl), causing locale warnings on every run.
+  Renamed to `_JR_LANG` throughout. No behaviour change; no OQ re-run required.
+
+---
+
 ## [3.9.0] — 2026-05-07
 
 ### Added
