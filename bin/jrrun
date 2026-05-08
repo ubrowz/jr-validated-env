@@ -250,12 +250,8 @@ if [[ "$_JR_LANG" == "R" ]]; then
   fi
 
   LOCK_FILE="$ADMIN_HOME/renv.lock"
-  if [[ ! -f "$LOCK_FILE" ]]; then
-    echo "❌ renv.lock not found. Contact admin."
-    exit 1
-  fi
 
-  REQ_HASH=$(shasum "$LOCK_FILE" | cut -d' ' -f1)
+  REQ_HASH=$(cat "$ADMIN_HOME/R_requirements.txt" "$ADMIN_HOME/r_version.txt" | shasum -a 256 | cut -d' ' -f1)
   HASH_FILE="$RENV_HOME/.renv_lock_hash"
   RENV_LIB=$(find "$RENV_HOME/renv/library" -mindepth 3 -maxdepth 3 \
              -type d 2>/dev/null | head -1)
@@ -286,10 +282,12 @@ if [[ "$_JR_LANG" == "R" ]]; then
       R_LOCAL_REPO_URL="file:///$(cygpath -w "$LOCAL_REPO" | tr '\\' '/')"
       R_RENV_HOME="$(cygpath -w "$RENV_HOME" | tr '\\' '/')"
       R_LOCK_FILE="$(cygpath -w "$LOCK_FILE" | tr '\\' '/')"
+      R_ADMIN_HOME="$(cygpath -w "$ADMIN_HOME" | tr '\\' '/')"
     else
       R_LOCAL_REPO_URL="file://$LOCAL_REPO"
       R_RENV_HOME="$RENV_HOME"
       R_LOCK_FILE="$LOCK_FILE"
+      R_ADMIN_HOME="$ADMIN_HOME"
     fi
 
     Rscript --vanilla - <<EOF
@@ -303,6 +301,23 @@ dir.create("$R_RENV_HOME", recursive = TRUE, showWarnings = FALSE)
 install.packages("renv", repos = local_repo, lib = "$R_RENV_HOME")
 .libPaths(c("$R_RENV_HOME", .libPaths()))
 Sys.setenv(RENV_PATHS_ROOT = "$R_RENV_HOME")
+# Regenerate renv.lock from R_requirements.txt + current R version.
+# renv.lock is no longer distributed via git — it is derived locally so that
+# user R-version upgrades and package additions never cause git conflicts.
+req_lines    <- readLines("$R_ADMIN_HOME/R_requirements.txt", warn = FALSE)
+req_lines    <- trimws(req_lines)
+req_lines    <- req_lines[nchar(req_lines) > 0 & !startsWith(req_lines, "#")]
+pkg_versions <- setNames(sub(".*==", "", req_lines), sub("==.*", "", req_lines))
+pkg_names    <- names(pkg_versions)
+r_ver        <- paste(R.version\$major, R.version\$minor, sep = ".")
+pkg_entries  <- paste(sapply(pkg_names, function(nm) {
+  sprintf('    "%s": {\n      "Package": "%s",\n      "Version": "%s",\n      "Source": "Repository",\n      "Repository": "LOCAL"\n    }',
+          nm, nm, pkg_versions[[nm]])
+}), collapse = ",\n")
+lock_json    <- sprintf(
+  '{\n  "R": {\n    "Version": "%s"\n  },\n  "Packages": {\n%s\n  }\n}',
+  r_ver, pkg_entries)
+writeLines(lock_json, "$R_LOCK_FILE")
 renv::init(project  = "$R_RENV_HOME",
            bare     = TRUE,
            restart  = FALSE)
