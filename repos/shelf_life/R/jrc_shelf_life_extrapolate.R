@@ -228,8 +228,16 @@ save_extrapolate_report <- function(model_file, source_f, run_ts,
     '{"k":"Spec limit","v":', jvn(spec_limit), '}'
   )
 
+  input_sha256 <- tryCatch({
+    fp_norm <- normalizePath(model_file, winslash = "/", mustWork = FALSE)
+    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
+                       stdout = TRUE, stderr = FALSE)
+    strsplit(raw, " ")[[1]][1]
+  }, error = function(e) NA_character_)
+
   results_rows <- paste0(
     '{"k":"Model file","v":', jvs(basename(model_file)), '},',
+    '{"k":"Model file SHA-256","v":', jvs(input_sha256), '},',
     '{"k":"Source data","v":', jvs(source_f), '},',
     '{"k":"Model fitted","v":', jvs(run_ts), '},',
     '{"k":"n (observations)","v":', jvn(n, "%.0f"), '},',

@@ -652,6 +652,13 @@ save_linear_report <- function(csv_file, spec_limit, confidence, direction,
   )
   results_rows <- paste(res_parts, collapse = ",\n")
 
+  input_sha256 <- tryCatch({
+    fp_norm <- normalizePath(csv_file, winslash = "/", mustWork = FALSE)
+    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
+                       stdout = TRUE, stderr = FALSE)
+    strsplit(raw, " ")[[1]][1]
+  }, error = function(e) NA_character_)
+
   json_lines <- c(
     "{",
     '  "report_type":          "dv",',
@@ -661,6 +668,8 @@ save_linear_report <- function(csv_file, spec_limit, confidence, direction,
     sprintf('  "generated":            %s,', jvs(dt_str)),
     '  "subtitle":             "Shelf Life Estimation - Linear Degradation Model (ICH Q1E)",',
     sprintf('  "data_file":            %s,', jvs(basename(csv_file))),
+    sprintf('  "input_file":           %s,', jvs(basename(csv_file))),
+    sprintf('  "input_sha256":         %s,', jvs(input_sha256)),
     '  "col_name":             "value",',
     sprintf('  "n":                    %d,', n_total),
     '  "lsl":                  null,',

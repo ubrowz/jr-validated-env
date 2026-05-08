@@ -275,10 +275,18 @@ save_grr_report <- function(csv_file, tolerance,
   jvn <- function(x, fmt = "%.6g") if (is.null(x) || (length(x) == 1 && is.na(x))) "null" else sprintf(fmt, as.numeric(x))
   jvb <- function(x) if (isTRUE(x)) "true" else "false"
 
+  input_sha256 <- tryCatch({
+    fp_norm <- normalizePath(csv_file, winslash = "/", mustWork = FALSE)
+    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
+                       stdout = TRUE, stderr = FALSE)
+    strsplit(raw, " ")[[1]][1]
+  }, error = function(e) NA_character_)
+
   method_rows <- paste0(
     '{"k":"Method","v":"Two-way ANOVA with interaction (Part × Operator)"},',
     '{"k":"Reference","v":"AIAG MSA 4th Edition"},',
     '{"k":"Data file","v":', jvs(basename(csv_file)), '},',
+    '{"k":"Data file SHA-256","v":', jvs(input_sha256), '},',
     '{"k":"Parts","v":', jvn(n_parts, "%.0f"), '},',
     '{"k":"Operators","v":', jvn(n_operators, "%.0f"), '},',
     '{"k":"Replicates per cell","v":', jvn(n_reps, "%.0f"), '},',

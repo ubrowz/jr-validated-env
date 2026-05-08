@@ -230,6 +230,13 @@ save_cap_nonnormal_report <- function(data_file, col_name, n, lsl, usl,
   if (!is.na(pct_above)) res_parts <- c(res_parts, sprintf('    {"label": "Observed %% Above USL", "value": "%.2f%%"}', pct_above))
   results_rows <- paste(res_parts, collapse = ",\n")
 
+  input_sha256 <- tryCatch({
+    fp_norm <- normalizePath(data_file, winslash = "/", mustWork = FALSE)
+    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
+                       stdout = TRUE, stderr = FALSE)
+    strsplit(raw, " ")[[1]][1]
+  }, error = function(e) NA_character_)
+
   json_lines <- c(
     "{",
     sprintf('  "report_type":          "pv",'),
@@ -239,6 +246,7 @@ save_cap_nonnormal_report <- function(data_file, col_name, n, lsl, usl,
     sprintf('  "generated":            %s,', jvs(generated)),
     sprintf('  "subtitle":             %s,', jvs("Process Capability Analysis - Non-Normal Data (Percentile Method)")),
     sprintf('  "data_file":            %s,', jvs(basename(data_file))),
+    sprintf('  "data_sha256":          %s,', jvs(input_sha256)),
     sprintf('  "col_name":             %s,', jvs(col_name)),
     sprintf('  "n":                    %d,', n),
     sprintf('  "lsl":                  %s,', jvn(lsl)),

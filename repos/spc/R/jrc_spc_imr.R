@@ -238,6 +238,13 @@ save_imr_report <- function(csv_file, n_obs,
   )
   results_rows <- paste(res_parts, collapse = ",\n")
 
+  input_sha256 <- tryCatch({
+    fp_norm <- normalizePath(csv_file, winslash = "/", mustWork = FALSE)
+    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
+                       stdout = TRUE, stderr = FALSE)
+    strsplit(raw, " ")[[1]][1]
+  }, error = function(e) NA_character_)
+
   json_lines <- c(
     "{",
     sprintf('  "report_type":          "pv",'),
@@ -247,6 +254,7 @@ save_imr_report <- function(csv_file, n_obs,
     sprintf('  "generated":            %s,', jvs(generated)),
     sprintf('  "subtitle":             %s,', jvs("Process Stability Assessment - I-MR Control Chart (Western Electric Rules)")),
     sprintf('  "data_file":            %s,', jvs(basename(csv_file))),
+    sprintf('  "data_sha256":          %s,', jvs(input_sha256)),
     '  "col_name":             "value",',
     sprintf('  "n":                    %d,', n_obs),
     '  "lsl":                  null,',
