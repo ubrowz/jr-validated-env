@@ -14,6 +14,11 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Added
 
+- **`admin/admin_setup`**: new script that runs all first-time (or subsequent) admin setup
+  steps in one command — pre-flight checks R and Python versions, verifies the shared
+  repository is accessible, then runs `admin_install_R [--rebuild]` →
+  `admin_install_Python [--rebuild]` → `admin_create_hash` → `admin_validate` →
+  `setup_jr_path.sh`. Pass `--rebuild` for a first-time internet-based build.
 - **`admin/admin_update`**: new script for safe over-the-air updates — fetches from GitHub,
   runs pre-flight conflict checks (uncommitted changes, local commits, R version mismatch),
   shows what the pull will change (R packages diff, Python env), and when clear automatically

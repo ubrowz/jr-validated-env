@@ -1,0 +1,389 @@
+#!/bin/bash
+#
+# admin_setup
+# Runs all required admin steps to set up JR Anchored on a new machine.
+#
+# Installs the R and Python environments, generates the project integrity file,
+# produces IQ validation evidence, and adds the scripts to PATH.
+#
+# Usage:
+#   admin_setup            — install from existing local repository (no internet)
+#   admin_setup --rebuild  — download all packages from the internet (first-time only)
+#
+# Blocked if: R or Python is missing or the wrong version,
+#             or (in local mode) the shared package repository is not accessible.
+#
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolve paths
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# shellcheck source=../bin/jr_platform.sh
+source "$PROJECT_ROOT/bin/jr_platform.sh"
+
+SEP="─────────────────────────────────────────────────────────────"
+
+# ---------------------------------------------------------------------------
+# Help
+# ---------------------------------------------------------------------------
+
+for arg in "$@"; do
+  if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+    echo ""
+    echo "Usage: admin_setup [--rebuild]"
+    echo ""
+    echo "  (no flag)   Install R and Python environments from the local shared"
+    echo "              repository (Dropbox / SMB). No internet access required."
+    echo ""
+    echo "  --rebuild   Download all packages from the internet and build the"
+    echo "              local repository. Use this for a first-time admin setup."
+    echo ""
+    echo "  Both modes run:"
+    echo "    admin_install_R [--rebuild]"
+    echo "    admin_install_Python [--rebuild]"
+    echo "    admin_create_hash"
+    echo "    admin_validate"
+    echo "    setup_jr_path.sh"
+    echo ""
+    exit 0
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+
+BUILD_REPO=false
+for arg in "$@"; do
+  case "$arg" in
+    --rebuild) BUILD_REPO=true ;;
+    -h|--help) ;;  # handled above
+    *)
+      echo "❌ Unknown argument: $arg"
+      echo "   Run admin_setup --help for usage."
+      exit 1
+      ;;
+  esac
+done
+
+# ---------------------------------------------------------------------------
+# Banner
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "============================================================="
+echo " JR Anchored — Setup"
+echo "============================================================="
+if [[ "$BUILD_REPO" == "true" ]]; then
+  echo " Mode: first-time (rebuild repository from internet)"
+else
+  echo " Mode: install from local repository"
+fi
+echo ""
+
+# ---------------------------------------------------------------------------
+# Pre-checks
+# ---------------------------------------------------------------------------
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "❌ git not found."
+  if [[ "$(jr_os)" == "windows" ]]; then
+    echo "   Install Git for Windows from: https://git-scm.com/download/win"
+  fi
+  exit 1
+fi
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "❌ Not a git repository: $PROJECT_ROOT"
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Pre-flight checks
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Pre-flight checks"
+echo "$SEP"
+echo ""
+
+BLOCKED=false
+
+# ------------------------------------------------------------------
+# Check 1 — R installed and correct version
+# ------------------------------------------------------------------
+
+R_VERSION_FILE="$SCRIPT_DIR/r_version.txt"
+if [[ ! -f "$R_VERSION_FILE" ]]; then
+  echo "❌ admin/r_version.txt not found."
+  exit 1
+fi
+REQ_R="$(tr -d '[:space:]' < "$R_VERSION_FILE")"
+
+if ! command -v Rscript >/dev/null 2>&1; then
+  if [[ "$(jr_os)" == "windows" ]]; then
+    R_BIN_DIR=""
+    for r_dir in "/c/Program Files/R"/R-*/; do
+      [[ -f "${r_dir}bin/Rscript.exe" ]] && R_BIN_DIR="${r_dir}bin" && break
+    done
+    if [[ -n "$R_BIN_DIR" ]]; then
+      echo "📍 Rscript not on PATH — found R at: $R_BIN_DIR"
+      echo "   Adding to current session..."
+      export PATH="$R_BIN_DIR:$PATH"
+    fi
+  fi
+fi
+
+if ! command -v Rscript >/dev/null 2>&1; then
+  echo "❌ R is not installed or not on PATH."
+  echo "   Install R $REQ_R from: $PROJECT_ROOT/R_repo/"
+  echo "   (or from https://cran.r-project.org if building from internet)"
+  echo ""
+  BLOCKED=true
+else
+  INSTALLED_R=$(Rscript --vanilla -e 'cat(format(getRversion(), nsmall=1))' 2>/dev/null || echo "")
+  INSTALLED_R_MM=$(echo "$INSTALLED_R" | cut -d. -f1,2)
+  if [[ "$INSTALLED_R_MM" != "$REQ_R" ]]; then
+    echo "❌ Wrong R version installed."
+    echo "   Required : R $REQ_R  (admin/r_version.txt)"
+    echo "   Installed: R $INSTALLED_R"
+    echo ""
+    if [[ "$(jr_os)" == "windows" ]]; then
+      echo "   Uninstall R $INSTALLED_R via Add/Remove Programs, then"
+    fi
+    echo "   Install R $REQ_R from https://cran.r-project.org"
+    echo ""
+    BLOCKED=true
+  else
+    echo "✅ R version: $INSTALLED_R"
+  fi
+fi
+
+# ------------------------------------------------------------------
+# Check 2 — Python installed and correct version
+# ------------------------------------------------------------------
+
+PY_VERSION_FILE="$SCRIPT_DIR/python_version.txt"
+if [[ ! -f "$PY_VERSION_FILE" ]]; then
+  echo "❌ admin/python_version.txt not found."
+  exit 1
+fi
+REQ_PYTHON="$(tr -d '[:space:]' < "$PY_VERSION_FILE")"
+REQ_MAJOR_MINOR=$(echo "$REQ_PYTHON" | awk -F. '{print $1 "." $2}')
+
+# Resolve the Python binary the same way admin_install_Python does
+if [[ "$(jr_os)" == "windows" ]]; then
+  PYTHON_BIN="python"
+  for _win_py in "python3" "python"; do
+    if command -v "$_win_py" >/dev/null 2>&1; then
+      PYTHON_BIN="$_win_py"
+      break
+    fi
+  done
+else
+  PYTHON_BIN="python$REQ_MAJOR_MINOR"
+fi
+
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  # Fallback: try python3 and python
+  for _fb in python3 python; do
+    if command -v "$_fb" >/dev/null 2>&1; then
+      PYTHON_BIN="$_fb"
+      break
+    fi
+  done
+fi
+
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  echo "❌ Python $REQ_PYTHON is not installed or not on PATH."
+  echo "   Install Python $REQ_PYTHON from: $PROJECT_ROOT/Python_repo/"
+  echo "   (or from https://www.python.org/downloads/ if building from internet)"
+  echo ""
+  BLOCKED=true
+else
+  INSTALLED_PYTHON=$("$PYTHON_BIN" -c \
+    'import sys; v=sys.version_info; print(f"{v.major}.{v.minor}.{v.micro}")' \
+    2>/dev/null || echo "")
+  INSTALLED_PYTHON_MM=$(echo "$INSTALLED_PYTHON" | cut -d. -f1,2)
+  if [[ "$INSTALLED_PYTHON_MM" != "$REQ_MAJOR_MINOR" ]]; then
+    echo "❌ Wrong Python version installed."
+    echo "   Required : Python $REQ_PYTHON  (admin/python_version.txt)"
+    echo "   Installed: Python $INSTALLED_PYTHON"
+    echo ""
+    echo "   Install Python $REQ_PYTHON from https://www.python.org/downloads/"
+    echo ""
+    BLOCKED=true
+  else
+    echo "✅ Python version: $INSTALLED_PYTHON"
+  fi
+fi
+
+# ------------------------------------------------------------------
+# Check 3 (local mode) — shared R repository accessible
+# ------------------------------------------------------------------
+
+R_REPO="$PROJECT_ROOT/R_repo/my-cran-repo"
+
+if [[ "$BUILD_REPO" == "false" ]]; then
+  if [[ ! -d "$R_REPO" ]]; then
+    echo "❌ Local R repository not found: R_repo/my-cran-repo/"
+    echo ""
+    echo "   This folder is shared via Dropbox or an SMB network share."
+    echo "   Make sure it is synced and accessible, then run admin_setup again."
+    echo "   Or, to build the repository from the internet:"
+    echo "     admin_setup --rebuild"
+    echo ""
+    BLOCKED=true
+  elif ! find "$R_REPO" -name "PACKAGES" 2>/dev/null | grep -q .; then
+    echo "❌ R repository found but PACKAGES index is missing: R_repo/my-cran-repo/"
+    echo "   The repository may still be syncing, or it may be incomplete."
+    echo "   Wait for sync to finish, or rebuild from internet: admin_setup --rebuild"
+    echo ""
+    BLOCKED=true
+  else
+    echo "✅ R repository: accessible"
+  fi
+else
+  echo "ℹ️   R repository: will be built from internet (--rebuild)"
+fi
+
+# ------------------------------------------------------------------
+# Check 4 (local mode) — shared Python repository accessible
+# ------------------------------------------------------------------
+
+PY_REPO="$PROJECT_ROOT/Python_repo/my-repo"
+
+# Count non-comment, non-empty lines in python_requirements.txt
+PY_PKG_COUNT=$(grep -cv '^\s*#\|^\s*$' "$SCRIPT_DIR/python_requirements.txt" 2>/dev/null || echo 0)
+
+if [[ "$BUILD_REPO" == "false" ]]; then
+  if [[ "$PY_PKG_COUNT" -gt 0 ]]; then
+    if [[ ! -d "$PY_REPO" ]]; then
+      echo "❌ Local Python repository not found: Python_repo/my-repo/"
+      echo ""
+      echo "   This folder is shared via Dropbox or an SMB network share."
+      echo "   Make sure it is synced and accessible, then run admin_setup again."
+      echo "   Or, to build the repository from the internet:"
+      echo "     admin_setup --rebuild"
+      echo ""
+      BLOCKED=true
+    else
+      echo "✅ Python repository: accessible"
+    fi
+  else
+    echo "✅ Python packages: none required (python_requirements.txt is empty)"
+  fi
+else
+  echo "ℹ️   Python repository: will be built from internet (--rebuild)"
+fi
+
+# ------------------------------------------------------------------
+# Info: what will be installed
+# ------------------------------------------------------------------
+
+echo ""
+R_PKG_COUNT=$(grep -cv '^\s*#\|^\s*$' "$SCRIPT_DIR/R_requirements.txt" 2>/dev/null || echo 0)
+echo "ℹ️   R packages   : $R_PKG_COUNT listed in admin/R_requirements.txt"
+echo "ℹ️   Python packages: $PY_PKG_COUNT listed in admin/python_requirements.txt"
+echo ""
+
+# ---------------------------------------------------------------------------
+# Blocked?
+# ---------------------------------------------------------------------------
+
+if [[ "$BLOCKED" == "true" ]]; then
+  echo "============================================================="
+  echo " ❌ Setup blocked — resolve the issues above first."
+  echo "============================================================="
+  echo ""
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Execute setup
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Installing environments"
+echo "$SEP"
+echo ""
+
+# --- admin_install_R
+if [[ "$BUILD_REPO" == "true" ]]; then
+  echo "📦 Building R repository and installing packages (this may take several minutes)..."
+  "$SCRIPT_DIR/admin_install_R" --rebuild
+else
+  echo "📦 Installing R packages from local repository..."
+  "$SCRIPT_DIR/admin_install_R"
+fi
+echo ""
+
+# --- admin_install_Python
+if [[ "$BUILD_REPO" == "true" ]]; then
+  echo "🐍 Building Python repository and installing packages..."
+  "$SCRIPT_DIR/admin_install_Python" --rebuild
+else
+  echo "🐍 Installing Python packages from local repository..."
+  "$SCRIPT_DIR/admin_install_Python"
+fi
+echo ""
+
+# ---------------------------------------------------------------------------
+# Integrity hash
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Generating integrity file"
+echo "$SEP"
+echo ""
+
+echo "🔒 Generating project integrity hash..."
+"$SCRIPT_DIR/admin_create_hash"
+echo ""
+
+# ---------------------------------------------------------------------------
+# IQ validation
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Running IQ validation"
+echo "$SEP"
+echo ""
+
+"$SCRIPT_DIR/admin_validate"
+echo ""
+
+# ---------------------------------------------------------------------------
+# PATH setup
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Configuring PATH"
+echo "$SEP"
+echo ""
+
+bash "$PROJECT_ROOT/setup_jr_path.sh"
+echo ""
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+
+echo "============================================================="
+echo " ✅ Setup complete"
+echo "============================================================="
+echo ""
+if [[ "$(jr_os)" == "windows" ]]; then
+  echo " Next step: close and reopen Git Bash, then test with:"
+else
+  echo " Next step: open a new Terminal window, then test with:"
+fi
+echo ""
+echo "   jrc_ss_discrete --help"
+echo ""
