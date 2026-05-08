@@ -626,31 +626,27 @@ save_linear_report <- function(csv_file, spec_limit, confidence, direction,
   acceptance_json <- sprintf("%s %s CI bound must not cross spec limit %g (direction: %s, ICH Q1E).",
                              bound_label_json, ci_pct_json, spec_limit, direction)
 
-  method_rows <- paste(
-    '    {"label": "Method", "value": "Linear regression: value ~ time. ICH Q1E — Evaluation for Stability Data."}',
-    sprintf('    {"label": "Transform", "value": "%s"}', transform_note),
-    sprintf('    {"label": "Homogeneity of Variance", "value": "%s"}', bf_note),
-    sprintf('    {"label": "Confidence level", "value": "%s"}', ci_pct_json),
-    sprintf('    {"label": "Spec limit", "value": "%g (%s)"}',
-            spec_limit, if (direction == "low") "lower bound" else "upper bound"),
-    sprintf('    {"label": "Direction", "value": "%s (%s)"}',
-            direction, if (direction == "low") "value must stay above spec" else "value must stay below spec"),
-    sprintf('    {"label": "Pass Criterion", "value": "%s"}', acceptance_json),
-    sep = ",\n"
+  method_rows <- paste0(
+    '{"k":"Method","v":"Linear regression: value ~ time. ICH Q1E — Evaluation for Stability Data."},',
+    '{"k":"Transform","v":', jvs(transform_note), '},',
+    '{"k":"Homogeneity of Variance","v":', jvs(bf_note), '},',
+    '{"k":"Confidence level","v":', jvs(ci_pct_json), '},',
+    '{"k":"Spec limit","v":', jvs(sprintf("%g (%s)", spec_limit,
+      if (direction == "low") "lower bound" else "upper bound")), '},',
+    '{"k":"Direction","v":', jvs(sprintf("%s (%s)", direction,
+      if (direction == "low") "value must stay above spec" else "value must stay below spec")), '},',
+    '{"k":"Pass Criterion","v":', jvs(acceptance_json), '}'
   )
 
-  res_parts <- c(
-    sprintf('    {"label": "Data file",              "value": "%s"}', basename(csv_file)),
-    sprintf('    {"label": "Observations (n)",        "value": "%d"}', n_total),
-    sprintf('    {"label": "Time points",             "value": "%d (t_min=%g, t_max=%g)"}',
-            n_timepoints, t_min, t_max),
-    sprintf('    {"label": "Intercept",               "value": "%.5f (p=%.4f)"}', b0, p_intercept),
-    sprintf('    {"label": "Slope",                   "value": "%.5f (p=%.4f)"}', b1, p_slope),
-    sprintf('    {"label": "R-squared",               "value": "%.4f"}', r2),
-    sprintf('    {"label": "Residual SE",             "value": "%.5f"}', sigma),
-    sprintf('    {"label": "Shelf life estimate",     "value": "%s"}', shelf_life_label)
+  results_rows <- paste0(
+    '{"k":"Observations (n)","v":', jvs(as.character(n_total)), '},',
+    '{"k":"Time points","v":', jvs(sprintf("%d (t_min=%g, t_max=%g)", n_timepoints, t_min, t_max)), '},',
+    '{"k":"Intercept","v":', jvs(sprintf("%.5f (p=%.4f)", b0, p_intercept)), '},',
+    '{"k":"Slope","v":', jvs(sprintf("%.5f (p=%.4f)", b1, p_slope)), '},',
+    '{"k":"R-squared","v":', jvs(sprintf("%.4f", r2)), '},',
+    '{"k":"Residual SE","v":', jvs(sprintf("%.5f", sigma)), '},',
+    '{"k":"Shelf life estimate","v":', jvs(shelf_life_label), '}'
   )
-  results_rows <- paste(res_parts, collapse = ",\n")
 
   input_sha256 <- tryCatch({
     fp_norm <- normalizePath(csv_file, winslash = "/", mustWork = FALSE)
@@ -675,8 +671,8 @@ save_linear_report <- function(csv_file, spec_limit, confidence, direction,
     '  "lsl":                  null,',
     '  "usl":                  null,',
     sprintf('  "acceptance_criterion": %s,', jvs(acceptance_json)),
-    sprintf('  "method_rows": [\n%s\n  ],', method_rows),
-    sprintf('  "results_rows": [\n%s\n  ],', results_rows),
+    sprintf('  "method": [%s],', method_rows),
+    sprintf('  "results": [%s],', results_rows),
     sprintf('  "verdict":              "Shelf life estimate: %s",', shelf_life_label),
     '  "verdict_pass":         true,',
     sprintf('  "png_path":             %s', jvs(gsub("\\\\", "/", png_path))),
