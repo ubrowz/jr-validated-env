@@ -466,6 +466,8 @@ save_poolability_report <- function(csv_file, n_batches, n_total, batch_fits,
     '"verdict_pass":', if (is_pass) "true" else "false", ',',
     '"lsl":null,"usl":null,',
     '"png_path":', jvs(png_path), ',',
+    '"input_file":', jvs(basename(csv_file)), ',',
+    '"input_sha256":', jvs(input_sha256), ',',
     '"method":[', method_rows, '],',
     '"results":[', results_rows, '],',
     '"batch_fits":', batch_json, '}'

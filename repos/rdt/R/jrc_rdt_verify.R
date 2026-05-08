@@ -389,6 +389,8 @@ save_rdt_report <- function(file_path, n, k, n_suspensions,
     '"lsl":null,"usl":null,',
     '"use_weibayes":', if (use_weibayes) "true" else "false", ',',
     '"png_path":', jvs(png_path), ',',
+    '"input_file":', jvs(basename(file_path)), ',',
+    '"input_sha256":', jvs(input_sha256), ',',
     '"method":[', method_rows, '],',
     '"results":[', results_rows, ']}'
   )

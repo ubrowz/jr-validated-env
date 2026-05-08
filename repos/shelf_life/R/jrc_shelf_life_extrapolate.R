@@ -262,6 +262,8 @@ save_extrapolate_report <- function(model_file, source_f, run_ts,
     '"verdict_pass":', jvb(spec_ok), ',',
     '"lsl":', lsl_json, ',"usl":', usl_json, ',',
     '"png_path":null,',
+    '"input_file":', jvs(basename(model_file)), ',',
+    '"input_sha256":', jvs(input_sha256), ',',
     '"method":[', method_rows, '],',
     '"results":[', results_rows, ']}'
   )
