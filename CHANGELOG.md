@@ -12,6 +12,28 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+---
+
+## [3.10.0] — 2026-05-08
+
+### Fixed
+
+- **All 12 `--report` scripts: input file SHA-256 added to JSON sidecar** — generated Word
+  reports now include the input filename and its SHA-256 hash, providing a complete data
+  traceability chain for auditors. Scripts with numeric-only inputs (`jrc_verify_discrete`,
+  `jrc_shelf_life_arrhenius`, `jrc_shelf_life_q10`) are unaffected. Pack generators
+  (`generate_dv_report.py`, `generate_pv_report.py`) updated to render the new fields.
+- **`jrc_shelf_life_linear`: JSON sidecar format mismatch with DV report generator** —
+  `method_rows`/`results_rows` were written as `{"label","value"}` pairs under keys
+  `"method_rows"`/`"results_rows"`, while `generate_dv_report.py` reads `"method"`/`"results"`
+  with `{"k","v"}` pairs. Sections 2 and 3 of the generated Word report rendered empty.
+  Converted to the standard format and renamed the keys.
+- **4 DV scripts: top-level `input_file` and `input_sha256` missing from JSON sidecar** —
+  `jrc_shelf_life_extrapolate`, `jrc_shelf_life_poolability`, `jrc_msa_gauge_rr`, and
+  `jrc_rdt_verify` were embedding SHA-256 only inside the `method`/`results` arrays.
+  Added top-level fields to align with `jrc_verify_attr` and `jrc_shelf_life_linear`,
+  enabling the dedicated Input Data Traceability block in the generated Word report.
+
 ### Added
 
 - **`admin/admin_setup`**: new script that runs all first-time (or subsequent) admin setup
@@ -23,6 +45,15 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   runs pre-flight conflict checks (uncommitted changes, local commits, R version mismatch),
   shows what the pull will change (R packages diff, Python env), and when clear automatically
   runs `git pull` → `admin_create_hash` → `admin_install_R` / `admin_install_Python` as needed.
+- **Validation Pack — Input file folder field**: DV and PV Word reports now include a
+  yellow user-fill "Input file folder" row in the traceability section, allowing the user
+  to record where the input file is stored so an auditor can locate it independently.
+- **Website — `get-started.html`**: admin first-time setup steps condensed to
+  `admin_setup --rebuild`; subsequent setups condensed to `admin_setup`.
+- **Website — `guide_install.html`**: sections 5.3–5.6 replaced with single
+  `admin_setup --rebuild` step; section 8.1 (Upgrading) updated to use `admin_update`.
+- **Website — `guide_customization.html`, `regulatory.html`, `guide_validation.html`**:
+  stale `renv.lock` references replaced with `R_requirements.txt`.
 
 ### Changed
 
