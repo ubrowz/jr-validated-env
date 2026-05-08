@@ -10,6 +10,33 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`admin/admin_update`**: new script for safe over-the-air updates — fetches from GitHub,
+  runs pre-flight conflict checks (uncommitted changes, local commits, R version mismatch),
+  shows what the pull will change (R packages diff, Python env), and when clear automatically
+  runs `git pull` → `admin_create_hash` → `admin_install_R` / `admin_install_Python` as needed.
+
+### Changed
+
+- **`bin/jrrun`: R rebuild trigger switches from `renv.lock` to `R_requirements.txt` + `r_version.txt`** —
+  `renv.lock` is a derived file generated deterministically by `admin_install_R`
+  from `R_requirements.txt` and the installed R version. Distributing it via git
+  caused merge conflicts whenever admins upgraded R or added packages locally.
+  The rebuild trigger is now the combined SHA-256 of `R_requirements.txt` and
+  `r_version.txt`. During a rebuild, `jrrun` regenerates `renv.lock` inline from
+  `R_requirements.txt` before calling `renv::restore`, so a stale lockfile can
+  never silently install the wrong package versions.
+- **`admin/admin_install_R`: writes matching combined hash to `.renv_lock_hash`** —
+  prevents a spurious jrrun rebuild immediately after `admin_install_R` has run.
+- **`admin/renv.lock` gitignored and removed from git index** — new admins
+  generate it locally on first `admin_install_R`; existing admins are unaffected
+  (file remains on disk after pull).
+
+---
+
 ## [3.9.1] — 2026-05-07
 
 ### Fixed

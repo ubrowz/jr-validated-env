@@ -1,0 +1,316 @@
+#!/bin/bash
+#
+# admin_update
+# Safely updates JR Anchored from GitHub.
+#
+# Checks for conflicts before pulling, then runs all required admin steps.
+# Blocked if: uncommitted local changes would conflict with incoming changes,
+#             or if incoming R version requires a different R installation.
+#
+# Usage: admin_update
+#
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Resolve paths
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# shellcheck source=../bin/jr_platform.sh
+source "$PROJECT_ROOT/bin/jr_platform.sh"
+
+SEP="─────────────────────────────────────────────────────────────"
+
+# ---------------------------------------------------------------------------
+# Help
+# ---------------------------------------------------------------------------
+
+for arg in "$@"; do
+  if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+    echo ""
+    echo "Usage: admin_update"
+    echo ""
+    echo "  Fetches the latest JR Anchored release from GitHub,"
+    echo "  checks for conflicts, and runs all required admin steps."
+    echo ""
+    echo "  Blocked if:"
+    echo "    - Uncommitted local changes conflict with incoming changes"
+    echo "    - Incoming R version does not match the installed R"
+    echo ""
+    exit 0
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# Banner
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "============================================================="
+echo " JR Anchored — Update"
+echo "============================================================="
+echo ""
+
+# ---------------------------------------------------------------------------
+# Pre-checks
+# ---------------------------------------------------------------------------
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "❌ git not found."
+  exit 1
+fi
+
+cd "$PROJECT_ROOT" || exit 1
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "❌ Not a git repository: $PROJECT_ROOT"
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Fetch
+# ---------------------------------------------------------------------------
+
+echo "🔄 Fetching latest changes from GitHub..."
+git fetch origin 2>&1 | sed 's/^/   /'
+echo ""
+
+# ---------------------------------------------------------------------------
+# Already up to date?
+# ---------------------------------------------------------------------------
+
+LOCAL_HASH=$(git rev-parse HEAD)
+REMOTE_HASH=$(git rev-parse origin/main 2>/dev/null || echo "")
+
+if [[ -z "$REMOTE_HASH" ]]; then
+  echo "❌ Could not reach origin/main. Check your internet connection."
+  exit 1
+fi
+
+if [[ "$LOCAL_HASH" == "$REMOTE_HASH" ]]; then
+  echo "✅ Already up to date — nothing to do."
+  echo ""
+  exit 0
+fi
+
+MERGE_BASE=$(git merge-base HEAD origin/main)
+
+# ---------------------------------------------------------------------------
+# What will the pull change?
+# ---------------------------------------------------------------------------
+
+# Files changed in the incoming update (remote since common ancestor)
+REMOTE_CHANGED=$(git diff --name-only "$MERGE_BASE" origin/main)
+
+# ---------------------------------------------------------------------------
+# Pre-flight checks
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Pre-flight checks"
+echo "$SEP"
+echo ""
+
+BLOCKED=false
+
+# ------------------------------------------------------------------
+# Check 1 — uncommitted local changes that conflict with the update
+# ------------------------------------------------------------------
+
+# Tracked files with any local modification (staged or unstaged)
+LOCAL_DIRTY=$(git status --porcelain | grep -v '^??' | awk '{print $NF}' || true)
+
+if [[ -n "$LOCAL_DIRTY" ]]; then
+  COLLISIONS=""
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    if echo "$REMOTE_CHANGED" | grep -qx "$f"; then
+      COLLISIONS="${COLLISIONS}   $f\n"
+    fi
+  done <<< "$LOCAL_DIRTY"
+
+  if [[ -n "$COLLISIONS" ]]; then
+    echo "❌ Uncommitted local changes conflict with the incoming update:"
+    printf "%b" "$COLLISIONS"
+    echo ""
+    echo "   These files were modified both locally and in the update."
+    echo "   Before running admin_update again, choose one of:"
+    echo ""
+    echo "   Option A — discard your local changes (you will lose them):"
+    echo "     git checkout -- <file>"
+    echo ""
+    echo "   Option B — back up and restore after the update:"
+    echo "     cp admin/R_requirements.txt ~/Desktop/R_requirements.txt.bak"
+    echo "     git checkout -- admin/R_requirements.txt"
+    echo "     admin/admin_update"
+    echo "     # then re-apply your additions to admin/R_requirements.txt"
+    echo "     # and run: admin/admin_install_R"
+    echo ""
+    BLOCKED=true
+  else
+    echo "⚠️   Uncommitted local changes (not in conflict with the update):"
+    while IFS= read -r f; do
+      [[ -z "$f" ]] && continue
+      echo "   $f"
+    done <<< "$LOCAL_DIRTY"
+    echo "   These files will be left unchanged by the update."
+    echo ""
+  fi
+fi
+
+# ------------------------------------------------------------------
+# Check 2 — local commits that diverge from remote on the same files
+# ------------------------------------------------------------------
+
+LOCAL_AHEAD=$(git log --oneline "$MERGE_BASE"..HEAD 2>/dev/null || true)
+
+if [[ -n "$LOCAL_AHEAD" ]]; then
+  LOCAL_COMMITTED=$(git diff --name-only "$MERGE_BASE" HEAD)
+  COLLISIONS=""
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    if echo "$REMOTE_CHANGED" | grep -qx "$f"; then
+      COLLISIONS="${COLLISIONS}   $f\n"
+    fi
+  done <<< "$LOCAL_COMMITTED"
+
+  if [[ -n "$COLLISIONS" ]]; then
+    echo "❌ Your local commits modify the same files as the incoming update:"
+    printf "%b" "$COLLISIONS"
+    echo ""
+    echo "   Run the update manually:"
+    echo "     git pull --no-rebase"
+    echo "   For each conflicted file, keep your version:"
+    echo "     git checkout --ours <file>"
+    echo "     git add <file>"
+    echo "   Then:"
+    echo "     git commit"
+    echo "     admin/admin_create_hash"
+    echo "     admin/admin_install_R   (if R packages changed)"
+    echo ""
+    BLOCKED=true
+  fi
+fi
+
+# ------------------------------------------------------------------
+# Check 3 — R version: does the update require a different R?
+# ------------------------------------------------------------------
+
+LOCAL_R_VER=$(tr -d '[:space:]' < "$SCRIPT_DIR/r_version.txt" 2>/dev/null || echo "")
+REMOTE_R_VER=$(git show origin/main:admin/r_version.txt 2>/dev/null | tr -d '[:space:]' || echo "$LOCAL_R_VER")
+
+if [[ "$LOCAL_R_VER" != "$REMOTE_R_VER" ]]; then
+  echo "⚠️   R version requirement changes: $LOCAL_R_VER → $REMOTE_R_VER"
+
+  if command -v Rscript >/dev/null 2>&1; then
+    INSTALLED_R=$(Rscript --vanilla -e 'cat(format(getRversion(), nsmall=1))' 2>/dev/null || echo "")
+    INSTALLED_R_MM=$(echo "$INSTALLED_R" | cut -d. -f1,2)
+    if [[ "$INSTALLED_R_MM" != "$REMOTE_R_VER" ]]; then
+      echo "❌ Installed R ($INSTALLED_R) does not match the required version ($REMOTE_R_VER)."
+      echo ""
+      echo "   Install R $REMOTE_R_VER from https://cran.r-project.org"
+      echo "   then run admin_update again."
+      echo ""
+      BLOCKED=true
+    else
+      echo "   Installed R $INSTALLED_R matches ✅"
+      echo ""
+    fi
+  else
+    echo "⚠️   Could not detect installed R version — verify manually after update."
+    echo ""
+  fi
+else
+  echo "✅ R version: $LOCAL_R_VER (unchanged)"
+fi
+
+# ------------------------------------------------------------------
+# Info: R packages changing?
+# ------------------------------------------------------------------
+
+R_ENV_CHANGED=false
+if echo "$REMOTE_CHANGED" | grep -qE '^admin/R_requirements\.txt$|^admin/r_version\.txt$'; then
+  R_ENV_CHANGED=true
+  echo "ℹ️   R environment will be updated after pull."
+  R_DIFF=$(git diff "$MERGE_BASE" origin/main -- admin/R_requirements.txt 2>/dev/null | grep '^[+-][^+-]' || true)
+  if [[ -n "$R_DIFF" ]]; then
+    echo "   Changes to R_requirements.txt:"
+    echo "$R_DIFF" | sed 's/^/   /'
+  fi
+  echo ""
+else
+  echo "✅ R packages: unchanged"
+fi
+
+# ------------------------------------------------------------------
+# Info: Python environment changing?
+# ------------------------------------------------------------------
+
+PY_ENV_CHANGED=false
+if echo "$REMOTE_CHANGED" | grep -qE '^admin/python_requirements\.txt$|^admin/python_version\.txt$'; then
+  PY_ENV_CHANGED=true
+  echo "ℹ️   Python environment will be updated after pull."
+  echo ""
+else
+  echo "✅ Python environment: unchanged"
+fi
+
+echo ""
+
+# ---------------------------------------------------------------------------
+# Blocked?
+# ---------------------------------------------------------------------------
+
+if [[ "$BLOCKED" == "true" ]]; then
+  echo "============================================================="
+  echo " ❌ Update blocked — resolve the issues above first."
+  echo "============================================================="
+  echo ""
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Execute update
+# ---------------------------------------------------------------------------
+
+echo "$SEP"
+echo " Applying update"
+echo "$SEP"
+echo ""
+
+# --- git pull
+echo "⬇️   Pulling from GitHub..."
+git pull
+echo ""
+
+# --- admin_create_hash (always — any tracked file may have changed)
+echo "🔒 Regenerating integrity hash..."
+"$SCRIPT_DIR/admin_create_hash"
+echo ""
+
+# --- admin_install_R if R environment spec changed
+if [[ "$R_ENV_CHANGED" == "true" ]]; then
+  echo "📦 Reinstalling R packages..."
+  "$SCRIPT_DIR/admin_install_R"
+  echo ""
+fi
+
+# --- admin_install_Python if Python environment spec changed
+if [[ "$PY_ENV_CHANGED" == "true" ]]; then
+  echo "🐍 Reinstalling Python packages..."
+  "$SCRIPT_DIR/admin_install_Python"
+  echo ""
+fi
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+
+echo "============================================================="
+echo " ✅ Update complete"
+echo "============================================================="
+echo ""
