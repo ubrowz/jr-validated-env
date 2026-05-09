@@ -14,6 +14,51 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [3.11.0] — 2026-05-09
+
+### Added
+
+- **GUI: Admin tab** — third sidebar tab gated behind a SHA256-hashed password.
+  Admin can set a password on first use, log in/out per browser session, and run
+  all admin commands (`admin_install_R`, `admin_install_Python`, `admin_create_hash`,
+  `admin_validate`, `admin_setup`, `jr_versions`) with live streaming output.
+  Admin config stored in `app/.admin_config.json` (gitignored).
+- **GUI: Export Configured App** — admin button in the Admin tab that bundles a
+  configured copy of `JR Anchored.app` (macOS) or a configured `.bat` + launcher
+  zip (Windows) with the project root path baked in, ready to share with end users.
+- **GUI: Environment pre-flight checks** — sidebar shows `✅`/`❌` R and Python
+  version status on every page, compared against `admin/r_version.txt` and
+  `admin/python_version.txt`. Scripts page shows an error banner if versions mismatch.
+- **GUI: Settings UX improvements** — Validation Pack section shows a friendly
+  `st.info` for non-admin users; Terminal Access and Install App sections clearly
+  labelled as optional; Install App explains the Launchpad benefit.
+
+### Fixed
+
+- **`JR Anchored.app` launcher: no Terminal window** — launcher rewritten to use
+  `nohup /bin/zsh -l -c "exec jr_app" & disown`. The app now detaches silently;
+  a macOS notification confirms the browser is opening. No Terminal window left open.
+- **`JR Anchored.app` launcher: full PATH on double-click** — changed to a zsh
+  login shell (`-l`) so `~/.zprofile` is sourced, giving the app the same R, Python,
+  and Homebrew PATH as an interactive Terminal session.
+- **GUI: Python 3.9 type-hint error** — added `from __future__ import annotations`
+  to fix `str | None` syntax failing on macOS system Python (< 3.10).
+- **`_get_env_status()`: Rscript not found via bare name** — now tries four candidate
+  paths (`Rscript`, `/usr/local/bin/Rscript`, `/opt/homebrew/bin/Rscript`,
+  `/Library/Frameworks/R.framework/Resources/bin/Rscript`) before reporting R as
+  not found, ensuring detection works even when PATH is minimal.
+- **`setup_jr_path.sh`: project root written unconditionally** — `jr_project_root.txt`
+  is now always written to `~/.jrscript/`, even when PATH was already configured,
+  so the GUI launcher always knows the project location.
+- **`JR Anchored.app` launcher: 3-level project root fallback** — checks
+  `Contents/Resources/jr_project_root.txt` (admin-exported), then
+  `~/.jrscript/jr_project_root.txt` (written by `setup_jr_path.sh`), then
+  relative path (app still in project folder).
+- **`JR Anchored.bat`: configurable project root** — added `JRROOT` variable
+  (blank = auto-detect) for admin-distributed Windows launchers.
+
+---
+
 ## [3.10.0] — 2026-05-08
 
 ### Fixed

@@ -8,13 +8,19 @@ integrity-checked, validated path as the CLI.
 Launch:  streamlit run app/jr_app.py
 """
 
+from __future__ import annotations
+
 import base64
 import glob
+import hashlib
+import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 
 import streamlit as st
 
@@ -38,6 +44,7 @@ COMM_DATA  = os.path.join(PROJECT_ROOT, "oq", "data")
 
 PACK_DIR    = os.path.join(PROJECT_ROOT, "pack")
 PACK_CONFIG = os.path.join(PACK_DIR, "jr_pack_config.json")
+ADMIN_CONFIG = os.path.join(APP_DIR, ".admin_config.json")
 
 # ---------------------------------------------------------------------------
 # Windows: convert a Windows path to a POSIX path for bash (MSYS2).
@@ -849,6 +856,51 @@ CATALOGUE = {
 }
 
 # ---------------------------------------------------------------------------
+# Environment pre-flight check (cached per session)
+# ---------------------------------------------------------------------------
+
+def _get_env_status() -> dict:
+    if "env_status" not in st.session_state:
+        _r_req_file  = os.path.join(PROJECT_ROOT, "admin", "r_version.txt")
+        _py_req_file = os.path.join(PROJECT_ROOT, "admin", "python_version.txt")
+
+        _r_required  = open(_r_req_file).read().strip()  if os.path.exists(_r_req_file)  else "?"
+        _py_req_full = open(_py_req_file).read().strip() if os.path.exists(_py_req_file) else "?.?.?"
+        _py_required = ".".join(_py_req_full.split(".")[:2])
+
+        _v           = sys.version_info
+        _py_inst     = f"{_v.major}.{_v.minor}.{_v.micro}"
+        _py_ok       = f"{_v.major}.{_v.minor}" == _py_required
+
+        _r_inst, _r_ok = "not found", False
+        _rscript_candidates = [
+            "Rscript",
+            "/usr/local/bin/Rscript",
+            "/opt/homebrew/bin/Rscript",
+            "/Library/Frameworks/R.framework/Resources/bin/Rscript",
+        ]
+        for _rscript in _rscript_candidates:
+            try:
+                _rp = subprocess.run(
+                    [_rscript, "--vanilla", "-e", "cat(format(getRversion(), nsmall=1))"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                if _rp.returncode == 0:
+                    _r_full = _rp.stdout.strip()
+                    _r_inst = _r_full
+                    _r_ok   = ".".join(_r_full.split(".")[:2]) == _r_required
+                    break
+            except Exception:
+                continue
+
+        st.session_state.env_status = {
+            "r_ok": _r_ok,   "r_installed": _r_inst,  "r_required": _r_required,
+            "py_ok": _py_ok, "py_installed": _py_inst, "py_required": _py_required,
+            "all_ok": _r_ok and _py_ok,
+        }
+    return st.session_state.env_status
+
+# ---------------------------------------------------------------------------
 # Page config
 # ---------------------------------------------------------------------------
 
@@ -866,7 +918,15 @@ st.sidebar.title("⚓ JR Anchored")
 st.sidebar.caption("Validated R & Python analytics")
 st.sidebar.markdown("---")
 
-page = st.sidebar.radio("Navigation", ["Scripts", "⚙  Settings"], label_visibility="collapsed")
+_env = _get_env_status()
+_r_line  = (f"✅ R {_env['r_installed']}" if _env["r_ok"]
+            else f"❌ R {_env['r_installed']} *(need {_env['r_required']})*")
+_py_line = (f"✅ Python {_env['py_installed']}" if _env["py_ok"]
+            else f"❌ Python {_env['py_installed']} *(need {_env['py_required']})*")
+st.sidebar.markdown(f"**Environment**  \n{_r_line}  \n{_py_line}")
+st.sidebar.markdown("---")
+
+page = st.sidebar.radio("Navigation", ["Scripts", "⚙  Settings", "🔧  Admin"], label_visibility="collapsed")
 st.sidebar.markdown("---")
 
 if page == "Scripts":
@@ -911,25 +971,23 @@ st.sidebar.caption(
 # Settings page (renders and stops; Scripts page continues below)
 # ---------------------------------------------------------------------------
 
-if page != "Scripts":
-    import json as _json
-
+if page == "⚙  Settings":
     st.title("⚙  Settings")
-    st.markdown("Configure the **JR Anchored Validation Pack** report fields. "
-                "These values are embedded in every generated Word report.")
 
+    st.markdown("### Validation Pack")
     pack_available = os.path.isfile(PACK_CONFIG)
 
     if not pack_available:
-        st.warning(
-            "Configuration file not found. "
-            f"Expected: `{PACK_CONFIG}`\n\n"
-            "Run `bash pack/install.sh` to set up the Validation Pack, "
-            "or run `jr_pack configure` to create the config file."
+        st.info(
+            "The **Validation Pack** is not installed on this machine.  \n"
+            "It is a paid add-on that enables Word report generation for design "
+            "verification and process validation. If you have purchased it, ask "
+            "your administrator to install it. If you are not a Validation Pack "
+            "user, no action is needed here."
         )
     else:
         with open(PACK_CONFIG, encoding="utf-8") as _f:
-            _config = _json.load(_f)
+            _config = json.load(_f)
 
         with st.form("pack_settings_form"):
             st.markdown("### Report configuration")
@@ -957,17 +1015,343 @@ if page != "Scripts":
             _config["logo_path"]         = s_logo
             _config["doc_number_prefix"] = s_prefix
             with open(PACK_CONFIG, "w", encoding="utf-8") as _f:
-                _json.dump(_config, _f, indent=2, ensure_ascii=False)
+                json.dump(_config, _f, indent=2, ensure_ascii=False)
             st.success("Configuration saved.")
 
         st.markdown("---")
         st.caption(f"Config file: `{PACK_CONFIG}`")
+
+    # --- Terminal Access (optional) ----------------------------------------
+    st.markdown("---")
+    st.markdown("### Terminal Access *(optional)*")
+    st.caption(
+        "Only needed if you want to run JR scripts from a Terminal window. "
+        "The GUI works without this."
+    )
+
+    _home = os.path.expanduser("~")
+    _rc_file = os.path.join(_home, ".zprofile" if sys.platform == "darwin" else ".bashrc")
+    _marker  = "# JR Validated Environment — begin"
+    _configured = (
+        os.path.exists(_rc_file)
+        and _marker in open(_rc_file, encoding="utf-8").read()
+    )
+
+    if _configured:
+        st.success(f"PATH is configured — JR scripts are available in every Terminal window.")
+    else:
+        st.info("Not configured yet. Click below to add JR scripts to your shell PATH.")
+
+    _setup_script = os.path.join(PROJECT_ROOT, "setup_jr_path.sh")
+    if st.button("▶  Run setup_jr_path.sh", key="btn_path_setup"):
+        _result = subprocess.run(
+            BASH_PREFIX + [_setup_script],
+            capture_output=True, text=True, cwd=PROJECT_ROOT,
+        )
+        _out = (_result.stdout or "") + (_result.stderr or "")
+        st.code(_out, language="text")
+        if _result.returncode == 0:
+            st.success("Done. **Open a new Terminal window** before using JR scripts from the command line.")
+        else:
+            st.error("Setup failed — see output above.")
+
+    # --- Install App (optional) --------------------------------------------
+    st.markdown("---")
+    st.markdown("### Install App *(optional)*")
+    st.caption("Convenience only — the GUI works without this.")
+    st.markdown(
+        "After installing, you can launch JR Anchored directly from **Launchpad** — "
+        "no need to locate the app file each time."
+    )
+
+    if sys.platform == "darwin":
+        _app_src = os.path.join(PROJECT_ROOT, "JR Anchored.app")
+        _app_dst = os.path.expanduser("~/Applications/JR Anchored.app")
+        if os.path.exists(_app_dst):
+            st.success("JR Anchored is installed in ~/Applications.")
+        else:
+            st.info("Installs to ~/Applications so you can open JR Anchored from Launchpad, Spotlight, or the Dock.")
+        if st.button("📲  Install to ~/Applications", key="btn_install_app"):
+            if os.path.exists(_app_dst):
+                shutil.rmtree(_app_dst)
+            _inst = subprocess.run(["ditto", _app_src, _app_dst],
+                                   capture_output=True, text=True)
+            if _inst.returncode == 0:
+                st.success("Installed. Find JR Anchored in ~/Applications, Launchpad, or Spotlight.")
+                st.info("Drag it from ~/Applications to your Dock to pin it.")
+            else:
+                st.error(f"Install failed: {_inst.stderr}")
+
+    elif sys.platform == "win32":
+        _ps1 = os.path.join(PROJECT_ROOT, "Create JR Anchored Shortcut.ps1")
+        st.info("Create a Desktop shortcut with the anchor icon, then pin it to the taskbar.")
+        if st.button("📲  Create Desktop Shortcut", key="btn_shortcut"):
+            _sc = subprocess.run(
+                ["powershell", "-ExecutionPolicy", "Bypass", "-File", _ps1],
+                capture_output=True, text=True, cwd=PROJECT_ROOT,
+            )
+            st.code((_sc.stdout or "") + (_sc.stderr or ""), language="text")
+            if _sc.returncode == 0:
+                st.success("Shortcut created on your Desktop.")
+            else:
+                st.error("Failed — see output above.")
+
+    if sys.platform == "darwin":
+        st.markdown("---")
+        st.caption(
+            f"App log (if something goes wrong): `{os.path.expanduser('~/.jrscript/jr_app.log')}`"
+        )
+
+    st.stop()
+
+# ---------------------------------------------------------------------------
+# Admin page
+# ---------------------------------------------------------------------------
+
+if page == "🔧  Admin":
+
+    def _admin_pw_hash(pw: str) -> str:
+        return hashlib.sha256(pw.encode()).hexdigest()
+
+    def _stored_hash() -> str | None:
+        if os.path.exists(ADMIN_CONFIG):
+            with open(ADMIN_CONFIG) as _f:
+                return json.load(_f).get("password_hash")
+        return None
+
+    def _save_admin_pw(pw: str):
+        with open(ADMIN_CONFIG, "w") as _f:
+            json.dump({"password_hash": _admin_pw_hash(pw)}, _f)
+
+    st.title("🔧  Admin")
+
+    _stored = _stored_hash()
+
+    if not st.session_state.get("admin_unlocked"):
+        if _stored is None:
+            st.info("No admin password set. Create one to continue.")
+            with st.form("admin_set_pw"):
+                _pw1 = st.text_input("New password",     type="password", key="adm_pw1")
+                _pw2 = st.text_input("Confirm password", type="password", key="adm_pw2")
+                if st.form_submit_button("Set password", type="primary"):
+                    if not _pw1:
+                        st.error("Password cannot be empty.")
+                    elif _pw1 != _pw2:
+                        st.error("Passwords do not match.")
+                    else:
+                        _save_admin_pw(_pw1)
+                        st.session_state.admin_unlocked = True
+                        st.rerun()
+        else:
+            with st.form("admin_login"):
+                _pw = st.text_input("Admin password", type="password", key="adm_pw")
+                if st.form_submit_button("Unlock", type="primary"):
+                    if _admin_pw_hash(_pw) == _stored:
+                        st.session_state.admin_unlocked = True
+                        st.rerun()
+                    else:
+                        st.error("Incorrect password.")
+        st.stop()
+
+    # Authenticated -------------------------------------------------------
+
+    _col_lock, _col_clear, _ = st.columns([1, 1, 4])
+    if _col_lock.button("🔒  Lock admin"):
+        st.session_state.admin_unlocked = False
+        st.rerun()
+    _col_clear.button("🗑  Clear output")
+
+    with st.expander("🔑  Change admin password"):
+        with st.form("admin_change_pw"):
+            _old_pw  = st.text_input("Current password",     type="password", key="adm_old")
+            _new_pw1 = st.text_input("New password",         type="password", key="adm_new1")
+            _new_pw2 = st.text_input("Confirm new password", type="password", key="adm_new2")
+            if st.form_submit_button("Change password"):
+                if _admin_pw_hash(_old_pw) != _stored_hash():
+                    st.error("Current password is incorrect.")
+                elif not _new_pw1:
+                    st.error("New password cannot be empty.")
+                elif _new_pw1 != _new_pw2:
+                    st.error("New passwords do not match.")
+                else:
+                    _save_admin_pw(_new_pw1)
+                    st.success("Password changed.")
+
+    st.markdown("---")
+
+    ADMIN_DIR = os.path.join(PROJECT_ROOT, "admin")
+
+    def _run_admin_cmd(label: str, cmd: list):
+        out_area = st.empty()
+        lines = []
+        proc = subprocess.Popen(
+            BASH_PREFIX + cmd,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, cwd=PROJECT_ROOT,
+        )
+        for line in proc.stdout:
+            lines.append(line)
+            out_area.code("".join(lines), language="text")
+        proc.wait()
+        if not lines:
+            out_area.code("(no output)", language="text")
+        if proc.returncode == 0:
+            st.success(f"{label} completed successfully.")
+        else:
+            st.error(f"{label} failed (exit {proc.returncode}).")
+
+    # --- Integrity & Validation ------------------------------------------
+    st.markdown("### Integrity & Validation")
+    _col_h, _col_v = st.columns(2)
+    with _col_h:
+        st.markdown("**Regenerate integrity file**")
+        st.caption("Run after adding or changing any script. Regenerates `project_integrity.sha256`.")
+        _run_hash = st.button("▶  admin_create_hash", key="btn_hash", use_container_width=True)
+    with _col_v:
+        st.markdown("**Generate IQ validation evidence**")
+        st.caption("Runs R and Python env validation scripts, produces timestamped audit file.")
+        _run_validate = st.button("▶  admin_validate", key="btn_validate", use_container_width=True)
+
+    if _run_hash:
+        _run_admin_cmd("admin_create_hash", [os.path.join(ADMIN_DIR, "admin_create_hash")])
+    if _run_validate:
+        _run_admin_cmd("admin_validate", [os.path.join(ADMIN_DIR, "admin_validate")])
+
+    st.markdown("---")
+
+    # --- Update ----------------------------------------------------------
+    st.markdown("### Update")
+    st.caption(
+        "Pre-flight conflict checks (uncommitted changes, R version mismatch, local commits), "
+        "then git pull → re-hash → reinstall environments as needed."
+    )
+    _run_update = st.button("▶  admin_update", key="btn_update")
+    if _run_update:
+        _run_admin_cmd("admin_update", [os.path.join(ADMIN_DIR, "admin_update")])
+
+    st.markdown("---")
+
+    # --- OQ Testing ------------------------------------------------------
+    st.markdown("### OQ Testing")
+    _oq_extra = st.text_input(
+        "Extra pytest options for admin_oq (optional)",
+        value="", placeholder="e.g.  -k jrc_normality   or   -x",
+        key="oq_extra",
+    )
+    _col_oq, _col_oq_all = st.columns(2)
+    with _col_oq:
+        st.caption("Core / community suite only.")
+        _run_oq = st.button("▶  admin_oq", key="btn_oq", use_container_width=True)
+    with _col_oq_all:
+        st.caption("Core + all module suites (repos/*/)")
+        _run_oq_all = st.button("▶  admin_oq_all", key="btn_oq_all", use_container_width=True)
+
+    if _run_oq:
+        _extra = _oq_extra.strip().split() if _oq_extra.strip() else []
+        _run_admin_cmd("admin_oq", [os.path.join(ADMIN_DIR, "admin_oq")] + _extra)
+    if _run_oq_all:
+        _run_admin_cmd("admin_oq_all", [os.path.join(ADMIN_DIR, "admin_oq_all")])
+
+    st.markdown("---")
+
+    # --- Export Configured App -------------------------------------------
+    st.markdown("### Export Configured App")
+    st.markdown(
+        "Create a distributable zip with the shared project folder path baked in. "
+        "Share via Slack or Mail — users unzip and double-click to launch."
+    )
+    _export_root = st.text_input(
+        "Shared project folder path",
+        value=PROJECT_ROOT,
+        key="export_root",
+        help="The path that end users' machines use to reach the shared project folder "
+             "(e.g. a network mount or Dropbox path).",
+    )
+
+    if sys.platform == "darwin":
+        st.caption(
+            "Produces `JR Anchored.zip` on your Desktop.  "
+            "Users: download → unzip → right-click → **Open** once (Gatekeeper bypass) → done."
+        )
+        if st.button("📦  Create shareable zip (macOS)", key="btn_export_mac"):
+            _app_src = os.path.join(PROJECT_ROOT, "JR Anchored.app")
+            _zip_dst = os.path.expanduser("~/Desktop/JR Anchored.zip")
+            if os.path.exists(_zip_dst):
+                os.remove(_zip_dst)
+            with tempfile.TemporaryDirectory() as _etmp:
+                _app_copy = os.path.join(_etmp, "JR Anchored.app")
+                _cp = subprocess.run(["ditto", _app_src, _app_copy],
+                                     capture_output=True, text=True)
+                if _cp.returncode != 0:
+                    st.error(f"Copy failed: {_cp.stderr}")
+                else:
+                    _cfg = os.path.join(_app_copy, "Contents", "Resources",
+                                        "jr_project_root.txt")
+                    with open(_cfg, "w") as _f:
+                        _f.write(_export_root.strip())
+                    _zp = subprocess.run(
+                        ["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent",
+                         _app_copy, _zip_dst],
+                        capture_output=True, text=True,
+                    )
+                    if _zp.returncode == 0:
+                        st.success("Ready: `~/Desktop/JR Anchored.zip`")
+                        st.info(
+                            "**User instructions:**\n"
+                            "1. Download and double-click the zip to extract\n"
+                            "2. Right-click `JR Anchored.app` → **Open** (one-time Gatekeeper step)\n"
+                            "3. Drag to Dock to pin for future use"
+                        )
+                    else:
+                        st.error(f"Zip failed: {_zp.stderr}")
+
+    elif sys.platform == "win32":
+        st.caption(
+            "Produces `JR Anchored Windows.zip` on your Desktop containing a "
+            "configured .bat, the icon, and the shortcut creator."
+        )
+        if st.button("📦  Create shareable zip (Windows)", key="btn_export_win"):
+            _bat_src = os.path.join(PROJECT_ROOT, "JR Anchored.bat")
+            _ico_src = os.path.join(PROJECT_ROOT, "JR Anchored.ico")
+            _ps1_src = os.path.join(PROJECT_ROOT, "Create JR Anchored Shortcut.ps1")
+            _zip_dst = os.path.expanduser("~/Desktop/JR Anchored Windows.zip")
+            try:
+                _bat_text       = open(_bat_src, encoding="utf-8").read()
+                _bat_configured = _bat_text.replace(
+                    'set "JRROOT="', f'set "JRROOT={_export_root.strip()}"'
+                )
+                with zipfile.ZipFile(_zip_dst, "w", zipfile.ZIP_DEFLATED) as _z:
+                    _z.writestr("JR Anchored.bat", _bat_configured)
+                    for _extra_file in [_ico_src, _ps1_src]:
+                        if os.path.exists(_extra_file):
+                            _z.write(_extra_file, os.path.basename(_extra_file))
+                st.success("Ready: `~/Desktop/JR Anchored Windows.zip`")
+                st.info(
+                    "**User instructions:**\n"
+                    "1. Download and unzip\n"
+                    "2. Right-click `Create JR Anchored Shortcut.ps1` → **Run with PowerShell**\n"
+                    "3. Pin the Desktop shortcut to the taskbar"
+                )
+            except Exception as _ex:
+                st.error(f"Export failed: {_ex}")
 
     st.stop()
 
 # ---------------------------------------------------------------------------
 # Scripts page — title and description
 # ---------------------------------------------------------------------------
+
+if not _env["all_ok"]:
+    _mismatch_parts = []
+    if not _env["r_ok"]:
+        _mismatch_parts.append(f"R {_env['r_installed']} installed — R {_env['r_required']} required")
+    if not _env["py_ok"]:
+        _mismatch_parts.append(f"Python {_env['py_installed']} installed — Python {_env['py_required']} required")
+    st.error(
+        "⚠️  Version mismatch — scripts will not run correctly.  \n"
+        + "  \n".join(_mismatch_parts)
+        + "  \nPlease install the correct version(s) and restart the app."
+    )
 
 st.title(script_choice)
 st.markdown(f"<p style='font-size:1.2rem;color:#555;margin-top:-12px'>Script: <code>{cfg['script']}</code></p>", unsafe_allow_html=True)

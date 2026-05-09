@@ -1,10 +1,34 @@
 #!/bin/bash
-SCRIPT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
-JR_APP="$SCRIPT_DIR/bin/jr_app"
+# Resolve project root — priority order:
+#   1. Baked-in config (admin distributed this .app with a hardcoded path)
+#   2. User config written by setup_jr_path.sh
+#   3. Relative path fallback (app is still inside the project folder)
+_BUNDLE_CFG="$(dirname "$0")/../Resources/jr_project_root.txt"
+_USER_CFG="$HOME/.jrscript/jr_project_root.txt"
 
-osascript <<APPLESCRIPT
-tell application "Terminal"
-    activate
-    do script "exec \"$JR_APP\""
-end tell
-APPLESCRIPT
+if [[ -f "$_BUNDLE_CFG" ]] && [[ -s "$_BUNDLE_CFG" ]]; then
+    SCRIPT_DIR="$(cat "$_BUNDLE_CFG")"
+elif [[ -f "$_USER_CFG" ]] && [[ -s "$_USER_CFG" ]]; then
+    SCRIPT_DIR="$(cat "$_USER_CFG")"
+else
+    SCRIPT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+fi
+
+JR_APP="$SCRIPT_DIR/bin/jr_app"
+LOG_DIR="$HOME/.jrscript"
+LOG="$LOG_DIR/jr_app.log"
+mkdir -p "$LOG_DIR"
+
+# Guard: project folder must exist
+if [[ ! -f "$JR_APP" ]]; then
+    osascript -e "display alert \"JR Anchored\" message \"Could not find the JR Anchored project at:\n$SCRIPT_DIR\n\nMake sure the shared folder is accessible, then try again.\" as critical"
+    exit 1
+fi
+
+# Brief notification — no Terminal window needed
+osascript -e 'display notification "Opening in your browser shortly…" with title "JR Anchored ⚓"'
+
+# Run through a zsh login shell so ~/.zprofile is sourced and the user's
+# full PATH (R, Python, Homebrew) is available — same as opening Terminal.
+nohup /bin/zsh -l -c "exec \"$JR_APP\"" > "$LOG" 2>&1 &
+disown $!

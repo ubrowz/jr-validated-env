@@ -17,6 +17,11 @@ source "$SCRIPT_DIR/bin/jr_platform.sh"
 
 RC_FILE="$(jr_shell_rc)"
 
+# --- Always write project root so the GUI launcher works from any location
+_JR_STATE_DIR="$HOME/.jrscript"
+mkdir -p "$_JR_STATE_DIR"
+echo "$SCRIPT_DIR" > "$_JR_STATE_DIR/jr_project_root.txt"
+
 # --- Check if already added
 if grep -q "$SCRIPT_DIR/bin" "$RC_FILE" 2>/dev/null; then
   echo "✅ PATH already configured — nothing to do."
