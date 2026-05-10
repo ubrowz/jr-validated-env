@@ -7,7 +7,7 @@
 #
 # Reuses the shared OQ venv at ~/.venvs/<PROJECT_ID>_oq/ (created by
 # admin_oq). If the venv does not yet exist, it is created here using
-# oq/requirements.txt and oq/python_version.txt from the core OQ folder.
+# oq/requirements.txt from the core OQ folder; Python version pin from admin/python_version.txt.
 #
 # Evidence output:
 #   ~/.jrscript/<PROJECT_ID>/validation/corr_oq_execution_<timestamp>.txt
@@ -66,9 +66,9 @@ elif [[ "$(cat "$HASH_FILE")" != "$REQ_HASH" ]]; then
 fi
 
 if $NEED_REBUILD; then
-  PY_VER_FILE="$CORE_OQ_DIR/python_version.txt"
+  PY_VER_FILE="$ADMIN_HOME/python_version.txt"
   if [[ ! -f "$PY_VER_FILE" ]]; then
-    echo "❌ oq/python_version.txt not found at: $PY_VER_FILE"
+    echo "❌ admin/python_version.txt not found at: $PY_VER_FILE"
     exit 1
   fi
   REQ_PYTHON="$(tr -d '[:space:]' < "$PY_VER_FILE")"

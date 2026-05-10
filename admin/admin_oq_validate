@@ -4,7 +4,7 @@
 #
 # Validates the OQ test environment before running admin_oq.
 # Checks that the OQ venv exists, that the Python version matches
-# oq/python_version.txt, and that all packages in oq/requirements.txt
+# admin/python_version.txt, and that all packages in oq/requirements.txt
 # are installed at the pinned versions.
 #
 # Usage: admin_oq_validate
@@ -29,7 +29,7 @@ fi
 PROJECT_ID="$(tr -d '[:space:]' < "$PROJECT_ID_FILE")"
 
 OQ_VENV="$HOME/.venvs/${PROJECT_ID}_oq"
-PYTHON_PIN_FILE="$PROJECT_ROOT/oq/python_version.txt"
+PYTHON_PIN_FILE="$SCRIPT_DIR/python_version.txt"
 REQUIREMENTS_FILE="$PROJECT_ROOT/oq/requirements.txt"
 
 PASS="✅"
@@ -47,22 +47,22 @@ echo " "
 # ---------------------------------------------------------------------------
 # Check 1: python_version.txt exists and is readable
 # ---------------------------------------------------------------------------
-echo "Checking oq/python_version.txt ..."
+echo "Checking admin/python_version.txt ..."
 if [[ ! -f "$PYTHON_PIN_FILE" ]]; then
-  echo "$FAIL  oq/python_version.txt not found at: $PYTHON_PIN_FILE"
+  echo "$FAIL  admin/python_version.txt not found at: $PYTHON_PIN_FILE"
   echo "       Create it with a single line containing the pinned Python version,"
-  echo "       e.g.: echo '3.11.4' > oq/python_version.txt"
+  echo "       e.g.: echo '3.11.4' > admin/python_version.txt"
   echo " "
   errors=$((errors + 1))
 else
   PINNED_PYTHON="$(cat "$PYTHON_PIN_FILE" | tr -d '[:space:]')"
   if [[ -z "$PINNED_PYTHON" ]]; then
-    echo "$FAIL  oq/python_version.txt is empty."
+    echo "$FAIL  admin/python_version.txt is empty."
     echo "       Add a single line with the pinned Python version, e.g.: 3.11.4"
     echo " "
     errors=$((errors + 1))
   else
-    echo "$PASS  oq/python_version.txt found. Pinned version: $PINNED_PYTHON"
+    echo "$PASS  admin/python_version.txt found. Pinned version: $PINNED_PYTHON"
     echo " "
   fi
 fi
@@ -109,7 +109,7 @@ if [[ -d "$OQ_VENV" && -n "$PINNED_PYTHON" ]]; then
     else
       echo "$FAIL  Python version mismatch."
       echo "       Installed in venv: $INSTALLED_PYTHON"
-      echo "       Pinned in oq/python_version.txt: $PINNED_PYTHON"
+      echo "       Pinned in admin/python_version.txt: $PINNED_PYTHON"
       echo " "
       echo "       Options:"
       echo "       A) If $INSTALLED_PYTHON is acceptable, update the pin:"

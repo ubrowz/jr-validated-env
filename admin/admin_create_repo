@@ -15,7 +15,6 @@
 #   ├── oq/
 #   │   ├── conftest.py             ← shared OQ helpers (ready to use)
 #   │   ├── requirements.txt        ← pytest pin (copied from oq/)
-#   │   ├── python_version.txt      ← Python version (copied from oq/)
 #   │   ├── data/                   ← test data files (empty)
 #   │   └── test_<module>_example.py ← annotated example test (ready to adapt)
 #   └── admin_<module>_oq           ← module OQ runner (executable, ready to run)
@@ -86,7 +85,7 @@ fi
 
 CORE_OQ_DIR="$PROJECT_ROOT/oq"
 OQ_REQUIREMENTS="$CORE_OQ_DIR/requirements.txt"
-OQ_PYTHON_VERSION="$CORE_OQ_DIR/python_version.txt"
+OQ_PYTHON_VERSION="$PROJECT_ROOT/admin/python_version.txt"
 
 if [[ ! -f "$OQ_REQUIREMENTS" ]]; then
   echo "❌ Core oq/requirements.txt not found at: $OQ_REQUIREMENTS"
@@ -95,7 +94,7 @@ if [[ ! -f "$OQ_REQUIREMENTS" ]]; then
 fi
 
 if [[ ! -f "$OQ_PYTHON_VERSION" ]]; then
-  echo "❌ Core oq/python_version.txt not found at: $OQ_PYTHON_VERSION"
+  echo "❌ admin/python_version.txt not found at: $OQ_PYTHON_VERSION"
   exit 1
 fi
 
@@ -121,14 +120,12 @@ mkdir -p "$MODULE_DIR/docs"
 mkdir -p "$MODULE_DIR/oq/data"
 
 # ---------------------------------------------------------------------------
-# oq/requirements.txt and oq/python_version.txt
+# oq/requirements.txt
 # ---------------------------------------------------------------------------
 
 cp "$OQ_REQUIREMENTS"    "$MODULE_DIR/oq/requirements.txt"
-cp "$OQ_PYTHON_VERSION"  "$MODULE_DIR/oq/python_version.txt"
 
 echo "   ✅ repos/$MODULE/oq/requirements.txt"
-echo "   ✅ repos/$MODULE/oq/python_version.txt"
 
 # ---------------------------------------------------------------------------
 # oq/conftest.py
@@ -257,7 +254,7 @@ cat > "$MODULE_DIR/admin_${MODULE}_oq" << OQRUNNER
 #
 # Reuses the shared OQ venv at ~/.venvs/<PROJECT_ID>_oq/ (created by
 # admin_oq). If the venv does not yet exist, it is created here using
-# oq/requirements.txt and oq/python_version.txt from the core OQ folder.
+# oq/requirements.txt from the core OQ folder and admin/python_version.txt.
 #
 # Evidence output:
 #   ~/.jrscript/<PROJECT_ID>/validation/${MODULE}_oq_execution_<timestamp>.txt
@@ -316,9 +313,9 @@ elif [[ "\$(cat "\$HASH_FILE")" != "\$REQ_HASH" ]]; then
 fi
 
 if \$NEED_REBUILD; then
-  PY_VER_FILE="\$CORE_OQ_DIR/python_version.txt"
+  PY_VER_FILE="\$ADMIN_HOME/python_version.txt"
   if [[ ! -f "\$PY_VER_FILE" ]]; then
-    echo "❌ oq/python_version.txt not found at: \$PY_VER_FILE"
+    echo "❌ admin/python_version.txt not found at: \$PY_VER_FILE"
     exit 1
   fi
   REQ_PYTHON="\$(tr -d '[:space:]' < "\$PY_VER_FILE")"
@@ -738,7 +735,6 @@ echo "   ├── docs/                            ← validation documents"
 echo "   ├── oq/"
 echo "   │   ├── conftest.py                  ← OQ helpers (ready to use)"
 echo "   │   ├── requirements.txt"
-echo "   │   ├── python_version.txt"
 echo "   │   ├── data/                        ← test data CSVs"
 echo "   │   └── test_${MODULE}_example.py    ← example test to adapt"
 echo "   ├── admin_${MODULE}_scaffold_R       ← add R scripts to this module"
