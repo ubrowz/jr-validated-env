@@ -12,6 +12,17 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed
+
+- **Consolidated Python version pin to `admin/python_version.txt`** — the
+  duplicate `oq/python_version.txt` (and three dead module-level copies in
+  `repos/msa/oq/`, `repos/spc/oq/`, `repos/shelf_life/oq/`) have been removed.
+  `admin_oq_validate` and all 8 module `admin_*_oq` runners now read the pin
+  from `admin/python_version.txt` directly. `admin_create_repo` updated to
+  source the pin from `admin/` and no longer copies a version file into new
+  module `oq/` directories. No behaviour change — both venvs have always used
+  the same Python version (3.11.9).
+
 ---
 
 ## [3.11.0] — 2026-05-09
