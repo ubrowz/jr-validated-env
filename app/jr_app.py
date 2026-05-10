@@ -953,15 +953,23 @@ NO_FILE_TYPES = {
 needs_file = param_type not in NO_FILE_TYPES
 
 st.sidebar.markdown("---")
-if st.sidebar.button("⏹  Stop JR App", use_container_width=True):
-    os._exit(0)
-st.sidebar.caption(
-    "After stopping, close the browser tab. "
-    "If a \"Connection Error\" pop-up appears, ignore it "
-    "and close the tab.\n\n"
-    "Closing the tab without stopping leaves the server running — "
-    "press Ctrl+C in the terminal to stop it."
-)
+if st.sidebar.button("⏹  Close GUI", use_container_width=True):
+    import threading
+    # Hide Streamlit's "Connection error" modal before the server dies.
+    # The CSS lands in the browser's CSSOM in this render batch; the modal
+    # is created by React after the WebSocket drops but display:none keeps
+    # it invisible.  data-baseweb="modal" is the BaseWeb Modal root element.
+    st.markdown(
+        "<style>[data-baseweb='modal']{display:none!important}</style>",
+        unsafe_allow_html=True,
+    )
+    def _shutdown() -> None:
+        import time
+        time.sleep(1.0)
+        os._exit(0)
+    threading.Thread(target=_shutdown, daemon=True).start()
+    st.stop()
+st.sidebar.caption("After closing, you can also close this browser tab.")
 
 # ---------------------------------------------------------------------------
 # Main panel
