@@ -12,6 +12,14 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed
+
+- **GUI: "Connection error" popup suppressed on close** — clicking "Close GUI"
+  now injects a `display:none` CSS rule for Streamlit's BaseWeb modal before the
+  server shuts down, so the browser-side "Connection error" dialog is hidden when
+  the WebSocket drops. Button renamed from "Stop JR App" to "Close GUI" and the
+  caption simplified.
+
 ### Changed
 
 - **Consolidated Python version pin to `admin/python_version.txt`** — the
