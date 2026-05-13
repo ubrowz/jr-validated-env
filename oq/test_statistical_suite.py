@@ -287,20 +287,20 @@ class TestVerifyAttrReport:
                 data("normal_n30_mean10_sd1_seed42.csv"), "value", "7.0", "-",
                 "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        recent = [f for f in glob.glob(os.path.join(DOWNLOADS, "*"))
+                  if os.path.getmtime(f) >= t_start]
         if PACK_INSTALLED:
-            files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_jrc_verify_attr_report.docx"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert files, \
-                "No *_jrc_verify_attr_report.docx found in ~/Downloads/ after --report run"
+            files = [f for f in recent if f.endswith("_jrc_verify_attr_report.docx")]
+            assert files, (
+                f"No *_jrc_verify_attr_report.docx found in ~/Downloads/ after --report run.\n"
+                f"Files written to ~/Downloads/ during this run: {recent}"
+            )
         else:
-            files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_jrc_verify_attr_report.html"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert files, \
-                "No *_jrc_verify_attr_report.html found in ~/Downloads/ after --report run"
+            files = [f for f in recent if f.endswith("_jrc_verify_attr_report.html")]
+            assert files, (
+                f"No *_jrc_verify_attr_report.html found in ~/Downloads/ after --report run.\n"
+                f"Files written to ~/Downloads/ during this run: {recent}"
+            )
 
     def test_tc_ver_013_report_file_valid(self):
         """
@@ -495,20 +495,20 @@ class TestVerifyDiscreteReport:
         t_start = time.time()
         r = run("jrc_verify_discrete.R", "125", "2", "0.95", "0.95", "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        recent = [f for f in glob.glob(os.path.join(DOWNLOADS, "*"))
+                  if os.path.getmtime(f) >= t_start]
         if PACK_INSTALLED:
-            files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_discrete_verification_report.docx"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert files, \
-                "No *_discrete_verification_report.docx found in ~/Downloads/ after --report run"
+            files = [f for f in recent if f.endswith("_discrete_verification_report.docx")]
+            assert files, (
+                f"No *_discrete_verification_report.docx found in ~/Downloads/ after --report run.\n"
+                f"Files written to ~/Downloads/ during this run: {recent}"
+            )
         else:
-            files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_discrete_verification_report.html"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert files, \
-                "No *_discrete_verification_report.html found in ~/Downloads/ after --report run"
+            files = [f for f in recent if f.endswith("_discrete_verification_report.html")]
+            assert files, (
+                f"No *_discrete_verification_report.html found in ~/Downloads/ after --report run.\n"
+                f"Files written to ~/Downloads/ during this run: {recent}"
+            )
 
     def test_tc_ver_disc_010_report_file_valid(self):
         """
