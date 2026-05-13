@@ -14,6 +14,19 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [3.11.3] — 2026-05-13
+
+### Fixed
+
+- **GUI: logo upload uses file picker instead of path input** — the previous
+  text-input + file-copy approach still triggered a macOS TCC `PermissionError`
+  because the Streamlit process itself cannot read from `~/Downloads/`. Replaced
+  with `st.file_uploader`: the user picks the file through a system dialog, which
+  grants the process permission. Bytes are received in-memory and written directly
+  to `pack/shared/`, so no path outside the pack is ever accessed by the process.
+
+---
+
 ## [3.11.2] — 2026-05-13
 
 ### Fixed
