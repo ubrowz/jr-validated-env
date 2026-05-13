@@ -12,6 +12,10 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+---
+
+## [3.11.1] — 2026-05-13
+
 ### Fixed
 
 - **OQ: `--report` tests pass on machines with Validation Pack installed** — when
