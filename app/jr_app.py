@@ -1007,15 +1007,10 @@ if page == "⚙  Settings":
             _current_logo = _config.get("logo_path", "")
             _logo_display = _current_logo if _current_logo else "(none)"
             st.markdown(f"**Company logo** — current: `{_logo_display}`")
-            s_logo = st.text_input(
-                "Logo path",
-                value="",
-                placeholder="Paste full path to PNG or JPG, e.g. /Users/you/logo.png",
-                help=(
-                    "Enter the path to your logo file. "
-                    "It will be copied into the pack folder so reports always have access to it. "
-                    "Leave blank to keep the current logo."
-                ),
+            s_logo_file = st.file_uploader(
+                "Upload new logo (PNG or JPG)",
+                type=["png", "jpg", "jpeg"],
+                help="Leave empty to keep the current logo.",
             )
             s_prefix = st.text_input(
                 "Document number prefix",
@@ -1029,17 +1024,13 @@ if page == "⚙  Settings":
             _config["company_name"]      = s_company
             _config["doc_number_prefix"] = s_prefix
 
-            if s_logo.strip():
-                _src = os.path.expanduser(s_logo.strip())
-                if not os.path.isfile(_src):
-                    st.error(f"Logo file not found: {_src}")
-                else:
-                    import shutil
-                    _shared_dir = os.path.join(PACK_DIR, "shared")
-                    os.makedirs(_shared_dir, exist_ok=True)
-                    _dst = os.path.join(_shared_dir, os.path.basename(_src))
-                    shutil.copy2(_src, _dst)
-                    _config["logo_path"] = os.path.join("shared", os.path.basename(_src))
+            if s_logo_file is not None:
+                _shared_dir = os.path.join(PACK_DIR, "shared")
+                os.makedirs(_shared_dir, exist_ok=True)
+                _dst = os.path.join(_shared_dir, s_logo_file.name)
+                with open(_dst, "wb") as _f:
+                    _f.write(s_logo_file.getbuffer())
+                _config["logo_path"] = os.path.join("shared", s_logo_file.name)
 
             with open(PACK_CONFIG, "w", encoding="utf-8") as _f:
                 json.dump(_config, _f, indent=2, ensure_ascii=False)
