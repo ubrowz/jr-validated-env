@@ -6,12 +6,11 @@ Covers: jrc_bland_altman, jrc_weibull, jrc_verify_attr (TC-VER-001..014),
 """
 
 import os
+import re
 import glob
-import time
 import zipfile
 from conftest import run, combined, extract_float, DATA_DIR, PROJECT_ROOT
 
-DOWNLOADS     = os.path.expanduser("~/Downloads")
 PACK_INSTALLED = os.path.exists(os.path.join(PROJECT_ROOT, "pack", "jr_pack.py"))
 
 
@@ -282,25 +281,25 @@ class TestVerifyAttrReport:
         to a Word (.docx) report and removes the intermediate HTML/JSON files.
         When the Pack is absent the HTML is the deliverable.
         """
-        t_start = time.time()
         r = run("jrc_verify_attr.R", "0.95", "0.95",
                 data("normal_n30_mean10_sd1_seed42.csv"), "value", "7.0", "-",
                 "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
-        recent = [f for f in glob.glob(os.path.join(DOWNLOADS, "*"))
-                  if os.path.getmtime(f) >= t_start]
+        out = combined(r)
         if PACK_INSTALLED:
-            files = [f for f in recent if f.endswith("_jrc_verify_attr_report.docx")]
-            assert files, (
-                f"No *_jrc_verify_attr_report.docx found in ~/Downloads/ after --report run.\n"
-                f"Files written to ~/Downloads/ during this run: {recent}"
+            m = re.search(r'DV Report saved to:\s*(\S+\.docx)', out)
+            assert m, (
+                f"No 'DV Report saved to: *.docx' in script output.\n{out}"
             )
+            assert os.path.exists(m.group(1)), \
+                f"docx path from output does not exist: {m.group(1)}"
         else:
-            files = [f for f in recent if f.endswith("_jrc_verify_attr_report.html")]
-            assert files, (
-                f"No *_jrc_verify_attr_report.html found in ~/Downloads/ after --report run.\n"
-                f"Files written to ~/Downloads/ during this run: {recent}"
+            m = re.search(r'Verification report saved to:\s*(\S+\.html)', out)
+            assert m, (
+                f"No 'Verification report saved to: *.html' in script output.\n{out}"
             )
+            assert os.path.exists(m.group(1)), \
+                f"html path from output does not exist: {m.group(1)}"
 
     def test_tc_ver_013_report_file_valid(self):
         """
@@ -310,27 +309,22 @@ class TestVerifyAttrReport:
         Pack absent: JSON sidecar is present alongside the HTML.
         """
         import json
-        t_start = time.time()
         r = run("jrc_verify_attr.R", "0.95", "0.95",
                 data("normal_n30_mean10_sd1_seed42.csv"), "value", "7.0", "-",
                 "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
         if PACK_INSTALLED:
-            files = sorted(
-                [f for f in glob.glob(os.path.join(DOWNLOADS, "*_jrc_verify_attr_report.docx"))
-                 if os.path.getmtime(f) >= t_start],
-                key=os.path.getmtime,
-            )
-            assert files, "No .docx found — cannot validate file"
-            assert zipfile.is_zipfile(files[-1]), \
-                f"Report is not a valid .docx (ZIP): {files[-1]}"
+            m = re.search(r'DV Report saved to:\s*(\S+\.docx)', out)
+            assert m, f"No docx path in output — cannot validate file.\n{out}"
+            assert zipfile.is_zipfile(m.group(1)), \
+                f"Report is not a valid .docx (ZIP): {m.group(1)}"
         else:
-            json_files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_jrc_verify_attr_report_data.json"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert json_files, \
-                "No *_jrc_verify_attr_report_data.json found in ~/Downloads/ after --report run"
+            m = re.search(r'Verification report saved to:\s*(\S+\.html)', out)
+            assert m, f"No html path in output — cannot find JSON sidecar.\n{out}"
+            json_path = m.group(1).replace('.html', '_data.json')
+            assert os.path.exists(json_path), \
+                f"JSON sidecar not found: {json_path}"
 
     def test_tc_ver_014_report_content(self):
         """
@@ -340,25 +334,19 @@ class TestVerifyAttrReport:
         Pack installed: jr_pack exit 0 already proves JSON was valid; docx existence confirmed.
         """
         import json
-        t_start = time.time()
         r = run("jrc_verify_attr.R", "0.95", "0.95",
                 data("normal_n30_mean10_sd1_seed42.csv"), "value", "7.0", "-",
                 "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
         if PACK_INSTALLED:
-            files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_jrc_verify_attr_report.docx"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert files, "No .docx found after --report run"
+            m = re.search(r'DV Report saved to:\s*(\S+\.docx)', out)
+            assert m, f"No .docx path in output after --report run.\n{out}"
         else:
-            json_files = sorted(
-                [f for f in glob.glob(os.path.join(DOWNLOADS, "*_jrc_verify_attr_report_data.json"))
-                 if os.path.getmtime(f) >= t_start],
-                key=os.path.getmtime,
-            )
-            assert json_files, "No JSON sidecar found — cannot check content"
-            with open(json_files[-1]) as fh:
+            m = re.search(r'Verification report saved to:\s*(\S+\.html)', out)
+            assert m, f"No html path in output — cannot find JSON sidecar.\n{out}"
+            json_path = m.group(1).replace('.html', '_data.json')
+            with open(json_path) as fh:
                 d = json.load(fh)
             assert d.get("report_type") == "dv", \
                 f"Expected report_type=dv, got {d.get('report_type')}"
@@ -492,23 +480,23 @@ class TestVerifyDiscreteReport:
         to a Word (.docx) report and removes the intermediate HTML/JSON files.
         When the Pack is absent the HTML is the deliverable.
         """
-        t_start = time.time()
         r = run("jrc_verify_discrete.R", "125", "2", "0.95", "0.95", "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
-        recent = [f for f in glob.glob(os.path.join(DOWNLOADS, "*"))
-                  if os.path.getmtime(f) >= t_start]
+        out = combined(r)
         if PACK_INSTALLED:
-            files = [f for f in recent if f.endswith("_discrete_verification_report.docx")]
-            assert files, (
-                f"No *_discrete_verification_report.docx found in ~/Downloads/ after --report run.\n"
-                f"Files written to ~/Downloads/ during this run: {recent}"
+            m = re.search(r'DV Report saved to:\s*(\S+\.docx)', out)
+            assert m, (
+                f"No 'DV Report saved to: *.docx' in script output.\n{out}"
             )
+            assert os.path.exists(m.group(1)), \
+                f"docx path from output does not exist: {m.group(1)}"
         else:
-            files = [f for f in recent if f.endswith("_discrete_verification_report.html")]
-            assert files, (
-                f"No *_discrete_verification_report.html found in ~/Downloads/ after --report run.\n"
-                f"Files written to ~/Downloads/ during this run: {recent}"
+            m = re.search(r'Verification report saved to:\s*(\S+\.html)', out)
+            assert m, (
+                f"No 'Verification report saved to: *.html' in script output.\n{out}"
             )
+            assert os.path.exists(m.group(1)), \
+                f"html path from output does not exist: {m.group(1)}"
 
     def test_tc_ver_disc_010_report_file_valid(self):
         """
@@ -518,25 +506,20 @@ class TestVerifyDiscreteReport:
         Pack absent: JSON sidecar is present alongside the HTML.
         """
         import json
-        t_start = time.time()
         r = run("jrc_verify_discrete.R", "125", "2", "0.95", "0.95", "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
         if PACK_INSTALLED:
-            files = sorted(
-                [f for f in glob.glob(os.path.join(DOWNLOADS, "*_discrete_verification_report.docx"))
-                 if os.path.getmtime(f) >= t_start],
-                key=os.path.getmtime,
-            )
-            assert files, "No .docx found — cannot validate file"
-            assert zipfile.is_zipfile(files[-1]), \
-                f"Report is not a valid .docx (ZIP): {files[-1]}"
+            m = re.search(r'DV Report saved to:\s*(\S+\.docx)', out)
+            assert m, f"No docx path in output — cannot validate file.\n{out}"
+            assert zipfile.is_zipfile(m.group(1)), \
+                f"Report is not a valid .docx (ZIP): {m.group(1)}"
         else:
-            json_files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_discrete_verification_report_data.json"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert json_files, \
-                "No *_discrete_verification_report_data.json found in ~/Downloads/ after --report run"
+            m = re.search(r'Verification report saved to:\s*(\S+\.html)', out)
+            assert m, f"No html path in output — cannot find JSON sidecar.\n{out}"
+            json_path = m.group(1).replace('.html', '_data.json')
+            assert os.path.exists(json_path), \
+                f"JSON sidecar not found: {json_path}"
 
     def test_tc_ver_disc_011_report_content(self):
         """
@@ -546,23 +529,17 @@ class TestVerifyDiscreteReport:
         Pack installed: jr_pack exit 0 already proves JSON was valid; docx existence confirmed.
         """
         import json
-        t_start = time.time()
         r = run("jrc_verify_discrete.R", "125", "2", "0.95", "0.95", "--report")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
+        out = combined(r)
         if PACK_INSTALLED:
-            files = [
-                f for f in glob.glob(os.path.join(DOWNLOADS, "*_discrete_verification_report.docx"))
-                if os.path.getmtime(f) >= t_start
-            ]
-            assert files, "No .docx found after --report run"
+            m = re.search(r'DV Report saved to:\s*(\S+\.docx)', out)
+            assert m, f"No .docx path in output after --report run.\n{out}"
         else:
-            json_files = sorted(
-                [f for f in glob.glob(os.path.join(DOWNLOADS, "*_discrete_verification_report_data.json"))
-                 if os.path.getmtime(f) >= t_start],
-                key=os.path.getmtime,
-            )
-            assert json_files, "No JSON sidecar found — cannot check content"
-            with open(json_files[-1]) as fh:
+            m = re.search(r'Verification report saved to:\s*(\S+\.html)', out)
+            assert m, f"No html path in output — cannot find JSON sidecar.\n{out}"
+            json_path = m.group(1).replace('.html', '_data.json')
+            with open(json_path) as fh:
                 d = json.load(fh)
             assert d.get("report_type") == "dv", \
                 f"Expected report_type=dv, got {d.get('report_type')}"
