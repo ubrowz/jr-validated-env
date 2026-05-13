@@ -270,6 +270,7 @@ save_discrete_report <- function(N_val, f_val, proportion, confidence,
     message(paste(ret, collapse = "\n"))
     if (exit_code != 0L) {
       message(sprintf("   Retry manually: jr_pack deliverables dv-report --json %s", json_path))
+      quit(save = "no", status = 1)
     } else {
       if (file.exists(out_file))  file.remove(out_file)
       if (file.exists(json_path)) file.remove(json_path)
