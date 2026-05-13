@@ -14,6 +14,20 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [3.11.5] — 2026-05-13
+
+### Fixed
+
+- **jrrun: set `PYTHONUNBUFFERED=1` for Python scripts** — without this,
+  Python block-buffers stdout when writing to a pipe (e.g. the OQ test
+  subprocess). Output printed before a blocking call such as `plt.show()`
+  was never flushed to the pipe before a timeout fired, causing
+  TC-CORE-OQ-002 to report a false failure even when the script ran
+  correctly. Setting `PYTHONUNBUFFERED=1` ensures all print output is
+  flushed immediately, regardless of whether stdout is a TTY or a pipe.
+
+---
+
 ## [3.11.4] — 2026-05-13
 
 ### Fixed
