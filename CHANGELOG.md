@@ -12,6 +12,27 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed
+
+- **GUI: logo copied into `pack/shared/` on save** — the Settings form previously
+  stored the raw absolute path the user typed (often `~/Downloads/`). macOS TCC
+  blocks subprocess access to `~/Downloads/`, causing `jr_pack` to crash with
+  `PermissionError` when generating Word reports via `system2()` in R. The form
+  now copies the logo file into `pack/shared/` and writes a relative path to
+  `jr_pack_config.json`, which is always accessible to subprocesses. Existing
+  installs can re-save in Settings to migrate.
+
+- **`--report`: exit non-zero when `jr_pack` fails** — previously the script
+  printed "Retry manually" and continued with exit 0, masking `jr_pack` failures.
+  OQ tests then failed with a confusing "no .docx found" message. Now
+  `quit(status=1)` is called so the failure and `jr_pack` error output are
+  visible in the test report. Applies to `jrc_verify_attr.R` and
+  `jrc_verify_discrete.R`.
+
+- **OQ: `--report` failure shows `~/Downloads/` contents** — when the expected
+  report file is not found, the assertion now lists every file written to
+  `~/Downloads/` during the run, making filename mismatches immediately visible.
+
 ---
 
 ## [3.11.1] — 2026-05-13
