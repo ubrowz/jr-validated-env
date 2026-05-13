@@ -14,6 +14,21 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ---
 
+## [3.11.4] — 2026-05-13
+
+### Fixed
+
+- **OQ: report tests no longer fail on machines with macOS TCC restrictions** —
+  the six `--report` test cases (TC-VER-012–014, TC-VER-DISC-009–011) previously
+  used `glob.glob(~/Downloads/)` to verify report creation. On macOS the test
+  process is blocked from listing `~/Downloads/`, returning an empty list even
+  when the `.docx` was successfully written. Tests now parse the output path
+  directly from the script's printed `"DV Report saved to: …"` /
+  `"Verification report saved to: …"` messages using `re.search()`, eliminating
+  the directory-listing dependency entirely.
+
+---
+
 ## [3.11.3] — 2026-05-13
 
 ### Fixed
