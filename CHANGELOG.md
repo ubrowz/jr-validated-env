@@ -14,6 +14,14 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Fixed
 
+- **OQ: `--report` tests pass on machines with Validation Pack installed** — when
+  `jr_pack.py` is present it converts the JSON sidecar to a Word report in
+  `~/Downloads/` and removes the intermediate HTML/JSON files. Tests
+  TC-VER-012..014 and TC-VER-DISC-009..011 previously always checked for
+  HTML/JSON and failed on Pack-installed machines. Tests now detect
+  `PACK_INSTALLED` at import time and assert `.docx` (Pack present, validated
+  with `zipfile.is_zipfile`) or HTML/JSON + JSON content (Pack absent).
+
 - **GUI: "Connection error" popup suppressed on close** — clicking "Close GUI"
   now injects a `display:none` CSS rule for Streamlit's BaseWeb modal before the
   server shuts down, so the browser-side "Connection error" dialog is hidden when
