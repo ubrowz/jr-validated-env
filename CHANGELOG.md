@@ -12,6 +12,10 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+---
+
+## [3.11.2] — 2026-05-13
+
 ### Fixed
 
 - **GUI: logo copied into `pack/shared/` on save** — the Settings form previously
