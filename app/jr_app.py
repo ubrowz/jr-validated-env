@@ -1218,6 +1218,50 @@ if page == "🔧  Admin":
         else:
             st.error(f"{label} failed (exit {proc.returncode}).")
 
+    def _run_oq_cmd(label: str, cmd: list):
+        _status = st.empty()
+        _status.info(f"⏳ {label} running… (may take several minutes)")
+        proc = subprocess.Popen(
+            BASH_PREFIX + cmd,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, cwd=PROJECT_ROOT,
+        )
+        lines = []
+        for line in proc.stdout:
+            lines.append(line)
+        proc.wait()
+        _status.empty()
+
+        # Find "short test summary info" section (present when failures exist)
+        summary_idx = next(
+            (i for i, ln in enumerate(lines) if "short test summary info" in ln),
+            None,
+        )
+        # Find final pytest count line  ===  N passed … ===
+        final_idx = next(
+            (len(lines) - 1 - i
+             for i, ln in enumerate(reversed(lines))
+             if re.search(r"={5,}.+passed", ln) or re.search(r"={5,}.+failed", ln)),
+            None,
+        )
+
+        if summary_idx is not None:
+            start = summary_idx
+        elif final_idx is not None:
+            start = final_idx
+        else:
+            start = max(0, len(lines) - 5)
+
+        display = "".join(lines[start:]).strip() or "(no output)"
+        st.code(display, language="text")
+
+        if proc.returncode == 0:
+            st.success(f"{label} completed — all tests passed.")
+        else:
+            st.error(f"{label} failed (exit {proc.returncode}).")
+            with st.expander("Full output"):
+                st.code("".join(lines), language="text")
+
     # --- Integrity & Validation ------------------------------------------
     st.markdown("### Integrity & Validation")
     _col_h, _col_v = st.columns(2)
@@ -1266,9 +1310,9 @@ if page == "🔧  Admin":
 
     if _run_oq:
         _extra = _oq_extra.strip().split() if _oq_extra.strip() else []
-        _run_admin_cmd("admin_oq", [os.path.join(ADMIN_DIR, "admin_oq")] + _extra)
+        _run_oq_cmd("admin_oq", [os.path.join(ADMIN_DIR, "admin_oq")] + _extra)
     if _run_oq_all:
-        _run_admin_cmd("admin_oq_all", [os.path.join(ADMIN_DIR, "admin_oq_all")])
+        _run_oq_cmd("admin_oq_all", [os.path.join(ADMIN_DIR, "admin_oq_all")])
 
     st.markdown("---")
 
