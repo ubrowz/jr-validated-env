@@ -1397,6 +1397,12 @@ if page == "🔧  Admin":
             except Exception as _ex:
                 st.error(f"Export failed: {_ex}")
 
+    st.caption(
+        "ℹ️ Each zip is platform-specific. "
+        "Export from a macOS admin machine for macOS users; "
+        "export from a Windows admin machine for Windows users."
+    )
+
     st.stop()
 
 # ---------------------------------------------------------------------------
