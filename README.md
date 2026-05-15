@@ -108,7 +108,7 @@ Press `Ctrl+C` in the Terminal window to stop.
 **First-time setup** (requires internet):
 
 ```bash
-# 1. Clone the repository
+# 1. Clone the repository — the release branch is the default
 git clone https://github.com/ubrowz/jr-anchored.git
 cd jr-anchored
 
@@ -132,6 +132,23 @@ cd jr-anchored
 ./admin/admin_install_R
 ./admin/admin_install_Python
 ```
+
+**Upgrading to a new release:**
+
+```bash
+# Pull the latest validated release
+git pull
+
+# Rebuild environments if package versions changed
+./admin/admin_install_R
+./admin/admin_install_Python
+./admin/admin_create_hash
+```
+
+> JR Anchored uses a `release` branch as the default. `git pull` on this branch
+> only delivers changes that have been explicitly promoted to a validated release —
+> never unfinished development from `main`. To see what version you are on:
+> `git describe --tags`.
 
 ---
 

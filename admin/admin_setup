@@ -38,7 +38,7 @@ for arg in "$@"; do
     echo ""
     echo "Usage: admin_setup [--rebuild]"
     echo ""
-    echo "  Run this after cloning the repository:"
+    echo "  Run this after cloning the repository (release branch is the default):"
     echo "    git clone https://github.com/ubrowz/jr-anchored.git"
     echo "    cd jr-anchored"
     echo "    ./admin/admin_setup --rebuild   # first-time, downloads from internet"
@@ -108,6 +108,14 @@ fi
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
   echo "❌ Not a git repository: $PROJECT_ROOT"
   exit 1
+fi
+
+current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+if [[ "$current_branch" == "main" ]]; then
+  echo "⚠️  Warning: you are on the 'main' branch (development, not a validated release)."
+  echo "   For a validated installation, switch to the release branch:"
+  echo "   git checkout release"
+  echo ""
 fi
 
 # ---------------------------------------------------------------------------
