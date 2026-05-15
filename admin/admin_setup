@@ -136,7 +136,10 @@ if ! command -v Rscript >/dev/null 2>&1; then
   if [[ "$(jr_os)" == "windows" ]]; then
     R_BIN_DIR=""
     for r_dir in "/c/Program Files/R"/R-*/; do
-      [[ -f "${r_dir}bin/Rscript.exe" ]] && R_BIN_DIR="${r_dir}bin" && break
+      if [[ -f "${r_dir}bin/Rscript.exe" ]]; then
+        ver_mm=$(basename "$r_dir" | sed 's/^R-//' | cut -d. -f1,2)
+        [[ "$ver_mm" == "$REQ_R" ]] && R_BIN_DIR="${r_dir}bin" && break
+      fi
     done
     if [[ -n "$R_BIN_DIR" ]]; then
       echo "📍 Rscript not on PATH — found R at: $R_BIN_DIR"
@@ -183,27 +186,34 @@ fi
 REQ_PYTHON="$(tr -d '[:space:]' < "$PY_VERSION_FILE")"
 REQ_MAJOR_MINOR=$(echo "$REQ_PYTHON" | awk -F. '{print $1 "." $2}')
 
-# Resolve the Python binary the same way admin_install_Python does
+# Resolve the Python binary — mirrors admin_install_Python's detection logic
 if [[ "$(jr_os)" == "windows" ]]; then
-  PYTHON_BIN="python"
-  for _win_py in "python3" "python"; do
-    if command -v "$_win_py" >/dev/null 2>&1; then
-      PYTHON_BIN="$_win_py"
-      break
-    fi
-  done
+  PY_DIR_NAME="Python$(echo "$REQ_MAJOR_MINOR" | tr -d '.')"
+  WIN_PY="$HOME/AppData/Local/Programs/Python/$PY_DIR_NAME/python.exe"
+  if [[ -f "$WIN_PY" ]]; then
+    PYTHON_BIN="$WIN_PY"
+  else
+    PYTHON_BIN=""
+    for _py_dir in "$HOME/AppData/Local/Programs/Python"/Python*/; do
+      if [[ -f "${_py_dir}python.exe" ]]; then
+        _ver=$("${_py_dir}python.exe" -c \
+          "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')" \
+          2>/dev/null || echo "")
+        if [[ "$_ver" == "$REQ_PYTHON" ]]; then
+          PYTHON_BIN="${_py_dir}python.exe"
+          break
+        fi
+      fi
+    done
+    [[ -z "$PYTHON_BIN" ]] && PYTHON_BIN="python"
+  fi
 else
   PYTHON_BIN="python$REQ_MAJOR_MINOR"
-fi
-
-if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-  # Fallback: try python3 and python
-  for _fb in python3 python; do
-    if command -v "$_fb" >/dev/null 2>&1; then
-      PYTHON_BIN="$_fb"
-      break
-    fi
-  done
+  if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    for _fb in python3 python; do
+      command -v "$_fb" >/dev/null 2>&1 && PYTHON_BIN="$_fb" && break
+    done
+  fi
 fi
 
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
@@ -217,7 +227,13 @@ else
     'import sys; v=sys.version_info; print(f"{v.major}.{v.minor}.{v.micro}")' \
     2>/dev/null || echo "")
   INSTALLED_PYTHON_MM=$(echo "$INSTALLED_PYTHON" | cut -d. -f1,2)
-  if [[ "$INSTALLED_PYTHON_MM" != "$REQ_MAJOR_MINOR" ]]; then
+  if [[ -z "$INSTALLED_PYTHON" ]]; then
+    echo "❌ Python found but returned no version — likely the Windows Store stub."
+    echo "   Go to Settings → Apps → App execution aliases and"
+    echo "   disable python.exe and python3.exe, then re-run admin_setup."
+    echo ""
+    BLOCKED=true
+  elif [[ "$INSTALLED_PYTHON_MM" != "$REQ_MAJOR_MINOR" ]]; then
     echo "❌ Wrong Python version installed."
     echo "   Required : Python $REQ_PYTHON  (admin/python_version.txt)"
     echo "   Installed: Python $INSTALLED_PYTHON"
