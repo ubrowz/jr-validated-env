@@ -8,8 +8,12 @@ _USER_CFG="$HOME/.jrscript/jr_project_root.txt"
 
 if [[ -f "$_BUNDLE_CFG" ]] && [[ -s "$_BUNDLE_CFG" ]]; then
     SCRIPT_DIR="$(cat "$_BUNDLE_CFG")"
+    SCRIPT_DIR="${SCRIPT_DIR/#\~/$HOME}"
+    SCRIPT_DIR="${SCRIPT_DIR/\$HOME/$HOME}"
 elif [[ -f "$_USER_CFG" ]] && [[ -s "$_USER_CFG" ]]; then
     SCRIPT_DIR="$(cat "$_USER_CFG")"
+    SCRIPT_DIR="${SCRIPT_DIR/#\~/$HOME}"
+    SCRIPT_DIR="${SCRIPT_DIR/\$HOME/$HOME}"
 else
     SCRIPT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 fi

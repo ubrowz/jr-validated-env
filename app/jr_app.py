@@ -1326,9 +1326,24 @@ if page == "🔧  Admin":
         "Shared project folder path",
         value=PROJECT_ROOT,
         key="export_root",
-        help="The path that end users' machines use to reach the shared project folder "
-             "(e.g. a network mount or Dropbox path).",
+        help="The path that end users' machines use to reach the shared project folder. "
+             "For a network share use the UNC path (e.g. \\\\server\\JR Anchored). "
+             "For Dropbox/OneDrive use %%USERPROFILE%%\\Dropbox\\JR Anchored — "
+             "Windows expands %%USERPROFILE%% to each user's home folder at launch time.",
     )
+
+    if sys.platform == "darwin":
+        st.caption(
+            "💡 Dropbox path? Use `~/Dropbox/JR Anchored` — "
+            "the launcher expands `~` to each user's home folder at launch time."
+        )
+
+    if sys.platform == "win32":
+        st.caption(
+            "💡 Dropbox / OneDrive path? Replace your username with `%USERPROFILE%` "
+            r"(e.g. `%USERPROFILE%\Dropbox\JR Anchored`) — "
+            "Windows fills it in per user at launch time."
+        )
 
     if sys.platform == "darwin":
         st.caption(
