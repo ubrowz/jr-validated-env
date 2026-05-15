@@ -65,6 +65,22 @@ def _find_help_file(module_name: str, script_name: str) -> str | None:
     return p if os.path.exists(p) else None
 
 
+def _win_desktop() -> str:
+    """Return the real Desktop path on Windows, handling OneDrive redirection."""
+    try:
+        import winreg
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",
+        )
+        path, _ = winreg.QueryValueEx(key, "Desktop")
+        winreg.CloseKey(key)
+        return path
+    except Exception:
+        onedrive = os.path.expanduser(r"~\OneDrive\Desktop")
+        return onedrive if os.path.isdir(onedrive) else os.path.expanduser("~/Desktop")
+
+
 def _to_posix(p: str) -> str:
     p = p.replace("\\", "/")
     if len(p) >= 2 and p[1] == ":":          # C:/... → /c/...
@@ -1394,7 +1410,7 @@ if page == "🔧  Admin":
             _bat_src = os.path.join(PROJECT_ROOT, "JR Anchored.bat")
             _ico_src = os.path.join(PROJECT_ROOT, "JR Anchored.ico")
             _ps1_src = os.path.join(PROJECT_ROOT, "Create JR Anchored Shortcut.ps1")
-            _zip_dst = os.path.expanduser("~/Desktop/JR Anchored Windows.zip")
+            _zip_dst = os.path.join(_win_desktop(), "JR Anchored Windows.zip")
             try:
                 _bat_text       = open(_bat_src, encoding="utf-8").read()
                 _bat_configured = _bat_text.replace(
@@ -1405,7 +1421,7 @@ if page == "🔧  Admin":
                     for _extra_file in [_ico_src, _ps1_src]:
                         if os.path.exists(_extra_file):
                             _z.write(_extra_file, os.path.basename(_extra_file))
-                st.success("Ready: `~/Desktop/JR Anchored Windows.zip`")
+                st.success(f"Ready: `{_zip_dst}`")
                 st.info(
                     "**User instructions:**\n"
                     "1. Download and unzip\n"
