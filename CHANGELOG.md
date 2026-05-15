@@ -12,6 +12,42 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed
+
+- **Windows: correct R version now detected when multiple versions are installed** —
+  `admin_setup` previously selected R alphabetically from `Program Files/R/`, picking
+  e.g. R-4.5.3 over a newly installed R-4.6.0. Detection now matches the folder
+  version against the pinned `REQ_R` value.
+
+- **Windows: Python version no longer blank when Windows Store stub is on PATH** —
+  `admin_setup` now looks up the real CPython installer directly via
+  `%USERPROFILE%\AppData\Local\Programs\Python\`, bypassing the Store stub. Falls
+  back to a version-verified AppData scan, then `python` in PATH.
+
+- **Windows: R bootstrap installs no longer require Administrator rights** —
+  `admin_R_install.R` now prepends a writable personal library
+  (`%USERPROFILE%\AppData\Local\R\win-library\<ver>\`) to `.libPaths()` when the
+  system R library is not writable, so miniCRAN and renv bootstrap without elevation.
+
+- **Windows: `JR Anchored.bat` now runs correctly in CMD without Git for Windows** —
+  replaced all Unicode box-drawing characters with plain ASCII (avoided CMD codepage
+  failures), and escaped all parentheses inside `echo` statements within `if`/`else`
+  blocks (avoided "and was unexpected at this time" parse error).
+
+- **Windows: `.gitattributes` added to enforce CRLF line endings for `*.bat`** —
+  CMD cannot parse LF-only batch files; the new `.gitattributes` rule ensures correct
+  endings on all Windows checkouts.
+
+- **Windows GUI: R now found on Windows when checking environment** —
+  the Streamlit environment check previously searched only macOS paths for `Rscript`.
+  It now also globs `C:\Program Files\R\R-*\bin\Rscript.exe` on Windows.
+
+- **Windows GUI: configured-app zip correctly placed on OneDrive-redirected Desktop** —
+  `os.path.expanduser("~/Desktop")` returns the default Desktop path, missing
+  OneDrive redirection. A new `_win_desktop()` helper reads the real path from the
+  Windows registry (`Shell Folders\Desktop`), falling back to the OneDrive path if
+  the registry key is unavailable.
+
 ---
 
 ## [3.11.6] — 2026-05-15
