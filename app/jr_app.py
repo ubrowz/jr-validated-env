@@ -879,6 +879,9 @@ def _get_env_status() -> dict:
             "/opt/homebrew/bin/Rscript",
             "/Library/Frameworks/R.framework/Resources/bin/Rscript",
         ]
+        if sys.platform == "win32":
+            _win = sorted(glob.glob(r"C:\Program Files\R\R-*\bin\Rscript.exe"), reverse=True)
+            _rscript_candidates = _win + _rscript_candidates
         for _rscript in _rscript_candidates:
             try:
                 _rp = subprocess.run(
