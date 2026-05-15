@@ -12,6 +12,26 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Added
+
+- **Release branch introduced as GitHub default** — the `release` branch now
+  serves as the stable, validated entry point for all clones and pulls.
+  `main` remains the development branch and is never the recommended
+  installation target. New users cloning the repo land on `release`
+  automatically; existing users on `main` are warned by `admin_setup`.
+
+  **Release workflow** — when a commit on `main` is ready to be promoted
+  to a validated release:
+
+  ```bash
+  git tag vX.Y.Z              # tag the commit on main
+  git push origin vX.Y.Z      # publish the tag
+  git push origin vX.Y.Z:release   # advance the release branch
+  ```
+
+  This keeps `release` pinned to an explicit validated state regardless of
+  how frequently `main` is updated.
+
 ### Fixed
 
 - **Windows: correct R version now detected when multiple versions are installed** —
