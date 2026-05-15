@@ -41,7 +41,7 @@ if "!PYTHON_BIN!"=="" (
     ) else (
         echo.
         echo  ERROR: Python was not found on this machine.
-        echo  Please install Python (version specified by your administrator) and try again.
+        echo  Please install Python ^(version specified by your administrator^) and try again.
         echo.
         pause
         exit /b 1
