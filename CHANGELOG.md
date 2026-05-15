@@ -12,6 +12,10 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+---
+
+## [3.11.6] — 2026-05-15
+
 ### Fixed
 
 - **Windows launcher: no longer requires Git for Windows** — `JR Anchored.bat`
