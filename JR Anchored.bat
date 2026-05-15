@@ -1,19 +1,19 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-rem ──────────────────────────────────────────────────────────────────────────
-rem  JR Anchored — Windows launcher
+rem ---------------------------------------------------------------------------
+rem  JR Anchored - Windows launcher
 rem  Double-click to open the graphical interface in your default browser.
 rem  Close this window to stop.
 rem
 rem  Requirements: R and Python installed (versions specified by your
 rem  administrator). No Git for Windows required.
-rem ──────────────────────────────────────────────────────────────────────────
+rem ---------------------------------------------------------------------------
 
 rem --- Project root (filled in by admin during Export Configured App)
 set "JRROOT="
 
-rem ── Resolve project root ──────────────────────────────────────────────────
+rem --- Resolve project root
 if not "!JRROOT!"=="" (
     set "PROJECT_ROOT=!JRROOT!"
 ) else (
@@ -21,7 +21,7 @@ if not "!JRROOT!"=="" (
 )
 if "!PROJECT_ROOT:~-1!"=="\" set "PROJECT_ROOT=!PROJECT_ROOT:~0,-1!"
 
-rem ── Find Python ───────────────────────────────────────────────────────────
+rem --- Find Python
 set "PYTHON_BIN="
 set "PY_VER_FILE=!PROJECT_ROOT!\admin\python_version.txt"
 
@@ -48,7 +48,7 @@ if "!PYTHON_BIN!"=="" (
     )
 )
 
-rem ── Check / install Streamlit ─────────────────────────────────────────────
+rem --- Check / install Streamlit
 "!PYTHON_BIN!" -c "import streamlit" >nul 2>&1
 if !errorlevel! neq 0 (
     echo  Installing Streamlit ^(one-time setup, about 30 seconds^)...
@@ -65,7 +65,7 @@ if !errorlevel! neq 0 (
     echo.
 )
 
-rem ── Launch ────────────────────────────────────────────────────────────────
+rem --- Launch
 set "APP_FILE=!PROJECT_ROOT!\app\jr_app.py"
 set "PORT=8501"
 set "URL=http://localhost:%PORT%"
@@ -87,3 +87,11 @@ rem Launch Streamlit
     --browser.gatherUsageStats false ^
     --client.toolbarMode minimal ^
     --theme.primaryColor "#2E5BBA"
+
+if !errorlevel! neq 0 (
+    echo.
+    echo  ERROR: The application exited unexpectedly ^(exit code !errorlevel!^).
+    echo  Check the output above for details.
+    echo.
+    pause
+)
