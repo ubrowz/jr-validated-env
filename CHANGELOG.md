@@ -12,6 +12,22 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed
+
+- **Windows launcher: no longer requires Git for Windows** — `JR Anchored.bat`
+  rewritten in native cmd.exe. Reads `admin/python_version.txt` to locate the
+  correct Python executable; falls back to `python` in PATH. Checks and
+  auto-installs Streamlit with clear error messages. Opens the browser via
+  PowerShell after a short delay. Git for Windows is no longer a requirement
+  for Windows end users.
+
+- **Configured-app export: Dropbox paths now work for all users** — the macOS
+  launcher now expands a leading `~` or the literal string `$HOME` after reading
+  the baked-in project root, so an admin can export `~/Dropbox/JR Anchored` and
+  each user's home folder is substituted at launch time. On Windows, `%USERPROFILE%`
+  in the `JRROOT` value is expanded by cmd.exe at parse time — no bat change
+  required. The Export Configured App UI now shows platform-specific tips.
+
 ---
 
 ## [3.11.5] — 2026-05-13
