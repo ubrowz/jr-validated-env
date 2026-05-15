@@ -123,6 +123,27 @@ download_binaries_manually <- function(pkgs, local_repo, cran_mirror,
 }
 
 # ---------------------------------------------------------------------------
+# On Windows, ensure bootstrap packages can install without administrator rights
+# ---------------------------------------------------------------------------
+# install.packages() without lib= defaults to .libPaths()[1], which is the
+# system library (C:/Program Files/R/.../library) and requires admin rights.
+# If that path is not writable, prepend a user-writable personal library so
+# miniCRAN and renv can be bootstrapped by a non-admin user.
+
+if (.Platform$OS.type == "windows") {
+  sys_lib <- .libPaths()[1]
+  if (file.access(sys_lib, mode = 2) != 0) {
+    user_lib <- file.path(Sys.getenv("USERPROFILE"), "AppData", "Local", "R",
+                          "win-library", r_minor)
+    dir.create(user_lib, recursive = TRUE, showWarnings = FALSE)
+    .libPaths(c(user_lib, .libPaths()))
+    cat(sprintf(
+      "ℹ️  System R library not writable — bootstrap packages will go to:\n   %s\n\n",
+      user_lib))
+  }
+}
+
+# ---------------------------------------------------------------------------
 # Determine mode
 # ---------------------------------------------------------------------------
 
