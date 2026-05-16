@@ -1240,6 +1240,7 @@ if page == "🔧  Admin":
     def _run_oq_cmd(label: str, cmd: list):
         _status = st.empty()
         _status.info(f"⏳ {label} running… (may take several minutes)")
+        _live = st.empty()
         proc = subprocess.Popen(
             BASH_PREFIX + cmd,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -1248,10 +1249,20 @@ if page == "🔧  Admin":
         lines = []
         for line in proc.stdout:
             lines.append(line)
+            # Stream live tail every 10 lines — keeps WebSocket alive and shows progress.
+            if len(lines) % 10 == 0:
+                _live.code("".join(lines[-80:]), language="text")
         proc.wait()
         _status.empty()
+        _live.empty()
 
-        # Find "short test summary info" section (present when failures exist)
+        # Find admin_oq_all summary block ("OQ ALL — SUMMARY") — search from end.
+        oq_all_idx = next(
+            (len(lines) - 1 - i for i, ln in enumerate(reversed(lines))
+             if "OQ ALL" in ln),
+            None,
+        )
+        # Find "short test summary info" section (present when any pytest run has failures).
         summary_idx = next(
             (i for i, ln in enumerate(lines) if "short test summary info" in ln),
             None,
@@ -1264,12 +1275,14 @@ if page == "🔧  Admin":
             None,
         )
 
-        if summary_idx is not None:
+        if oq_all_idx is not None:
+            start = oq_all_idx
+        elif summary_idx is not None:
             start = summary_idx
         elif final_idx is not None:
             start = final_idx
         else:
-            start = max(0, len(lines) - 5)
+            start = max(0, len(lines) - 10)
 
         display = "".join(lines[start:]).strip() or "(no output)"
         st.code(display, language="text")

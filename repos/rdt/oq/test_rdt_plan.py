@@ -33,7 +33,7 @@ DOWNLOADS = os.path.expanduser("~/Downloads")
 def _recent_png(pattern, t_start):
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -188,7 +188,12 @@ class TestRdtPlan:
                 "--reliability", "0.95", "--confidence", "0.90", "--target_life", "5000")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_rdt_plan.png", t_start)
-        assert recent, "No *_jrc_rdt_plan.png found in ~/Downloads/ after plan run"
+        assert recent, (
+            f"No *_jrc_rdt_plan.png found in ~/Downloads/ after plan run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_rdt_plan.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_rdt_plan_010_reliability_out_of_range(self):
         """

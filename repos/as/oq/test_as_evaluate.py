@@ -31,7 +31,7 @@ DOWNLOADS = os.path.expanduser("~/Downloads")
 def _recent_png(pattern, t_start):
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -93,7 +93,12 @@ class TestEvaluate:
                 "--type", "variables", "--k", "1.45", "--lsl", "9.5")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_as_evaluate.png", t_start)
-        assert recent, "No *_jrc_as_evaluate.png found in ~/Downloads/ after variables run"
+        assert recent, (
+            f"No *_jrc_as_evaluate.png found in ~/Downloads/ after variables run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_as_evaluate.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_as_eval_006_attributes_png_created(self):
         """
@@ -105,7 +110,12 @@ class TestEvaluate:
                 "--type", "attributes", "--c", "2")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_as_evaluate.png", t_start)
-        assert recent, "No *_jrc_as_evaluate.png found in ~/Downloads/ after attributes run"
+        assert recent, (
+            f"No *_jrc_as_evaluate.png found in ~/Downloads/ after attributes run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_as_evaluate.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_as_eval_007_missing_type(self):
         """

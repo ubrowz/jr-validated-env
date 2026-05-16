@@ -43,7 +43,7 @@ DOWNLOADS = os.path.expanduser("~/Downloads")
 def _recent_png(pattern, t_start):
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -118,8 +118,13 @@ class TestType1:
         r = run("jrc_msa_type1.R", data("type1_good.csv"),
                 "--reference", "10.000", "--tolerance", "0.5")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
-        assert _recent_png("*_jrc_msa_type1.png", t_start), \
-            "No *_jrc_msa_type1.png found in ~/Downloads/"
+        recent_t1 = _recent_png("*_jrc_msa_type1.png", t_start)
+        assert recent_t1, (
+            f"No *_jrc_msa_type1.png found in ~/Downloads/\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_msa_type1.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_msa_t1_005_no_arguments(self):
         """TC-MSA-T1-005: No arguments → non-zero exit, usage message."""

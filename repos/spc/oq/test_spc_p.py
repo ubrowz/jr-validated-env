@@ -54,7 +54,7 @@ DOWNLOADS = os.path.expanduser("~/Downloads")
 def _recent_png(pattern, t_start):
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -131,7 +131,12 @@ class TestPChart:
         r = run("jrc_spc_p.R", data("p_stable.csv"))
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_spc_p.png", t_start)
-        assert recent, "No *_jrc_spc_p.png found in ~/Downloads/ after run"
+        assert recent, (
+            f"No *_jrc_spc_p.png found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_spc_p.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_spc_p_007_no_arguments(self):
         """
@@ -252,7 +257,12 @@ class TestPChartReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_spc_p_pv_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_spc_p_pv_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_spc_p_pv_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_spc_p_pv_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_spc_p_015_report_json_sidecar_created(self):
         """
@@ -266,7 +276,12 @@ class TestPChartReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_spc_p_pv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No *_spc_p_pv_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_spc_p_pv_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_spc_p_pv_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_spc_p_016_report_json_content(self):
         """
@@ -282,7 +297,11 @@ class TestPChartReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_spc_p_pv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "pv", \

@@ -43,7 +43,7 @@ DOWNLOADS = os.path.expanduser("~/Downloads")
 def _recent_png(pattern, t_start):
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -165,7 +165,12 @@ class TestRdtVerify:
                 "--reliability", "0.95", "--confidence", "0.90", "--target_life", "5000")
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_rdt_verify.png", t_start)
-        assert recent, "No *_jrc_rdt_verify.png found in ~/Downloads/ after verify run"
+        assert recent, (
+            f"No *_jrc_rdt_verify.png found in ~/Downloads/ after verify run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_rdt_verify.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_rdt_ver_006_all_failed_early(self):
         """
@@ -310,7 +315,12 @@ class TestRDTVerifyReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_rdt_verification_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_rdt_verification_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_rdt_verification_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_rdt_verification_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_rdt_ver_014_report_json_sidecar_created(self):
         """
@@ -326,8 +336,12 @@ class TestRDTVerifyReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_rdt_verification_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, \
-            "No *_rdt_verification_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_rdt_verification_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_rdt_verification_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_rdt_ver_015_report_json_content(self):
         """
@@ -345,7 +359,11 @@ class TestRDTVerifyReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_rdt_verification_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "rdt", \

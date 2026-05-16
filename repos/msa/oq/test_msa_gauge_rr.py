@@ -124,8 +124,12 @@ class TestGaugeRR:
         r = run("jrc_msa_gauge_rr.R", data("gauge_rr_balanced.csv"))
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_msa_gauge_rr.png", t_start)
-        assert recent, \
-            "No *_jrc_msa_gauge_rr.png found in ~/Downloads/ after run"
+        assert recent, (
+            f"No *_jrc_msa_gauge_rr.png found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_msa_gauge_rr.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_msa_grr_005_no_arguments(self):
         """
@@ -270,7 +274,12 @@ class TestGaugeRRReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_gauge_rr_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_gauge_rr_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_gauge_rr_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_gauge_rr_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_msa_grr_015_report_json_sidecar_created(self):
         """
@@ -284,7 +293,12 @@ class TestGaugeRRReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_gauge_rr_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No *_gauge_rr_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_gauge_rr_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_gauge_rr_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_msa_grr_016_report_json_content(self):
         """
@@ -300,7 +314,11 @@ class TestGaugeRRReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_gauge_rr_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "msa", \

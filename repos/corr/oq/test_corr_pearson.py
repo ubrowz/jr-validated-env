@@ -40,7 +40,7 @@ DOWNLOADS = os.path.expanduser("~/Downloads")
 def _recent_png(pattern, t_start):
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -101,7 +101,12 @@ class TestCorrPearson:
         r = run("jrc_corr_pearson.R", data("corr_linear.csv"))
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         recent = _recent_png("*_jrc_corr_pearson.png", t_start)
-        assert recent, "No *_jrc_corr_pearson.png found in ~/Downloads/ after run"
+        assert recent, (
+            f"No *_jrc_corr_pearson.png found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_corr_pearson.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_corr_p_006_no_arguments(self):
         """

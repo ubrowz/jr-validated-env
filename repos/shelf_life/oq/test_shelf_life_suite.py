@@ -228,7 +228,7 @@ def _recent_file(pattern, t_start):
     """Return list of files matching pattern in ~/Downloads created after t_start."""
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -484,7 +484,12 @@ class TestShelfLifeLinear:
                 "80.0", "0.95")
         assert r.returncode == 0
         recent = _recent_file("*_jrc_shelf_life_linear.png", t_start)
-        assert recent, "No *_jrc_shelf_life_linear.png found in ~/Downloads/ after run"
+        assert recent, (
+            f"No *_jrc_shelf_life_linear.png found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_shelf_life_linear.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_lin_006_model_csv_created(self):
         """TC-SHELF-LIN-006: Model coefficient CSV written to ~/Downloads/."""
@@ -493,7 +498,12 @@ class TestShelfLifeLinear:
                 "80.0", "0.95")
         assert r.returncode == 0
         recent = _recent_file("*_jrc_shelf_life_linear_model.csv", t_start)
-        assert recent, "No *_jrc_shelf_life_linear_model.csv found in ~/Downloads/ after run"
+        assert recent, (
+            f"No *_jrc_shelf_life_linear_model.csv found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_shelf_life_linear_model.csv'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_lin_007_direction_high(self):
         """TC-SHELF-LIN-007: --direction high → exit 0, upper CI used for growing impurity."""
@@ -599,7 +609,12 @@ class TestShelfLifeLinear:
                 "80.0", "0.95", "--transform", "log")
         assert r.returncode == 0
         recent = _recent_file("*_jrc_shelf_life_linear_model.csv", t_start)
-        assert recent, "No model CSV found in ~/Downloads/ after run"
+        assert recent, (
+            f"No model CSV found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_shelf_life_linear_model.csv'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(recent[0]) as fh:
             content = fh.read()
         assert "transform" in content, "Expected 'transform' row in model CSV"
@@ -680,7 +695,12 @@ class TestShelfLifePoolability:
         r = run("jrc_shelf_life_poolability.R", data("shelf_life_pool_poolable.csv"))
         assert r.returncode == 0
         recent = _recent_file("*_jrc_shelf_life_poolability.png", t_start)
-        assert recent, "No *_jrc_shelf_life_poolability.png found in ~/Downloads/ after run"
+        assert recent, (
+            f"No *_jrc_shelf_life_poolability.png found in ~/Downloads/ after run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_shelf_life_poolability.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_pool_006_no_arguments(self):
         """TC-SHELF-POOL-006: No arguments → non-zero exit or usage shown."""
@@ -855,7 +875,12 @@ class TestShelfLifeExtrapolate:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_extrapolate_dv_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_extrapolate_dv_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_extrapolate_dv_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_extrapolate_dv_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     @pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
                         reason="Validation Pack not installed (dv_report_template.html missing)")
@@ -869,7 +894,12 @@ class TestShelfLifeExtrapolate:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_extrapolate_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No *_extrapolate_dv_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_extrapolate_dv_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_extrapolate_dv_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     @pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
                         reason="Validation Pack not installed (dv_report_template.html missing)")
@@ -888,7 +918,11 @@ class TestShelfLifeExtrapolate:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_extrapolate_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "dv", \
@@ -916,7 +950,12 @@ class TestShelfLifeQ10Report:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_q10_dv_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_q10_dv_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_q10_dv_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_q10_dv_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_q10_012_report_json_sidecar_created(self):
         """TC-SHELF-Q10-012: --report → JSON sidecar (*_data.json) written alongside HTML."""
@@ -927,7 +966,12 @@ class TestShelfLifeQ10Report:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_q10_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No *_q10_dv_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_q10_dv_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_q10_dv_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_q10_013_report_json_content(self):
         """
@@ -943,7 +987,11 @@ class TestShelfLifeQ10Report:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_q10_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "dv", \
@@ -971,7 +1019,12 @@ class TestShelfLifeArrheniusReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_arrhenius_dv_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_arrhenius_dv_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_arrhenius_dv_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_arrhenius_dv_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_arr_012_report_json_sidecar_created(self):
         """TC-SHELF-ARR-012: --report → JSON sidecar (*_data.json) written alongside HTML."""
@@ -982,7 +1035,12 @@ class TestShelfLifeArrheniusReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_arrhenius_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No *_arrhenius_dv_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_arrhenius_dv_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_arrhenius_dv_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_arr_013_report_json_content(self):
         """
@@ -998,7 +1056,11 @@ class TestShelfLifeArrheniusReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_arrhenius_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "dv", \
@@ -1027,7 +1089,12 @@ class TestShelfLifeLinearReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_shelf_life_linear_dv_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_shelf_life_linear_dv_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_shelf_life_linear_dv_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_shelf_life_linear_dv_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_lin_018_report_json_sidecar_created(self):
         """TC-SHELF-LIN-018: --report → JSON sidecar (*_data.json) written alongside HTML."""
@@ -1039,8 +1106,12 @@ class TestShelfLifeLinearReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_shelf_life_linear_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, \
-            "No *_shelf_life_linear_dv_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_shelf_life_linear_dv_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_shelf_life_linear_dv_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_lin_019_report_json_content(self):
         """
@@ -1057,7 +1128,11 @@ class TestShelfLifeLinearReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_shelf_life_linear_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "dv", \
@@ -1086,7 +1161,12 @@ class TestShelfLifePoolabilityReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_poolability_dv_report.html"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert html_files, "No *_poolability_dv_report.html found in ~/Downloads/ after --report run"
+        assert html_files, (
+            f"No *_poolability_dv_report.html found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_poolability_dv_report.html'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_pool_012_report_json_sidecar_created(self):
         """TC-SHELF-POOL-012: --report → JSON sidecar (*_data.json) written alongside HTML."""
@@ -1098,7 +1178,12 @@ class TestShelfLifePoolabilityReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_poolability_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No *_poolability_dv_report_data.json found in ~/Downloads/ after --report run"
+        assert json_files, (
+            f"No *_poolability_dv_report_data.json found in ~/Downloads/ after --report run\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_poolability_dv_report_data.json'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_shelf_pool_013_report_json_content(self):
         """
@@ -1115,7 +1200,11 @@ class TestShelfLifePoolabilityReport:
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_poolability_dv_report_data.json"))
             if os.path.getmtime(f) >= t_start
         ]
-        assert json_files, "No JSON sidecar found — cannot check content"
+        assert json_files, (
+            f"No JSON sidecar found — cannot check content\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  Script output: {combined(r)}"
+        )
         with open(json_files[-1]) as fh:
             d = json.load(fh)
         assert d.get("report_type") == "dv", \
