@@ -21,6 +21,7 @@ Not automated (remain manual per JR-VP-001):
 import glob
 import os
 import subprocess
+import sys
 import time
 
 from conftest import (DATA_DIR, JRRUN, PROJECT_ROOT, BASH_PREFIX,
@@ -102,21 +103,27 @@ class TestCoreOQ:
         launched successfully and is displaying the window — this is treated
         as a pass provided the expected output was already printed.
         """
+        # Windows with Defender needs more time for venv setup on first run.
+        _timeout = 60 if sys.platform == "win32" else 15
         try:
             result = subprocess.run(
                 BASH_PREFIX + [JRRUN, "jrc_py_hello.py", "Validation"],
                 capture_output=True,
                 encoding="utf-8",
-                timeout=15,
+                timeout=_timeout,
                 cwd=DATA_DIR,
             )
             out = (result.stdout or "") + (result.stderr or "")
             assert result.returncode == 0, f"jrc_py_hello.py failed:\n{out}"
             assert "Validation" in out
         except subprocess.TimeoutExpired as exc:
-            # Still running after 15 s — GUI window is open. Check partial output.
-            # exc.stdout/stderr are bytes even when text=True is used.
-            partial = (exc.stdout or b"").decode() + (exc.stderr or b"").decode()
+            # Still running after timeout — GUI window is open. Check partial output.
+            # exc.stdout/stderr may be str or bytes depending on Python version/platform.
+            def _to_str(v):
+                if isinstance(v, bytes):
+                    return v.decode("utf-8", errors="replace")
+                return v or ""
+            partial = _to_str(exc.stdout) + _to_str(exc.stderr)
             assert "Validation" in partial, (
                 f"Script timed out without printing the expected message.\n"
                 f"Partial output:\n{partial}"
