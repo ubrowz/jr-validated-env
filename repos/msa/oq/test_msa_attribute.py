@@ -105,8 +105,13 @@ class TestAttribute:
         t_start = time.time()
         r = run("jrc_msa_attribute.R", data("attribute_with_ref.csv"))
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
-        assert _recent_png("*_jrc_msa_attribute.png", t_start), \
-            "No *_jrc_msa_attribute.png in ~/Downloads/"
+        recent_att = _recent_png("*_jrc_msa_attribute.png", t_start)
+        assert recent_att, (
+            f"No *_jrc_msa_attribute.png in ~/Downloads/\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_msa_attribute.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_msa_att_006_no_arguments(self):
         """TC-MSA-ATT-006: No arguments → non-zero exit, usage message."""

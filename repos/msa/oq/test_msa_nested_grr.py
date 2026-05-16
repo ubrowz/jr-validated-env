@@ -102,8 +102,13 @@ class TestNestedGRR:
         t_start = time.time()
         r = run("jrc_msa_nested_grr.R", data("nested_grr_good.csv"))
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
-        assert _recent_png("*_jrc_msa_nested_grr.png", t_start), \
-            "No *_jrc_msa_nested_grr.png in ~/Downloads/"
+        recent_ngr = _recent_png("*_jrc_msa_nested_grr.png", t_start)
+        assert recent_ngr, (
+            f"No *_jrc_msa_nested_grr.png in ~/Downloads/\n"
+            f"  DOWNLOADS={DOWNLOADS!r} (exists={os.path.isdir(DOWNLOADS)})\n"
+            f"  All matches (any age): {glob.glob(os.path.join(DOWNLOADS, '*_jrc_msa_nested_grr.png'))!r}\n"
+            f"  Script output: {combined(r)}"
+        )
 
     def test_tc_msa_ngr_006_no_arguments(self):
         """TC-MSA-NGR-006: No arguments → non-zero exit, usage message."""
