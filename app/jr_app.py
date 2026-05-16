@@ -902,7 +902,7 @@ def _get_env_status() -> dict:
             try:
                 _rp = subprocess.run(
                     [_rscript, "--vanilla", "-e", "cat(format(getRversion(), nsmall=1))"],
-                    capture_output=True, text=True, timeout=10,
+                    capture_output=True, text=True, encoding="utf-8", timeout=10,
                 )
                 if _rp.returncode == 0:
                     _r_full = _rp.stdout.strip()
@@ -1125,7 +1125,7 @@ if page == "⚙  Settings":
         if st.button("📲  Create Desktop Shortcut", key="btn_shortcut"):
             _sc = subprocess.run(
                 ["powershell", "-ExecutionPolicy", "Bypass", "-File", _ps1],
-                capture_output=True, text=True, cwd=PROJECT_ROOT,
+                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
             )
             st.code((_sc.stdout or "") + (_sc.stderr or ""), language="text")
             if _sc.returncode == 0:
