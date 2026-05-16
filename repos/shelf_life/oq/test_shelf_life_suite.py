@@ -114,11 +114,15 @@ Numerical reference values (all independently computed — NOT derived from scri
 import glob
 import math
 import os
+import pytest
 import re
 import subprocess
 import time
 
 from conftest import (
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_DV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
     PROJECT_ROOT, MODULE_ROOT, RSCRIPT_BIN, run, combined, data, extract_float
 )
 
@@ -839,6 +843,8 @@ class TestShelfLifeExtrapolate:
         assert result.returncode != 0
         assert "RENV_PATHS_ROOT" in (result.stdout or "") + (result.stderr or "")
 
+    @pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                        reason="Validation Pack not installed (dv_report_template.html missing)")
     def test_tc_shelf_ext_012_report_html_created(self):
         """TC-SHELF-EXT-012: --report flag → exit 0 and HTML report written to ~/Downloads/."""
         t_start = time.time()
@@ -851,6 +857,8 @@ class TestShelfLifeExtrapolate:
         ]
         assert html_files, "No *_extrapolate_dv_report.html found in ~/Downloads/ after --report run"
 
+    @pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                        reason="Validation Pack not installed (dv_report_template.html missing)")
     def test_tc_shelf_ext_013_report_json_sidecar_created(self):
         """TC-SHELF-EXT-013: --report → JSON sidecar (*_data.json) written alongside HTML."""
         t_start = time.time()
@@ -863,6 +871,8 @@ class TestShelfLifeExtrapolate:
         ]
         assert json_files, "No *_extrapolate_dv_report_data.json found in ~/Downloads/ after --report run"
 
+    @pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                        reason="Validation Pack not installed (dv_report_template.html missing)")
     def test_tc_shelf_ext_014_report_json_content(self):
         """
         TC-SHELF-EXT-014:
@@ -893,6 +903,8 @@ class TestShelfLifeExtrapolate:
 # TC-SHELF-Q10-011 .. 013  --report sidecar
 # ===========================================================================
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestShelfLifeQ10Report:
 
     def test_tc_shelf_q10_011_report_html_created(self):
@@ -946,6 +958,8 @@ class TestShelfLifeQ10Report:
 # TC-SHELF-ARR-011 .. 013  --report sidecar
 # ===========================================================================
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestShelfLifeArrheniusReport:
 
     def test_tc_shelf_arr_011_report_html_created(self):
@@ -999,6 +1013,8 @@ class TestShelfLifeArrheniusReport:
 # TC-SHELF-LIN-017 .. 019  --report sidecar
 # ===========================================================================
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestShelfLifeLinearReport:
 
     def test_tc_shelf_lin_017_report_html_created(self):
@@ -1056,6 +1072,8 @@ class TestShelfLifeLinearReport:
 # TC-SHELF-POOL-011 .. 013  --report sidecar
 # ===========================================================================
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestShelfLifePoolabilityReport:
 
     def test_tc_shelf_pool_011_report_html_created(self):

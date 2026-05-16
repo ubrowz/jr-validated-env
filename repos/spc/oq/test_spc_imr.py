@@ -43,10 +43,14 @@ Numeric correctness assertions (TC-SPC-IMR-012 to TC-SPC-IMR-015):
 
 import glob
 import os
+import pytest
 import subprocess
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -270,6 +274,8 @@ class TestIMRNumeric:
             f"Expected UCL_MR = 1.0495 ± 0.001, got {ucl_mr:.4f}"
 
 
+@pytest.mark.skipif(not _PV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (pv_report_template.html missing)")
 class TestIMRReport:
 
     def test_tc_spc_imr_016_report_html_created(self):

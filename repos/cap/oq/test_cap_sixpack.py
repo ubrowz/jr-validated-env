@@ -27,10 +27,14 @@ Maps to validation plan JR-VP-CAP-001 as follows:
 
 import glob
 import os
+import pytest
 import subprocess
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -206,6 +210,8 @@ class TestCapSixpack:
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
 
 
+@pytest.mark.skipif(not _PV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (pv_report_template.html missing)")
 class TestCapSixpackReport:
 
     def test_tc_cap_s_015_report_html_created(self):

@@ -39,11 +39,15 @@ Numeric correctness assertions (TC-MSA-GRR-011 to TC-MSA-GRR-013):
 
 import glob
 import os
+import pytest
 import re
 import subprocess
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_DV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -250,6 +254,8 @@ class TestMsaGaugeRrNumeric:
             f"Expected Part-to-Part = 99.91% ± 0.20%, got {pct_pt:.2f}%"
 
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestGaugeRRReport:
 
     def test_tc_msa_grr_014_report_html_created(self):

@@ -40,10 +40,14 @@ Numeric correctness assertions (TC-SPC-XBR-013 to TC-SPC-XBR-016):
 
 import glob
 import os
+import pytest
 import subprocess
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -278,6 +282,8 @@ class TestXbarRNumeric:
             f"Expected UCL_R = 2.7482 ± 0.001, got {ucl_r:.4f}"
 
 
+@pytest.mark.skipif(not _PV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (pv_report_template.html missing)")
 class TestXbarRReport:
 
     def test_tc_spc_xbr_017_report_html_created(self):

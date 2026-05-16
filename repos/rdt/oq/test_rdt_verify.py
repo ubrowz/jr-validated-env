@@ -26,11 +26,15 @@ Maps to validation plan JR-VP-RDT-001 as follows:
 import glob
 import math
 import os
+import pytest
 import subprocess
 import tempfile
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_DV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -288,6 +292,8 @@ class TestRdtVerify:
             f"Expected 'RENV_PATHS_ROOT' in error output:\n{out}"
 
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestRDTVerifyReport:
 
     def test_tc_rdt_ver_013_report_html_created(self):

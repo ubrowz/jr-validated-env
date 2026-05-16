@@ -37,11 +37,15 @@ Numeric correctness assertions (TC-SPC-P-012 to TC-SPC-P-013):
 
 import glob
 import os
+import pytest
 import re
 import subprocess
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -232,6 +236,8 @@ class TestSpcPNumeric:
             f"Expected UCL = 0.10150 ± 0.001, got {ucl:.5f}"
 
 
+@pytest.mark.skipif(not _PV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (pv_report_template.html missing)")
 class TestPChartReport:
 
     def test_tc_spc_p_014_report_html_created(self):

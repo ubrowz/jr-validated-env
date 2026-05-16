@@ -61,10 +61,14 @@ Numeric correctness assertions (TC-CAP-N-014 to TC-CAP-N-018):
 
 import glob
 import os
+import pytest
 import subprocess
 import time
 
 from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -308,6 +312,8 @@ class TestCapNormalNumeric:
             f"Expected Ppk = 1.739 ± 0.020, got {ppk:.4f}"
 
 
+@pytest.mark.skipif(not _PV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (pv_report_template.html missing)")
 class TestCapNormalReport:
 
     def test_tc_cap_n_019_report_html_created(self):
