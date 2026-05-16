@@ -120,11 +120,11 @@ import subprocess
 import time
 
 from conftest import (
+    PROJECT_ROOT, MODULE_ROOT, RSCRIPT_BIN, run, combined, data, extract_float
+)
 
 _TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
 _DV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
-    PROJECT_ROOT, MODULE_ROOT, RSCRIPT_BIN, run, combined, data, extract_float
-)
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
 
