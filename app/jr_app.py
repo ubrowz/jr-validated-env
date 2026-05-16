@@ -1224,7 +1224,7 @@ if page == "🔧  Admin":
         proc = subprocess.Popen(
             BASH_PREFIX + cmd,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            text=True, cwd=PROJECT_ROOT,
+            text=True, encoding="utf-8", cwd=PROJECT_ROOT,
         )
         for line in proc.stdout:
             lines.append(line)
@@ -1243,7 +1243,7 @@ if page == "🔧  Admin":
         proc = subprocess.Popen(
             BASH_PREFIX + cmd,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            text=True, cwd=PROJECT_ROOT,
+            text=True, encoding="utf-8", cwd=PROJECT_ROOT,
         )
         lines = []
         for line in proc.stdout:
