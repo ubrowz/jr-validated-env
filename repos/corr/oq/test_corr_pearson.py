@@ -31,7 +31,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float, RSCRIPT_BIN
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -161,7 +161,7 @@ class TestCorrPearson:
         script = os.path.join(MODULE_ROOT, "R", "jrc_corr_pearson.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", "--vanilla", script, data("corr_linear.csv")],
+            [RSCRIPT_BIN, "--vanilla", script, data("corr_linear.csv")],
             capture_output=True,
             encoding="utf-8",
             env=env,

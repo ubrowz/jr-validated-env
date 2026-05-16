@@ -26,6 +26,13 @@ DATA_DIR     = os.path.join(OQ_DIR, "data")
 
 BASH_PREFIX = ["bash"] if sys.platform == "win32" else []
 
+if sys.platform == "win32":
+    import glob as _glob
+    _candidates = sorted(_glob.glob(r"C:\Program Files\R\R-*\bin\Rscript.exe"))
+    RSCRIPT_BIN = _candidates[-1] if _candidates else "Rscript"
+else:
+    RSCRIPT_BIN = "Rscript"
+
 
 def run(script, *args, cwd=None):
     """

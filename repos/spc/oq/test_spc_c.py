@@ -32,7 +32,7 @@ import re
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float, RSCRIPT_BIN
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -163,7 +163,7 @@ class TestCChart:
         script = os.path.join(MODULE_ROOT, "R", "jrc_spc_c.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, data("c_stable.csv")],
+            [RSCRIPT_BIN, script, data("c_stable.csv")],
             capture_output=True,
             encoding="utf-8",
             env=env,

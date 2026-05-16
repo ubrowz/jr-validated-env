@@ -47,7 +47,7 @@ import time
 
 import re as _re
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float, RSCRIPT_BIN
 
 _TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
 _PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
@@ -195,7 +195,7 @@ class TestXbarS:
         script = os.path.join(MODULE_ROOT, "R", "jrc_spc_xbar_s.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, data("xbar_s_stable.csv")],
+            [RSCRIPT_BIN, script, data("xbar_s_stable.csv")],
             capture_output=True,
             encoding="utf-8",
             env=env,

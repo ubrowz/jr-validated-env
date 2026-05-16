@@ -22,7 +22,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, RSCRIPT_BIN
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -173,7 +173,7 @@ class TestEvaluate:
         script = os.path.join(MODULE_ROOT, "R", "jrc_as_evaluate.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, data("attr_accept_lot.csv"),
+            [RSCRIPT_BIN, script, data("attr_accept_lot.csv"),
              "--type", "attributes", "--c", "2"],
             capture_output=True,
             encoding="utf-8",

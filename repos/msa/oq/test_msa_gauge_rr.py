@@ -44,7 +44,7 @@ import re
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float, RSCRIPT_BIN
 
 _TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
 _DV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
@@ -192,7 +192,7 @@ class TestGaugeRR:
         script = os.path.join(MODULE_ROOT, "R", "jrc_msa_gauge_rr.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, data("gauge_rr_balanced.csv")],
+            [RSCRIPT_BIN, script, data("gauge_rr_balanced.csv")],
             capture_output=True,
             encoding="utf-8",
             env=env,

@@ -31,7 +31,7 @@ import subprocess
 import tempfile
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float, RSCRIPT_BIN
 
 _TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
 _DV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
@@ -278,7 +278,7 @@ class TestRdtVerify:
         script = os.path.join(MODULE_ROOT, "R", "jrc_rdt_verify.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, data("rdt_verify_pass.csv"),
+            [RSCRIPT_BIN, script, data("rdt_verify_pass.csv"),
              "--reliability", "0.95", "--confidence", "0.90", "--target_life", "5000"],
             capture_output=True,
             encoding="utf-8",

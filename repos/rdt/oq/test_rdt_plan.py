@@ -24,7 +24,7 @@ import os
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, RSCRIPT_BIN
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -229,7 +229,7 @@ class TestRdtPlan:
         script = os.path.join(MODULE_ROOT, "R", "jrc_rdt_plan.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script,
+            [RSCRIPT_BIN, script,
              "--reliability", "0.95", "--confidence", "0.90", "--target_life", "5000"],
             capture_output=True,
             encoding="utf-8",

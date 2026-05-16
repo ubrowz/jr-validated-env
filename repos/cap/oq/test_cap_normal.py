@@ -65,7 +65,7 @@ import pytest
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, extract_float, RSCRIPT_BIN
 
 _TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
 _PV_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "pv_report_template.html"))
@@ -219,7 +219,7 @@ class TestCapNormal:
         script = os.path.join(MODULE_ROOT, "R", "jrc_cap_normal.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", "--vanilla", script,
+            [RSCRIPT_BIN, "--vanilla", script,
              data("cap_normal_capable.csv"), "value", "9.0", "11.0"],
             capture_output=True,
             encoding="utf-8",

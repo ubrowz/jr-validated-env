@@ -22,7 +22,7 @@ import re
 import subprocess
 import time
 
-from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data
+from conftest import PROJECT_ROOT, MODULE_ROOT, run, combined, data, RSCRIPT_BIN
 
 
 DOWNLOADS = os.path.expanduser("~/Downloads")
@@ -143,7 +143,7 @@ class TestAttribute:
         script = os.path.join(MODULE_ROOT, "R", "jrc_msa_attribute.R")
         env = {k: v for k, v in os.environ.items() if k != "RENV_PATHS_ROOT"}
         result = subprocess.run(
-            ["Rscript", script, data("attribute_with_ref.csv")],
+            [RSCRIPT_BIN, script, data("attribute_with_ref.csv")],
             capture_output=True, encoding="utf-8", env=env, cwd=PROJECT_ROOT,
         )
         assert result.returncode != 0
