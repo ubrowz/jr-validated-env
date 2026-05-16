@@ -60,8 +60,8 @@ declare -a RESULTS_NAME
 declare -a RESULTS_EXIT
 
 for suite in "${SUITES[@]}"; do
-  if [[ ! -x "$suite" ]]; then
-    echo "⚠️  Skipping (not executable): $suite"
+  if [[ ! -f "$suite" ]]; then
+    echo "⚠️  Skipping (not found): $suite"
     RESULTS_NAME+=("$(basename "$suite")")
     RESULTS_EXIT+=(2)
     continue
@@ -72,8 +72,8 @@ for suite in "${SUITES[@]}"; do
   echo "▶  $label"
   echo "-----------------------------------------------------------"
 
-  # Run the suite; capture exit without triggering set -e
-  "$suite" || true
+  # Run via bash explicitly — avoids NTFS execute-bit issues on Windows.
+  bash "$suite" || true
   exit_code="${PIPESTATUS[0]:-$?}"
 
   RESULTS_NAME+=("$label")

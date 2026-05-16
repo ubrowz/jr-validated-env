@@ -1314,22 +1314,9 @@ if page == "🔧  Admin":
 
     # --- OQ Testing ------------------------------------------------------
     st.markdown("### OQ Testing")
-    _oq_extra = st.text_input(
-        "Extra pytest options for admin_oq (optional)",
-        value="", placeholder="e.g.  -k jrc_normality   or   -x",
-        key="oq_extra",
-    )
-    _col_oq, _col_oq_all = st.columns(2)
-    with _col_oq:
-        st.caption("Core / community suite only.")
-        _run_oq = st.button("▶  admin_oq", key="btn_oq", use_container_width=True)
-    with _col_oq_all:
-        st.caption("Core + all module suites (repos/*/)")
-        _run_oq_all = st.button("▶  admin_oq_all", key="btn_oq_all", use_container_width=True)
+    st.caption("Runs core / community suite plus all module suites (repos/*/).")
+    _run_oq_all = st.button("▶  Run full OQ suite", key="btn_oq_all", use_container_width=True)
 
-    if _run_oq:
-        _extra = _oq_extra.strip().split() if _oq_extra.strip() else []
-        _run_oq_cmd("admin_oq", [os.path.join(ADMIN_DIR, "admin_oq")] + _extra)
     if _run_oq_all:
         _run_oq_cmd("admin_oq_all", [os.path.join(ADMIN_DIR, "admin_oq_all")])
 
