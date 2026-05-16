@@ -74,8 +74,10 @@ for suite in "${SUITES[@]}"; do
   echo "-----------------------------------------------------------"
 
   # Run via bash explicitly — avoids NTFS execute-bit issues on Windows.
-  bash "$suite" || true
-  exit_code="${PIPESTATUS[0]:-$?}"
+  # No || true: set -e is not active here, so the script continues on failure,
+  # and $? correctly captures the suite's exit code.
+  bash "$suite"
+  exit_code=$?
 
   RESULTS_NAME+=("$label")
   RESULTS_EXIT+=("$exit_code")
