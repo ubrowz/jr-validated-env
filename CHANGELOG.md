@@ -34,6 +34,14 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Fixed
 
+- **Windows: `admin_oq`, all module `admin_*_oq`, `admin_oq_all`, and
+  `admin_validate_Python_env` now set `PYTHONUTF8=1` before invoking pytest or
+  Python** — on Windows, Python defaults stdout to `cp1252`, causing a
+  `UnicodeEncodeError` whenever pytest printed R script output containing emoji
+  (e.g. `✅`). All 191 OQ tests failed immediately. `PYTHONUTF8=1` forces UTF-8
+  I/O for the pytest process; it is a no-op on macOS where UTF-8 is the default.
+  `admin_validate` already had this fix; it is now applied consistently everywhere.
+
 - **Windows GUI: Admin and Settings pages no longer raise UnicodeDecodeError** —
   the Admin page buttons (`admin_validate`, `admin_create_hash`, `admin_oq`, etc.)
   and the Settings page R version check and PowerShell shortcut creator all used
