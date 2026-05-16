@@ -84,6 +84,26 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   Windows registry (`Shell Folders\Desktop`), falling back to the OneDrive path if
   the registry key is unavailable.
 
+- **Windows OQ: bypass protection tests no longer fail with FileNotFoundError** —
+  all 6 module conftest files now resolve the Rscript binary at import time via
+  `RSCRIPT_BIN` (globbing `C:\Program Files\R\R-*\bin\Rscript.exe` on Windows,
+  plain `"Rscript"` elsewhere). All 23 module test files that called
+  `subprocess.run(["Rscript", ...])` in bypass protection tests now use
+  `RSCRIPT_BIN`, which is exported from conftest.
+
+- **GUI: `admin_oq_all` now streams live output during the run** — the
+  `_run_oq_cmd` helper previously blocked silently for 20+ minutes. It now
+  streams stdout line-by-line into a live code block, updating every 10 lines.
+  This prevents the Streamlit WebSocket from dropping and eliminates the
+  symptom of the button resetting to unclicked with no result shown.
+
+- **OQ diagnostics: all Downloads assertion failures now show context** —
+  every `_recent_png` / `_recent_file` assertion in all 24 module test files
+  was updated to include: resolved `DOWNLOADS` path, whether it exists, all
+  matching files of any age, and the R script's own output. This makes
+  environment-specific failures (wrong HOME, TCC denial) immediately
+  identifiable from the pytest output alone.
+
 ---
 
 ## [3.11.6] — 2026-05-15
