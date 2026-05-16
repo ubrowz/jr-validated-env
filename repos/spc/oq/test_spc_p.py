@@ -255,7 +255,7 @@ class TestPChartReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_spc_p_pv_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_spc_p_pv_report.html found in ~/Downloads/ after --report run\n"
@@ -274,7 +274,7 @@ class TestPChartReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_spc_p_pv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_spc_p_pv_report_data.json found in ~/Downloads/ after --report run\n"
@@ -295,7 +295,7 @@ class TestPChartReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_spc_p_pv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"

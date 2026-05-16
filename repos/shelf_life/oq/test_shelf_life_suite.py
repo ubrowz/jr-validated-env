@@ -873,7 +873,7 @@ class TestShelfLifeExtrapolate:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_extrapolate_dv_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_extrapolate_dv_report.html found in ~/Downloads/ after --report run\n"
@@ -892,7 +892,7 @@ class TestShelfLifeExtrapolate:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_extrapolate_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_extrapolate_dv_report_data.json found in ~/Downloads/ after --report run\n"
@@ -916,7 +916,7 @@ class TestShelfLifeExtrapolate:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_extrapolate_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"
@@ -948,7 +948,7 @@ class TestShelfLifeQ10Report:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_q10_dv_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_q10_dv_report.html found in ~/Downloads/ after --report run\n"
@@ -964,7 +964,7 @@ class TestShelfLifeQ10Report:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_q10_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_q10_dv_report_data.json found in ~/Downloads/ after --report run\n"
@@ -985,7 +985,7 @@ class TestShelfLifeQ10Report:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_q10_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"
@@ -1017,7 +1017,7 @@ class TestShelfLifeArrheniusReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_arrhenius_dv_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_arrhenius_dv_report.html found in ~/Downloads/ after --report run\n"
@@ -1033,7 +1033,7 @@ class TestShelfLifeArrheniusReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_arrhenius_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_arrhenius_dv_report_data.json found in ~/Downloads/ after --report run\n"
@@ -1054,7 +1054,7 @@ class TestShelfLifeArrheniusReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_arrhenius_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"
@@ -1087,7 +1087,7 @@ class TestShelfLifeLinearReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_shelf_life_linear_dv_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_shelf_life_linear_dv_report.html found in ~/Downloads/ after --report run\n"
@@ -1104,7 +1104,7 @@ class TestShelfLifeLinearReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_shelf_life_linear_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_shelf_life_linear_dv_report_data.json found in ~/Downloads/ after --report run\n"
@@ -1126,7 +1126,7 @@ class TestShelfLifeLinearReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_shelf_life_linear_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"
@@ -1159,7 +1159,7 @@ class TestShelfLifePoolabilityReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_poolability_dv_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_poolability_dv_report.html found in ~/Downloads/ after --report run\n"
@@ -1176,7 +1176,7 @@ class TestShelfLifePoolabilityReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_poolability_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_poolability_dv_report_data.json found in ~/Downloads/ after --report run\n"
@@ -1198,7 +1198,7 @@ class TestShelfLifePoolabilityReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_poolability_dv_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"

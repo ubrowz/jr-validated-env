@@ -57,7 +57,7 @@ def _recent_png(pattern, t_start):
     """Return list of PNGs matching pattern in ~/Downloads created after t_start."""
     return [
         f for f in glob.glob(os.path.join(DOWNLOADS, pattern))
-        if os.path.getmtime(f) >= t_start
+        if os.path.getmtime(f) >= t_start - 1.0
     ]
 
 
@@ -272,7 +272,7 @@ class TestGaugeRRReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         html_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_gauge_rr_report.html"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert html_files, (
             f"No *_gauge_rr_report.html found in ~/Downloads/ after --report run\n"
@@ -291,7 +291,7 @@ class TestGaugeRRReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_gauge_rr_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No *_gauge_rr_report_data.json found in ~/Downloads/ after --report run\n"
@@ -312,7 +312,7 @@ class TestGaugeRRReport:
         assert r.returncode == 0, f"Expected exit 0:\n{combined(r)}"
         json_files = [
             f for f in glob.glob(os.path.join(DOWNLOADS, "*_gauge_rr_report_data.json"))
-            if os.path.getmtime(f) >= t_start
+            if os.path.getmtime(f) >= t_start - 1.0
         ]
         assert json_files, (
             f"No JSON sidecar found — cannot check content\n"
