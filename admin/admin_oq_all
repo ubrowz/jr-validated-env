@@ -28,13 +28,14 @@ REPOS_DIR="$PROJECT_ROOT/repos"
 # Core/community suite always runs first
 SUITES=("$SCRIPT_DIR/admin_oq")
 
-# Find one admin_*_oq script per repos subfolder, sorted by folder name
-while IFS= read -r -d '' script; do
-  SUITES+=("$script")
+# Find one admin_*_oq script per repos subfolder, sorted by folder name.
+# Plain newline output + sort (no -z / -print0) for Windows compatibility.
+while IFS= read -r script; do
+  [[ -n "$script" ]] && SUITES+=("$script")
 done < <(find "$REPOS_DIR" -mindepth 2 -maxdepth 2 \
-           -type f -name "admin_*oq" -perm -u+x \
+           -type f -name "admin_*oq" \
            -not -name "admin_oq_validate" \
-           | sort -z)
+           | sort)
 
 # ---------------------------------------------------------------------------
 # Print plan
