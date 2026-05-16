@@ -34,6 +34,14 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Fixed
 
+- **Windows GUI: Admin and Settings pages no longer raise UnicodeDecodeError** —
+  the Admin page buttons (`admin_validate`, `admin_create_hash`, `admin_oq`, etc.)
+  and the Settings page R version check and PowerShell shortcut creator all used
+  `text=True` without an explicit encoding. On Windows this defaulted to `cp1252`,
+  raising `UnicodeDecodeError` on any UTF-8 output. All four `subprocess` calls
+  now specify `encoding="utf-8"`, matching the convention already in use on the
+  Scripts page.
+
 - **Windows: correct R version now detected when multiple versions are installed** —
   `admin_setup` previously selected R alphabetically from `Program Files/R/`, picking
   e.g. R-4.5.3 over a newly installed R-4.6.0. Detection now matches the folder
