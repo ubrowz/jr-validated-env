@@ -9,9 +9,14 @@ import os
 import re
 import glob
 import zipfile
+import pytest
 from conftest import run, combined, extract_float, DATA_DIR, PROJECT_ROOT
 
 PACK_INSTALLED = os.path.exists(os.path.join(PROJECT_ROOT, "pack", "jr_pack.py"))
+
+_TMPL_DIR = os.path.join(PROJECT_ROOT, "docs", "templates")
+_ATTR_REPORT_AVAILABLE = os.path.exists(os.path.join(_TMPL_DIR, "verify_attr_report_template.html"))
+_DV_REPORT_AVAILABLE   = os.path.exists(os.path.join(_TMPL_DIR, "dv_report_template.html"))
 
 
 def data(name):
@@ -271,6 +276,8 @@ class TestVerifyAttr:
 # jrc_verify_attr — --report (TC-VER-012 .. TC-VER-014)
 # ===========================================================================
 
+@pytest.mark.skipif(not _ATTR_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (verify_attr_report_template.html missing)")
 class TestVerifyAttrReport:
 
     def test_tc_ver_012_report_output_created(self):
@@ -470,6 +477,8 @@ class TestVerifyDiscrete:
 # jrc_verify_discrete — --report (TC-VER-DISC-009)
 # ===========================================================================
 
+@pytest.mark.skipif(not _DV_REPORT_AVAILABLE,
+                    reason="Validation Pack not installed (dv_report_template.html missing)")
 class TestVerifyDiscreteReport:
 
     def test_tc_ver_disc_009_report_output_created(self):
