@@ -150,6 +150,9 @@ fi
 
 cd "$OQ_DIR"
 
+# Force UTF-8 I/O so pytest can print emoji from script output on Windows.
+export PYTHONUTF8=1
+
 "$(jr_venv_pytest "$OQ_VENV")" "${PYTEST_ARGS[@]}" | tee -a "$EVIDENCE_FILE"
 PYTEST_EXIT="${PIPESTATUS[0]}"
 

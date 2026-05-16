@@ -53,6 +53,9 @@ echo " "
 # Run each suite and collect results
 # ---------------------------------------------------------------------------
 
+# Force UTF-8 I/O so pytest can print emoji from script output on Windows.
+export PYTHONUTF8=1
+
 declare -a RESULTS_NAME
 declare -a RESULTS_EXIT
 

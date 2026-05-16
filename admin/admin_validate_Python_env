@@ -32,4 +32,5 @@ if [[ ! -f "$SCRIPT_DIR/Python/validate_Python_env.py" ]]; then
   exit 1
 fi
 
+export PYTHONUTF8=1
 "$(jr_venv_python "$VENV_PATH")" "$SCRIPT_DIR/Python/validate_Python_env.py"
