@@ -130,22 +130,26 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   (`for _script in "$_module_dir"admin_*oq`) which bypasses PATH lookup
   entirely and works identically on Windows, macOS, and Linux.
 
-- **macOS: `jr_app` re-execs via `arch` on both Apple Silicon and Intel Mac
-  when launched from Dock** — when the GUI is started from the Dock (`.app`
-  bundle), the process runs inside the bundle's nohup background context,
-  which macOS associates with the bundle's TCC permissions. This can block
-  child processes (e.g. R scripts) from writing to `~/Downloads`. Calling
-  `arch` creates a *new subprocess* rather than exec-ing in place, which
-  breaks the process out of that bundle context and gives it normal
-  user-session permissions.
+- **macOS: `jr_app` escapes the Dock bundle context at startup** — when the
+  GUI is started from the Dock (`.app` bundle), macOS associates all child
+  processes with the bundle's TCC responsible-process chain. This blocks R
+  scripts from writing to `~/Downloads`, so every OQ test that saves a PNG
+  there fails from the GUI even though it passes from Terminal.
 
-  - **Apple Silicon under Rosetta**: re-execs as arm64. Symptom without this:
-    numpy/matplotlib `.so` files (arm64) fail to load in the x86_64 emulated
-    process, causing the `admin` and `curve` OQ suites to fail.
-  - **Intel Mac launched without a TTY** (from Dock, not Terminal): re-execs
-    as x86_64. Architecture doesn't change; only the process context does.
-    Symptom without this: all OQ suites that save PNGs to `~/Downloads` fail
-    from the GUI even though they pass from Terminal.
+  Two separate strategies are used depending on hardware:
+
+  - **Apple Silicon under Rosetta**: re-execs as arm64 via `arch -arm64`.
+    `arch` creates a new subprocess that transitions from Rosetta to native,
+    resetting the TCC chain. Symptom without this: numpy/matplotlib `.so`
+    files (arm64) fail to load in the x86_64 emulated process, and all OQ
+    suites that save files to `~/Downloads` fail from the GUI.
+  - **Intel Mac launched without a TTY** (from Dock, not Terminal): relaunches
+    through Terminal.app via `osascript`. On Intel, `arch -x86_64` does
+    NOT reset the TCC chain because the architecture is unchanged — macOS
+    still attributes the subprocess to the bundle. Relaunching through
+    Terminal.app transfers the responsible process to Terminal, which already
+    holds the necessary `~/Downloads` (and other folder) TCC grants. Falls
+    back to `arch -x86_64` if `osascript` is unavailable.
 
   Both conditions are detected at startup via `hw.optional.arm64` /
   `uname -m` / `[[ ! -t 0 ]]`; they are no-ops when not applicable.

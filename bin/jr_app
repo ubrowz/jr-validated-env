@@ -25,8 +25,9 @@ set -euo pipefail
 #     Symptom without this: numpy/matplotlib .so files are arm64 but the
 #     process is x86_64, causing "incompatible architecture" dlopen errors.
 #  2. Intel Mac launched without a TTY (from Dock/app bundle, not Terminal):
-#     re-exec as x86_64. The architecture doesn't change; what changes is
-#     that the new subprocess escapes the nohup bundle context.
+#     relaunch through Terminal.app via osascript. arch -x86_64 re-exec does
+#     NOT break the TCC responsible-process chain, so ~/Downloads writes by
+#     child processes stay blocked. Terminal.app carries the full TCC grants.
 # ---------------------------------------------------------------------------
 if [[ "$(uname -s)" == "Darwin" ]] && [[ -z "${_JR_ARCH_REEXEC:-}" ]]; then
   _hw_arm64=$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)
@@ -36,9 +37,17 @@ if [[ "$(uname -s)" == "Darwin" ]] && [[ -z "${_JR_ARCH_REEXEC:-}" ]]; then
     export _JR_ARCH_REEXEC=1
     exec arch -arm64 "$0" "$@"
   elif [[ "$_hw_arm64" != "1" ]] && [[ ! -t 0 ]] && [[ ! -t 1 ]]; then
-    # Intel Mac launched without a terminal (from Dock/app bundle)
+    # Intel Mac: relaunch through Terminal.app to inherit its TCC permissions
+    # (~/Downloads, ~/Desktop, etc.). arch -x86_64 alone does not reset the
+    # TCC responsible-process chain when the architecture stays the same.
     export _JR_ARCH_REEXEC=1
-    exec arch -x86_64 "$0" "$@"
+    _self="$0"
+    osascript -e "tell application \"Terminal\"
+      activate
+      do script \"exec $(printf '%q' "$_self")\"
+    end tell" 2>/dev/null && exit 0
+    # osascript unavailable — fall back to arch re-exec (TCC issue persists)
+    exec arch -x86_64 "$_self" "$@"
   fi
 fi
 
