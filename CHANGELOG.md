@@ -12,6 +12,10 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+---
+
+## [3.11.8] — 2026-05-17
+
 ### Added
 
 - **Release branch introduced as GitHub default** — the `release` branch now
