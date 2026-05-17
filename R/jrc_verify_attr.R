@@ -821,7 +821,7 @@ save_report <- function(x, result, tl_data,
     '{"k":"Verdict","v":', jvs(v_text), '}'
   )
 
-  png_json <- if (!is.null(png_path) && file.exists(png_path)) jvs(png_path) else "null"
+  png_json <- if (!is.null(png_path) && file.exists(png_path)) jvs(gsub("\\\\", "/", png_path)) else "null"
 
   input_sha256 <- jr_sha256_file(file_path)
 
