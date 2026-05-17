@@ -51,5 +51,15 @@ jr_log_report <- function(docx_path) {
 }
 
 jr_python_bin <- function() {
-  if (.Platform$OS.type == "windows") "python" else "python3"
+  if (.Platform$OS.type != "windows") return("python3")
+  # Locate the real python.exe via admin/python_version.txt (same logic as jrrun)
+  ver_file <- file.path(Sys.getenv("JR_PROJECT_ROOT"), "admin", "python_version.txt")
+  if (file.exists(ver_file)) {
+    ver <- trimws(readLines(ver_file, warn = FALSE)[1L])
+    mm  <- paste(strsplit(ver, "\\.")[[1L]][1:2], collapse = "")
+    py  <- file.path(Sys.getenv("USERPROFILE"), "AppData", "Local", "Programs",
+                     "Python", paste0("Python", mm), "python.exe")
+    if (file.exists(py)) return(normalizePath(py, winslash = "/"))
+  }
+  "python"  # fallback: python in PATH
 }
