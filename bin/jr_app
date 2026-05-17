@@ -12,6 +12,20 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
+# Apple Silicon: re-exec natively if launched under Rosetta (x86_64 emulation)
+#
+# Symptoms without this: numpy/matplotlib .so files are arm64 but the process
+# is x86_64, causing "incompatible architecture" dlopen failures in OQ tests.
+# ---------------------------------------------------------------------------
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  _hw_arm64=$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)
+  _proc_arch=$(uname -m)
+  if [[ "$_hw_arm64" == "1" ]] && [[ "$_proc_arch" != "arm64" ]]; then
+    exec arch -arm64 "$0" "$@"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Resolve paths
 # ---------------------------------------------------------------------------
 

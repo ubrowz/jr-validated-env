@@ -104,6 +104,32 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   environment-specific failures (wrong HOME, TCC denial) immediately
   identifiable from the pytest output alone.
 
+- **OQ: report tests now accept `.docx` in addition to HTML/JSON** —
+  on machines with jr_pack (Validation Pack) fully installed, the R script
+  writes HTML + JSON intermediates, calls jr_pack to generate a `.docx` Word
+  report, then deletes the intermediates. All 30 report test methods across
+  10 module OQ suites (cap, msa, rdt, shelf_life, spc) now check for
+  `.docx` OR HTML/JSON so both install configurations pass. JSON content
+  checks are skipped when only `.docx` is present (jr_pack proved correctness
+  by producing the Word document).
+
+- **OQ: file detection mtime buffer increased to 1 second** —
+  `_recent_png` / `_recent_file` / html/json loops previously used
+  `>= t_start` with no tolerance. On Intel Macs with HFS+ timestamps this
+  caused spurious failures when the file mtime matched `t_start` exactly.
+  All 41 detection expressions across 10 files now use `>= t_start - 1.0`.
+
+- **macOS: `jr_app` re-execs natively on Apple Silicon when launched under
+  Rosetta** — if the GUI is started from a Rosetta (x86_64-emulated) shell,
+  the entire subprocess tree — including pytest and the Python venv — inherited
+  x86_64 emulation. The arm64-native numpy/matplotlib `.so` files in the venv
+  then failed to load with "incompatible architecture" errors, causing the
+  `admin` and `curve` OQ suites to fail. `bin/jr_app` now checks
+  `hw.optional.arm64` and `uname -m` at startup; if the hardware is Apple
+  Silicon but the current process is x86_64, it re-execs via `arch -arm64`
+  before launching Streamlit. This is a no-op on Intel Macs and on native
+  arm64 launches.
+
 ---
 
 ## [3.11.6] — 2026-05-15
