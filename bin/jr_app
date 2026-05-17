@@ -12,16 +12,31 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Apple Silicon: re-exec natively if launched under Rosetta (x86_64 emulation)
+# macOS: re-exec via arch to escape the .app-bundle process context.
 #
-# Symptoms without this: numpy/matplotlib .so files are arm64 but the process
-# is x86_64, causing "incompatible architecture" dlopen failures in OQ tests.
+# When launched from Dock, the nohup background process lives inside the
+# .app bundle's TCC context, which can restrict ~/Downloads access for
+# child processes (e.g. R scripts saving PNGs). Calling `arch` creates a
+# *new subprocess* (arch cannot exec in-place), breaking out of that
+# context and giving the new process normal user-session permissions.
+#
+# Two cases:
+#  1. Apple Silicon under Rosetta (x86_64 emulation): re-exec as arm64.
+#     Symptom without this: numpy/matplotlib .so files are arm64 but the
+#     process is x86_64, causing "incompatible architecture" dlopen errors.
+#  2. Intel Mac launched without a TTY (from Dock/app bundle, not Terminal):
+#     re-exec as x86_64. The architecture doesn't change; what changes is
+#     that the new subprocess escapes the nohup bundle context.
 # ---------------------------------------------------------------------------
 if [[ "$(uname -s)" == "Darwin" ]]; then
   _hw_arm64=$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)
   _proc_arch=$(uname -m)
   if [[ "$_hw_arm64" == "1" ]] && [[ "$_proc_arch" != "arm64" ]]; then
+    # Apple Silicon running under Rosetta — force native arm64
     exec arch -arm64 "$0" "$@"
+  elif [[ "$_hw_arm64" != "1" ]] && [[ ! -t 0 ]] && [[ ! -t 1 ]]; then
+    # Intel Mac launched without a terminal (from Dock/app bundle)
+    exec arch -x86_64 "$0" "$@"
   fi
 fi
 

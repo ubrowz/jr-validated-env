@@ -130,16 +130,25 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   (`for _script in "$_module_dir"admin_*oq`) which bypasses PATH lookup
   entirely and works identically on Windows, macOS, and Linux.
 
-- **macOS: `jr_app` re-execs natively on Apple Silicon when launched under
-  Rosetta** — if the GUI is started from a Rosetta (x86_64-emulated) shell,
-  the entire subprocess tree — including pytest and the Python venv — inherited
-  x86_64 emulation. The arm64-native numpy/matplotlib `.so` files in the venv
-  then failed to load with "incompatible architecture" errors, causing the
-  `admin` and `curve` OQ suites to fail. `bin/jr_app` now checks
-  `hw.optional.arm64` and `uname -m` at startup; if the hardware is Apple
-  Silicon but the current process is x86_64, it re-execs via `arch -arm64`
-  before launching Streamlit. This is a no-op on Intel Macs and on native
-  arm64 launches.
+- **macOS: `jr_app` re-execs via `arch` on both Apple Silicon and Intel Mac
+  when launched from Dock** — when the GUI is started from the Dock (`.app`
+  bundle), the process runs inside the bundle's nohup background context,
+  which macOS associates with the bundle's TCC permissions. This can block
+  child processes (e.g. R scripts) from writing to `~/Downloads`. Calling
+  `arch` creates a *new subprocess* rather than exec-ing in place, which
+  breaks the process out of that bundle context and gives it normal
+  user-session permissions.
+
+  - **Apple Silicon under Rosetta**: re-execs as arm64. Symptom without this:
+    numpy/matplotlib `.so` files (arm64) fail to load in the x86_64 emulated
+    process, causing the `admin` and `curve` OQ suites to fail.
+  - **Intel Mac launched without a TTY** (from Dock, not Terminal): re-execs
+    as x86_64. Architecture doesn't change; only the process context does.
+    Symptom without this: all OQ suites that save PNGs to `~/Downloads` fail
+    from the GUI even though they pass from Terminal.
+
+  Both conditions are detected at startup via `hw.optional.arm64` /
+  `uname -m` / `[[ ! -t 0 ]]`; they are no-ops when not applicable.
 
 ---
 
