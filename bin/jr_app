@@ -28,14 +28,16 @@ set -euo pipefail
 #     re-exec as x86_64. The architecture doesn't change; what changes is
 #     that the new subprocess escapes the nohup bundle context.
 # ---------------------------------------------------------------------------
-if [[ "$(uname -s)" == "Darwin" ]]; then
+if [[ "$(uname -s)" == "Darwin" ]] && [[ -z "${_JR_ARCH_REEXEC:-}" ]]; then
   _hw_arm64=$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)
   _proc_arch=$(uname -m)
   if [[ "$_hw_arm64" == "1" ]] && [[ "$_proc_arch" != "arm64" ]]; then
     # Apple Silicon running under Rosetta — force native arm64
+    export _JR_ARCH_REEXEC=1
     exec arch -arm64 "$0" "$@"
   elif [[ "$_hw_arm64" != "1" ]] && [[ ! -t 0 ]] && [[ ! -t 1 ]]; then
     # Intel Mac launched without a terminal (from Dock/app bundle)
+    export _JR_ARCH_REEXEC=1
     exec arch -x86_64 "$0" "$@"
   fi
 fi
