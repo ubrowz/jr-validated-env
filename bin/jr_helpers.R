@@ -50,6 +50,29 @@ jr_log_report <- function(docx_path) {
   invisible(NULL)
 }
 
+jr_sha256_file <- function(path) {
+  fp <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  raw <- tryCatch(
+    system2("shasum", args = c("-a", "256", fp), stdout = TRUE, stderr = FALSE),
+    error = function(e) character(0)
+  )
+  if (length(raw) > 0L && nchar(raw[1L]) > 0L) {
+    return(strsplit(raw[1L], "\\s+")[[1L]][1L])
+  }
+  if (.Platform$OS.type == "windows") {
+    fp_win <- normalizePath(path, winslash = "\\", mustWork = FALSE)
+    raw2 <- tryCatch(
+      system2("certutil", args = c("-hashfile", fp_win, "SHA256"),
+              stdout = TRUE, stderr = FALSE),
+      error = function(e) character(0)
+    )
+    if (length(raw2) >= 2L && grepl("^[0-9a-fA-F]+$", trimws(raw2[2L]))) {
+      return(tolower(trimws(raw2[2L])))
+    }
+  }
+  NA_character_
+}
+
 jr_python_bin <- function() {
   # Force UTF-8 I/O for the Python subprocess — prevents cp1252 UnicodeEncodeError
   # on Windows when jr_pack.py prints emoji (e.g. ✅) to stdout.

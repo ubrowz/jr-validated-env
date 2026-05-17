@@ -823,12 +823,7 @@ save_report <- function(x, result, tl_data,
 
   png_json <- if (!is.null(png_path) && file.exists(png_path)) jvs(png_path) else "null"
 
-  input_sha256 <- tryCatch({
-    fp_norm <- normalizePath(file_path, winslash = "/", mustWork = FALSE)
-    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
-                       stdout = TRUE, stderr = FALSE)
-    strsplit(raw, " ")[[1]][1]
-  }, error = function(e) NA_character_)
+  input_sha256 <- jr_sha256_file(file_path)
 
   json_str <- paste0(
     '{"report_type":"dv",',

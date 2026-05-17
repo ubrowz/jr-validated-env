@@ -648,12 +648,7 @@ save_linear_report <- function(csv_file, spec_limit, confidence, direction,
     '{"k":"Shelf life estimate","v":', jvs(shelf_life_label), '}'
   )
 
-  input_sha256 <- tryCatch({
-    fp_norm <- normalizePath(csv_file, winslash = "/", mustWork = FALSE)
-    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
-                       stdout = TRUE, stderr = FALSE)
-    strsplit(raw, " ")[[1]][1]
-  }, error = function(e) NA_character_)
+  input_sha256 <- jr_sha256_file(csv_file)
 
   json_lines <- c(
     "{",

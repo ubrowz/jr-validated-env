@@ -239,12 +239,7 @@ save_sixpack_report <- function(data_file, col_name, n, lsl, usl,
   )
   results_rows <- paste(res_parts, collapse = ",\n")
 
-  input_sha256 <- tryCatch({
-    fp_norm <- normalizePath(data_file, winslash = "/", mustWork = FALSE)
-    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
-                       stdout = TRUE, stderr = FALSE)
-    strsplit(raw, " ")[[1]][1]
-  }, error = function(e) NA_character_)
+  input_sha256 <- jr_sha256_file(data_file)
 
   json_lines <- c(
     "{",

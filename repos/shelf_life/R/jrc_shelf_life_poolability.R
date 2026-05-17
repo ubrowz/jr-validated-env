@@ -428,12 +428,7 @@ save_poolability_report <- function(csv_file, n_batches, n_total, batch_fits,
     '{"k":"Total observations","v":', jvn(n_total, "%.0f"), '}'
   )
 
-  input_sha256 <- tryCatch({
-    fp_norm <- normalizePath(csv_file, winslash = "/", mustWork = FALSE)
-    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
-                       stdout = TRUE, stderr = FALSE)
-    strsplit(raw, " ")[[1]][1]
-  }, error = function(e) NA_character_)
+  input_sha256 <- jr_sha256_file(csv_file)
 
   results_rows <- paste0(
     '{"k":"Data file","v":', jvs(basename(csv_file)), '},',

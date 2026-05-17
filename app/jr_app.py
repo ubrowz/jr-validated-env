@@ -1505,16 +1505,18 @@ if needs_file:
                                key=f"sc2_{script_choice}")
 
         if up1:
-            t = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
-            t.write(up1.getvalue()); t.close()
-            data_path = t.name; tmp_path = t.name
+            _td1 = tempfile.mkdtemp()
+            data_path = os.path.join(_td1, up1.name)
+            with open(data_path, "wb") as _tf: _tf.write(up1.getvalue())
+            tmp_path = data_path
         elif sc1 != "(none)":
             data_path = os.path.join(sdir, sc1)
 
         if up2:
-            t = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
-            t.write(up2.getvalue()); t.close()
-            data_path2 = t.name; tmp_path2 = t.name
+            _td2 = tempfile.mkdtemp()
+            data_path2 = os.path.join(_td2, up2.name)
+            with open(data_path2, "wb") as _tf: _tf.write(up2.getvalue())
+            tmp_path2 = data_path2
         elif sc2 != "(none)":
             data_path2 = os.path.join(sdir, sc2)
 
@@ -1588,10 +1590,10 @@ if needs_file:
             )
 
         if uploaded_file is not None:
-            suffix = os.path.splitext(uploaded_file.name)[1] or ".txt"
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-            tmp.write(uploaded_file.getvalue()); tmp.close()
-            data_path = tmp.name; tmp_path = tmp.name
+            _td = tempfile.mkdtemp()
+            data_path = os.path.join(_td, uploaded_file.name)
+            with open(data_path, "wb") as _tf: _tf.write(uploaded_file.getvalue())
+            tmp_path = data_path
             st.success(f"Using uploaded file: **{uploaded_file.name}**")
         elif sample_choice_val != "(none)":
             data_path = os.path.join(sample_dir, sample_choice_val)
@@ -1621,11 +1623,10 @@ if needs_file:
             )
 
         if uploaded_file is not None:
-            tmp = tempfile.NamedTemporaryFile(
-                delete=False, suffix=".csv", dir=tempfile.gettempdir()
-            )
-            tmp.write(uploaded_file.getvalue()); tmp.close()
-            data_path = tmp.name; tmp_path = tmp.name
+            _td = tempfile.mkdtemp()
+            data_path = os.path.join(_td, uploaded_file.name)
+            with open(data_path, "wb") as _tf: _tf.write(uploaded_file.getvalue())
+            tmp_path = data_path
             st.success(f"Using uploaded file: **{uploaded_file.name}**")
         elif sample_choice_val != "(none)":
             data_path = os.path.join(sample_dir, sample_choice_val)

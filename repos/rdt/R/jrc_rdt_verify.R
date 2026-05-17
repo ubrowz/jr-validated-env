@@ -353,12 +353,7 @@ save_rdt_report <- function(file_path, n, k, n_suspensions,
 
   wb_verdict_str <- if (!use_weibayes || is.na(pass_wb)) "null" else if (pass_wb) '"PASS"' else '"FAIL"'
 
-  input_sha256 <- tryCatch({
-    fp_norm <- normalizePath(file_path, winslash = "/", mustWork = FALSE)
-    raw     <- system2("shasum", args = c("-a", "256", fp_norm),
-                       stdout = TRUE, stderr = FALSE)
-    strsplit(raw, " ")[[1]][1]
-  }, error = function(e) NA_character_)
+  input_sha256 <- jr_sha256_file(file_path)
 
   results_rows <- paste0(
     '{"k":"Data file","v":', jvs(basename(file_path)), '},',
