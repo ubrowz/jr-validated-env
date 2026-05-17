@@ -51,6 +51,9 @@ jr_log_report <- function(docx_path) {
 }
 
 jr_python_bin <- function() {
+  # Force UTF-8 I/O for the Python subprocess — prevents cp1252 UnicodeEncodeError
+  # on Windows when jr_pack.py prints emoji (e.g. ✅) to stdout.
+  Sys.setenv(PYTHONUTF8 = "1")
   if (.Platform$OS.type != "windows") return("python3")
   # Locate the real python.exe via admin/python_version.txt (same logic as jrrun)
   ver_file <- file.path(Sys.getenv("JR_PROJECT_ROOT"), "admin", "python_version.txt")
