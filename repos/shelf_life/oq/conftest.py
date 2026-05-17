@@ -40,6 +40,7 @@ def run(script, *args, cwd=None):
         cmd,
         capture_output=True,
         encoding="utf-8",
+        stdin=subprocess.DEVNULL,
         cwd=cwd or DATA_DIR,
     )
     args_str = " ".join(str(a) for a in args)

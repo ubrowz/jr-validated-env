@@ -58,6 +58,7 @@ def run(script, *args, cwd=None):
         cmd,
         capture_output=True,
         encoding="utf-8",
+        stdin=subprocess.DEVNULL,
         cwd=cwd or DATA_DIR,
     )
     # Print invocation and output for OQ evidence (visible with pytest -s)
