@@ -150,6 +150,47 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   Both conditions are detected at startup via `hw.optional.arm64` /
   `uname -m` / `[[ ! -t 0 ]]`; they are no-ops when not applicable.
 
+- **Windows: Validation Pack `--report` now works end-to-end** — four
+  separate issues prevented `--report` Word document generation on Windows:
+
+  - **`python3` not found (status 9009)**: all 16 R scripts that invoke
+    `jr_pack.py` called `system2("python3", ...)`. On Windows, `python3`
+    resolves to the Microsoft Store stub (exit 9009). A new `jr_python_bin()`
+    helper in `jr_helpers.R` locates the real `python.exe` via
+    `admin/python_version.txt` → `%USERPROFILE%\AppData\Local\Programs\
+    Python\PythonXYY\python.exe`, and falls back to `"python"` in PATH. All
+    16 scripts now call `system2(jr_python_bin(), ...)`.
+
+  - **`UnicodeEncodeError` for emoji in `jr_pack.py` output**: `jr_pack.py`
+    prints `✅` to stdout; on Windows the default console encoding is
+    `cp1252`, which cannot encode that character. `jr_python_bin()` now
+    sets `PYTHONUTF8=1` as a side effect before every Python subprocess
+    call, forcing UTF-8 I/O without touching any of the 16 call sites.
+
+  - **SHA-256 missing from Word document**: the inline SHA-256 computation
+    in all 13 report-generating R scripts called `system2("shasum", ...)`,
+    which is not on the Windows PATH when R invokes `system2`. A new
+    `jr_sha256_file()` helper in `jr_helpers.R` tries `shasum` first
+    (macOS/Linux/Git Bash), then falls back to `certutil -hashfile`
+    (built in to all Windows installations). All 13 scripts now call
+    `jr_sha256_file()` instead of the inline 5-line block.
+
+  - **Data filename in report shows temp name instead of uploaded name**:
+    the GUI saved uploaded CSV files as random-named temp files
+    (e.g. `tmp3a8f1b.csv`); `basename()` in the R script returned that
+    temp name rather than the user's original filename. The GUI now saves
+    each upload into a dedicated `mkdtemp()` directory under the original
+    filename, so `basename()` returns the correct name.
+
+- **Windows: JSON sidecar invalid for MSA, RDT, and shelf-life poolability
+  `--report` runs** — `jvs(png_path)` wrote the raw Windows path (e.g.
+  `C:\Users\...\file.png`) into the JSON sidecar without escaping backslashes.
+  `json.load()` in the OQ test and in the Word generator then raised
+  `JSONDecodeError: Invalid \escape`. Fixed in `jrc_msa_gauge_rr`,
+  `jrc_rdt_verify`, `jrc_shelf_life_poolability`, and `jrc_verify_attr` to
+  match the `gsub("\\\\", "/", png_path)` normalisation already present in
+  the cap and spc scripts.
+
 ---
 
 ## [3.11.6] — 2026-05-15
