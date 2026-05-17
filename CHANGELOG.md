@@ -119,6 +119,17 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   caused spurious failures when the file mtime matched `t_start` exactly.
   All 41 detection expressions across 10 files now use `>= t_start - 1.0`.
 
+- **Windows: `admin_oq_all` now discovers module suites with bash glob
+  instead of `find`** — when `admin_oq_all` is invoked via `bash --login`
+  from the GUI on Windows, the login profile may prepend
+  `C:\Windows\System32` to `PATH`, causing `find` to resolve to Windows
+  `find.exe` (a string-in-file tool, not a filesystem searcher). This
+  produced no output, leaving `SUITES` with only the hardcoded core suite
+  (`admin_oq`). Module suites were silently skipped and no module evidence
+  files were written. Discovery now uses bash's native glob expansion
+  (`for _script in "$_module_dir"admin_*oq`) which bypasses PATH lookup
+  entirely and works identically on Windows, macOS, and Linux.
+
 - **macOS: `jr_app` re-execs natively on Apple Silicon when launched under
   Rosetta** — if the GUI is started from a Rosetta (x86_64-emulated) shell,
   the entire subprocess tree — including pytest and the Python venv — inherited

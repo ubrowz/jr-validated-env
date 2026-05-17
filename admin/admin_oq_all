@@ -28,14 +28,26 @@ REPOS_DIR="$PROJECT_ROOT/repos"
 # Core/community suite always runs first
 SUITES=("$SCRIPT_DIR/admin_oq")
 
-# Find one admin_*_oq script per repos subfolder, sorted by folder name.
-# Plain newline output + sort (no -z / -print0) for Windows compatibility.
-while IFS= read -r script; do
-  [[ -n "$script" ]] && SUITES+=("$script")
-done < <(find "$REPOS_DIR" -mindepth 2 -maxdepth 2 \
-           -type f -name "admin_*oq" \
-           -not -name "admin_oq_validate" \
-           | sort)
+# Discover module admin_*oq scripts using bash glob rather than `find`.
+# Rationale: when this script is invoked via "bash --login" from the GUI on
+# Windows, the login profile may prepend C:\Windows\System32 to PATH, causing
+# `find` to resolve to Windows find.exe (a string-in-file tool, not a
+# filesystem searcher). Using bash's native glob expansion avoids PATH lookup
+# entirely and works identically on macOS, Windows Git Bash, and Linux.
+_raw_modules=()
+for _module_dir in "$REPOS_DIR"/*/; do
+  [[ -d "$_module_dir" ]] || continue
+  for _script in "$_module_dir"admin_*oq; do
+    [[ -f "$_script" ]] || continue
+    [[ "$(basename "$_script")" == "admin_oq_validate" ]] && continue
+    _raw_modules+=("$_script")
+  done
+done
+if [[ ${#_raw_modules[@]} -gt 0 ]]; then
+  while IFS= read -r _s; do
+    [[ -n "$_s" ]] && SUITES+=("$_s")
+  done < <(printf "%s\n" "${_raw_modules[@]}" | sort)
+fi
 
 # ---------------------------------------------------------------------------
 # Print plan
