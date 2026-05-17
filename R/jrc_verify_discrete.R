@@ -261,7 +261,7 @@ save_discrete_report <- function(N_val, f_val, proportion, confidence,
 
   pack_py <- file.path(Sys.getenv("JR_PROJECT_ROOT"), "pack", "jr_pack.py")
   if (file.exists(pack_py)) {
-    ret       <- system2("python3",
+    ret       <- system2(jr_python_bin(),
                          args   = c(shQuote(pack_py), "deliverables", "dv-report",
                                     "--json", shQuote(json_path)),
                          stdout = TRUE, stderr = TRUE)

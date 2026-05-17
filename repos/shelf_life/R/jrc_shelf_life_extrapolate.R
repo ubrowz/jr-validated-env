@@ -273,7 +273,7 @@ save_extrapolate_report <- function(model_file, source_f, run_ts,
   message(sprintf("  JSON sidecar: %s", json_path))
   pack_py <- file.path(Sys.getenv("JR_PROJECT_ROOT"), "pack", "jr_pack.py")
   if (file.exists(pack_py)) {
-    ret       <- system2("python3",
+    ret       <- system2(jr_python_bin(),
                          args   = c(shQuote(pack_py), "deliverables", "dv-report",
                                     "--json", shQuote(json_path)),
                          stdout = TRUE, stderr = TRUE)

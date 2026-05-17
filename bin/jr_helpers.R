@@ -49,3 +49,7 @@ jr_log_report <- function(docx_path) {
       file = log_file, append = TRUE)
   invisible(NULL)
 }
+
+jr_python_bin <- function() {
+  if (.Platform$OS.type == "windows") "python" else "python3"
+}
