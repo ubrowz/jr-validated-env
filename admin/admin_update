@@ -84,10 +84,10 @@ echo ""
 # ---------------------------------------------------------------------------
 
 LOCAL_HASH=$(git rev-parse HEAD)
-REMOTE_HASH=$(git rev-parse origin/main 2>/dev/null || echo "")
+REMOTE_HASH=$(git rev-parse origin/release 2>/dev/null || echo "")
 
 if [[ -z "$REMOTE_HASH" ]]; then
-  echo "❌ Could not reach origin/main. Check your internet connection."
+  echo "❌ Could not reach origin/release. Check your internet connection."
   exit 1
 fi
 
@@ -97,14 +97,14 @@ if [[ "$LOCAL_HASH" == "$REMOTE_HASH" ]]; then
   exit 0
 fi
 
-MERGE_BASE=$(git merge-base HEAD origin/main)
+MERGE_BASE=$(git merge-base HEAD origin/release)
 
 # ---------------------------------------------------------------------------
 # What will the pull change?
 # ---------------------------------------------------------------------------
 
 # Files changed in the incoming update (remote since common ancestor)
-REMOTE_CHANGED=$(git diff --name-only "$MERGE_BASE" origin/main)
+REMOTE_CHANGED=$(git diff --name-only "$MERGE_BASE" origin/release)
 
 # ---------------------------------------------------------------------------
 # Pre-flight checks
@@ -201,7 +201,7 @@ fi
 # ------------------------------------------------------------------
 
 LOCAL_R_VER=$(tr -d '[:space:]' < "$SCRIPT_DIR/r_version.txt" 2>/dev/null || echo "")
-REMOTE_R_VER=$(git show origin/main:admin/r_version.txt 2>/dev/null | tr -d '[:space:]' || echo "$LOCAL_R_VER")
+REMOTE_R_VER=$(git show origin/release:admin/r_version.txt 2>/dev/null | tr -d '[:space:]' || echo "$LOCAL_R_VER")
 
 if [[ "$LOCAL_R_VER" != "$REMOTE_R_VER" ]]; then
   echo "⚠️   R version requirement changes: $LOCAL_R_VER → $REMOTE_R_VER"
@@ -284,7 +284,7 @@ echo ""
 
 # --- git pull
 echo "⬇️   Pulling from GitHub..."
-git pull
+git pull origin release
 echo ""
 
 # --- admin_create_hash (always — any tracked file may have changed)
